@@ -8,7 +8,7 @@ export function CTAButtons() {
     <div className="flex items-center gap-4">
       <Button
         size="lg"
-        className="bg-gray-900 text-white hover:bg-gray-800 px-8"
+        className="bg-[#292929] text-white hover:bg-[#1a1a1a] px-8 font-['Helvetica_Neue',_sans-serif]"
         asChild
       >
         <Link href="/signup">Sign up</Link>
@@ -16,7 +16,7 @@ export function CTAButtons() {
       <Button
         size="lg"
         variant="outline"
-        className="border-gray-900 text-gray-900 hover:bg-gray-100 px-8"
+        className="border-[#292929] text-[#292929] hover:bg-gray-100 px-8 font-['Helvetica_Neue',_sans-serif]"
         asChild
       >
         <Link href="/login">Sign in</Link>

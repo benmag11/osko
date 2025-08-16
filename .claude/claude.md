@@ -14,4 +14,3 @@ For a single component, call get_component(component_name).
 For a composite block, call get_block(block_name).
 
 Implement Correctly: Integrate the retrieved code into the application, customizing it with the necessary props and logic to fulfill the user's requestsible, you should use the shadcn mcp server every time you are working with shadcn components.
-- 
