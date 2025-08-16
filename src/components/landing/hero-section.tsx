@@ -9,10 +9,10 @@ export function HeroSection() {
       <div className="container mx-auto max-w-7xl px-6 lg:px-8 min-h-screen flex items-center">
         <div className="max-w-3xl text-center lg:text-left py-12 lg:py-0 -mt-20">
           <div className="space-y-4 mb-32">
-            <h1 className="text-9xl lg:text-[10.5rem] xl:text-[142px] font-medium text-gray-900 leading-tight whitespace-nowrap font-['Helvetica_Neue',_sans-serif]">
+            <h1 className="text-9xl lg:text-[10.5rem] xl:text-[142px] font-medium text-gray-900 leading-tight whitespace-nowrap font-['Helvetica_Neue',sans-serif]">
               It&apos;s Studyclix...
             </h1>
-            <p className="text-4xl lg:text-5xl xl:text-6xl text-gray-600 font-['Helvetica_Neue',_sans-serif]">
+            <p className="text-4xl lg:text-5xl xl:text-6xl text-gray-600 font-['Helvetica_Neue',sans-serif]">
               But it&apos;s{' '}
               <span className="text-[#0275de] font-bold italic">free</span>
             </p>
