@@ -26,13 +26,13 @@ export function Navigation() {
               className="text-gray-700 hover:text-gray-900 hover:bg-transparent text-lg font-['Helvetica_Neue',sans-serif]"
               asChild
             >
-              <Link href="/login">Sign in</Link>
+              <Link href="/auth/signin">Sign in</Link>
             </Button>
             <Button
               className="bg-[#0275de] text-white hover:bg-[#0263c2] text-lg font-['Helvetica_Neue',sans-serif]"
               asChild
             >
-              <Link href="/signup">Sign up</Link>
+              <Link href="/auth/signup">Sign up</Link>
             </Button>
           </div>
         </div>

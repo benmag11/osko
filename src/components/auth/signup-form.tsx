@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,11 +11,34 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { signUp } from '@/app/auth/actions'
+import { useState } from 'react'
+import { useFormStatus } from 'react-dom'
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? 'Creating account...' : 'Sign up'}
+    </Button>
+  )
+}
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [error, setError] = useState<string | null>(null)
+  
+  async function handleSubmit(formData: FormData) {
+    setError(null)
+    const result = await signUp(formData)
+    if (result?.error) {
+      setError(result.error)
+    }
+  }
+  
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -24,7 +49,7 @@ export function SignUpForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form action={handleSubmit}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
                 <Button variant="outline" className="w-full">
@@ -56,6 +81,7 @@ export function SignUpForm({
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="m@example.com"
                     required
@@ -63,15 +89,18 @@ export function SignUpForm({
                 </div>
                 <div className="grid gap-3">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" required />
+                  <Input id="password" name="password" type="password" required />
                 </div>
-                <Button type="submit" className="w-full">
-                  Sign up
-                </Button>
+                {error && (
+                  <div className="text-sm text-red-500 text-center">
+                    {error}
+                  </div>
+                )}
+                <SubmitButton />
               </div>
               <div className="text-center text-sm">
                 Already have an account?{" "}
-                <a href="/auth/signin" className="underline underline-offset-4">
+                <a href="/auth/signin" className="underline underline-offset-4 hover:text-primary">
                   Sign in
                 </a>
               </div>
