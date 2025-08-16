@@ -29,6 +29,8 @@ The login-03 block consists of:
 4. Adapt imports to match project structure (using @/ aliases)
 
 ## Implementation Complete
+
+### Sign-In Page (login-03 block)
 - ✅ Installed Card and Label components from shadcn/ui
 - ✅ Created LoginForm component at src/components/auth/login-form.tsx with:
   - OAuth buttons for Apple and Google
@@ -43,3 +45,21 @@ The login-03 block consists of:
   - Responsive layout
 
 The login-03 block has been successfully implemented. The page is accessible at /auth/signin route.
+
+### Sign-Up Page (based on login-03 block)
+- ✅ Created SignUpForm component at src/components/auth/signup-form.tsx with:
+  - Modified header: "Create an account" title
+  - OAuth buttons changed to "Sign up with Apple/Google"
+  - Added Name field
+  - Email field
+  - Password and Confirm Password fields
+  - Terms acceptance checkbox with inline links
+  - Sign up button
+  - "Already have an account? Sign in" link
+- ✅ Created sign-up page at src/app/auth/signup/page.tsx with:
+  - Same Acme Inc. branding and layout as sign-in page
+  - SignUpForm integration
+  - Consistent muted background styling
+  - Responsive layout
+
+The sign-up page has been successfully implemented. The page is accessible at /auth/signup route.
