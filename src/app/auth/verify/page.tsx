@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { OTPVerificationForm } from "@/components/auth/otp-verification-form"
 
 function VerificationContent() {
@@ -10,7 +11,7 @@ export default function VerifyPage() {
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
-        <a href="/" className="flex items-center justify-center">
+        <Link href="/" className="flex items-center justify-center">
           <Image
             src="/logo.svg"
             alt="Osko"
@@ -19,7 +20,7 @@ export default function VerifyPage() {
             priority
             className="h-auto w-auto"
           />
-        </a>
+        </Link>
         <Suspense fallback={
           <div className="flex items-center justify-center">
             <div className="text-muted-foreground">Loading...</div>

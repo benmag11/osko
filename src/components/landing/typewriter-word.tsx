@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useAnimate } from "motion/react";
+import { useAnimate } from "motion/react";
 import { useEffect } from "react";
 
 interface TypewriterSequence {

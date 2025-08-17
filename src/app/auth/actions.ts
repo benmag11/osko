@@ -2,7 +2,6 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 
 export async function signUp(formData: FormData) {
   const email = formData.get('email') as string

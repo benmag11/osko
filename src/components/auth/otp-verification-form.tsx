@@ -130,7 +130,7 @@ export function OTPVerificationForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Verify your email</CardTitle>
           <CardDescription>
-            We've sent a 6-digit code to <span className="font-medium">{email}</span>
+            We&apos;ve sent a 6-digit code to <span className="font-medium">{email}</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -169,7 +169,7 @@ export function OTPVerificationForm({
             
             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
               <span className="bg-card text-muted-foreground relative z-10 px-2">
-                Didn't receive the code?
+                Didn&apos;t receive the code?
               </span>
             </div>
             
