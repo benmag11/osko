@@ -2,21 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-
-# Tone and Behavior
-
-Criticism is welcome.
-Please tell me when I am wrong or mistaken, or even when you think I might be wrong or mistaken.
-Please tell me if there is a better approach than the one I am taking.
-Please tell me if there is a relevant standard or convention that I appear to be unaware of.
-Be skeptical.
-Be concise.
-Short summaries are OK, but don't give an extended breakdown unless we are working through the details of a plan.
-Do not flatter, and do not give compliments unless I am specifically asking for your judgement.
-Occasional pleasantries are fine.
-Feel free to ask many questions. If you are in doubt of my intent, don't guess. Ask.
-
-
 ## Development Commands
 
 ```bash
@@ -35,7 +20,8 @@ npm start
 # Type checking
 npx tsc --noEmit
 ```
-- The project uses Tailwind v4
+
+The project uses Tailwind CSS v4 with the new configuration format in `tailwind.config.ts`.
 
 
 ## Architecture Overview
@@ -63,8 +49,9 @@ This is a Next.js 15 application for browsing and studying past exam papers, bui
    - `/components/filters/`: Filter-specific components (search, year, topic, collapsible)
    - `/components/layout/`: Layout components (exam-sidebar, nav-user, subject-switcher)
    - `/components/questions/`: Question display components (question-card, question-list)
-   - `/components/landing/`: Landing page specific components
+   - `/components/landing/`: Landing page specific components (hero-section, cta-section, typewriter-word)
    - `/components/providers/`: React Query provider setup with SSR support
+   - `/components/kokonutui/`: Custom UI components library (e.g., type-writer)
 
 4. **Type System**:
    - Database types defined in `src/lib/types/database.ts`
@@ -84,6 +71,7 @@ src/
 │   ├── filters/          # Filter components with URL state sync
 │   ├── layout/           # Layout and navigation components
 │   ├── questions/        # Question display with infinite scroll
+│   ├── landing/          # Landing page components
 │   └── providers/        # QueryClient provider with SSR support
 └── lib/                  # Core utilities
     ├── supabase/         # Database client (server/client variants)
@@ -136,20 +124,27 @@ The application implements comprehensive error handling:
 - AbortSignal support for cancelled requests
 
 
-## Rules
-- Before you do any work, MUST view files in claude/tasks/context_session_x md file to get the
-full context (x being the id of the session we are operate, if file doesnt exist, then create
-one )
-- context_session_x-md should contain most of context of what we did, overall plan, and sub
-agents will continusly add context to the file
-- After you finish the work, MUST update the •claude/tasks/context_session_x.md file to make
-sure others can get full context of what you did
+## Key Dependencies
 
-### Sub agents
-You have access to 1 sub agent:
-- shadn-ui-builder: all task related to UI building & tweaking HAVE TO consult this agent
-Sub agents will do research about the implementation, but you will do the actual implementation;
-When passing task to sub agent, make sure you pass the context file, e.g. '.claude/tasks/
-session_context_x.md',
-After each sub agent finish the work, make sure you read the related documentation they created
-to get full context of the plan before you start executing
+- **motion**: Animation library (v12) used for UI components like TypewriterWord
+- **@tanstack/react-query**: Server state management with built-in caching
+- **@supabase/supabase-js**: Database client for PostgreSQL operations
+- **lucide-react**: Icon library used throughout the application
+- **use-debounce**: Hook for debouncing user inputs in search/filters
+
+## Landing Page Architecture
+
+The landing page (`/`) consists of modular components:
+- **LandingNavigation**: Header with logo and auth links
+- **HeroSection**: Main headline with value proposition
+- **ExamShowcase**: Visual preview of the exam interface
+- **CTASection**: Call-to-action with animated typewriter effect cycling through "keyword", "topic", "year"
+
+## Custom Components
+
+### TypewriterWord (`/components/landing/typewriter-word.tsx`)
+A custom typewriter animation component that:
+- Cycles through text sequences with typing/deleting animations
+- Maintains layout stability with fixed container heights
+- Configurable typing speed, delays, and loop behavior
+- Used in the CTA section for engagement
