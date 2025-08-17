@@ -64,12 +64,12 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
             >
               {showMarkingScheme ? (
                 <>
-                  <ChevronUp className="mr-1 h-4 w-4" />
+                  <ChevronUp className="h-4 w-4" />
                   Hide marking scheme
                 </>
               ) : (
                 <>
-                  <ChevronDown className="mr-1 h-4 w-4" />
+                  <ChevronDown className="h-4 w-4" />
                   Show marking scheme
                 </>
               )}
