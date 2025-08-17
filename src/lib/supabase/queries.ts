@@ -67,6 +67,36 @@ export async function getSubjects(): Promise<Subject[]> {
   })
 }
 
+export async function getSubjectsByUserSelection(
+  subjectName: string, 
+  level: string
+): Promise<Subject | null> {
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+    
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .eq('name', subjectName)
+      .eq('level', level)
+      .single()
+      
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null
+      }
+      console.error('Error fetching subject by user selection:', error)
+      throw new QueryError(
+        'Failed to fetch subject',
+        'SUBJECT_USER_FETCH_ERROR',
+        error
+      )
+    }
+    
+    return data
+  })
+}
+
 export async function getSubjectBySlug(slug: string): Promise<Subject | null> {
   return withRetry(async () => {
     const supabase = await createServerSupabaseClient()

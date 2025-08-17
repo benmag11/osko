@@ -1,6 +1,7 @@
 'use client'
 
 import { Card } from '@/components/ui/card'
+import Link from 'next/link'
 import { 
   BookOpen, 
   Calculator, 
@@ -43,6 +44,7 @@ interface Subject {
   id: string
   name: string
   level: string
+  slug: string | null
 }
 
 interface StudyPageClientProps {
@@ -84,9 +86,9 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {subjects.map((subject) => {
                 const Icon = getIcon(subject.name)
-                return (
+                
+                const cardContent = (
                   <Card 
-                    key={subject.id}
                     className="p-6 bg-white border-exam-border hover:border-exam-border-secondary hover:shadow-md transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex items-start space-x-4">
@@ -103,6 +105,26 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
                       </div>
                     </div>
                   </Card>
+                )
+                
+                // If we have a slug, wrap in Link, otherwise show as disabled
+                if (subject.slug) {
+                  return (
+                    <Link 
+                      key={subject.id}
+                      href={`/subject/${subject.slug}`}
+                      className="block"
+                    >
+                      {cardContent}
+                    </Link>
+                  )
+                }
+                
+                // Fallback for subjects without matching entries
+                return (
+                  <div key={subject.id} className="opacity-60 cursor-not-allowed">
+                    {cardContent}
+                  </div>
                 )
               })}
             </div>

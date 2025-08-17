@@ -2,6 +2,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { StudyPageClient } from './study-page-client'
 import { redirect } from 'next/navigation'
 import { formatName } from '@/lib/utils/format-name'
+import { getSubjectsByUserSelection } from '@/lib/supabase/queries'
+import { generateSlug } from '@/lib/utils/slug'
 
 export default async function StudyPage() {
   const supabase = await createServerSupabaseClient()
@@ -26,11 +28,33 @@ export default async function StudyPage() {
   ])
 
   const userName = formatName(profileData.data?.name || 'Student')
-  const subjects = (subjectsData.data || []).map(subject => ({
-    id: subject.id,
-    name: subject.subject_name,
-    level: subject.level
-  }))
+  
+  // Fetch actual subjects from subjects table and generate slugs
+  const subjectsWithSlugs = await Promise.all(
+    (subjectsData.data || []).map(async (userSubject) => {
+      const subject = await getSubjectsByUserSelection(
+        userSubject.subject_name,
+        userSubject.level
+      )
+      
+      if (subject) {
+        return {
+          id: subject.id,
+          name: subject.name,
+          level: subject.level,
+          slug: generateSlug(subject)
+        }
+      }
+      
+      // Fallback if subject not found in subjects table
+      return {
+        id: userSubject.id,
+        name: userSubject.subject_name,
+        level: userSubject.level,
+        slug: null
+      }
+    })
+  )
 
-  return <StudyPageClient userName={userName} subjects={subjects} />
+  return <StudyPageClient userName={userName} subjects={subjectsWithSlugs} />
 }
