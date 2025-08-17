@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/sidebar'
 import { signOut } from '@/app/auth/actions'
 import { createClient } from '@/lib/supabase/client'
+import { formatName, formatInitials } from '@/lib/utils/format-name'
 
 export function DashboardNavUser() {
   const { isMobile } = useSidebar()
@@ -48,11 +49,12 @@ export function DashboardNavUser() {
           .single()
         
         const name = profile?.name || 'User'
-        const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+        const displayName = formatName(name)
+        const initials = formatInitials(name)
         
         setUserInfo({
           email: user.email || '',
-          name,
+          name: displayName,
           initials,
         })
       }

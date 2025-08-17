@@ -189,3 +189,4 @@ A custom typewriter animation component that:
 - Maintains layout stability with fixed container heights
 - Configurable typing speed, delays, and loop behavior
 - Used in the CTA section for engagement
+- Update about this utility function and update the file strucute

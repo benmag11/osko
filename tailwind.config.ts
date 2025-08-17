@@ -73,6 +73,11 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        'glow-sm': '0 0 20px 5px hsl(209 95% 45% / 0.15), 0 0 40px 10px hsl(209 95% 45% / 0.10), 0 0 60px 15px hsl(209 95% 45% / 0.05)',
+        'glow-md': '0 0 25px 8px hsl(209 95% 45% / 0.20), 0 0 50px 15px hsl(209 95% 45% / 0.15), 0 0 75px 20px hsl(209 95% 45% / 0.08)',
+        'glow-lg': '0 0 30px 10px hsl(209 95% 45% / 0.25), 0 0 60px 20px hsl(209 95% 45% / 0.18), 0 0 90px 30px hsl(209 95% 45% / 0.10)',
+      },
       fontFamily: {
         sans: [
           '-apple-system',

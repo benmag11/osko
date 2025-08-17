@@ -82,8 +82,8 @@ export function SubjectCard({
   const Icon = subjectIcons[subject] || Book // Default to Book icon if not found
   
   return (
-    <Card className="border-[#e5e5e5] hover:shadow-sm transition-shadow">
-      <CardContent className="px-3 py-1.5 space-y-1">
+    <Card className="border-[#e5e5e5] transition-shadow">
+      <CardContent className="px-4 py-1 space-y-2">
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-[#757575] flex-shrink-0" />
           <h3 className="font-medium text-base text-left truncate">{subject}</h3>

@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { StudyPageClient } from './study-page-client'
 import { redirect } from 'next/navigation'
+import { formatName } from '@/lib/utils/format-name'
 
 export default async function StudyPage() {
   const supabase = await createServerSupabaseClient()
@@ -24,7 +25,7 @@ export default async function StudyPage() {
       .order('subject_name')
   ])
 
-  const userName = profileData.data?.name || 'Student'
+  const userName = formatName(profileData.data?.name || 'Student')
   const subjects = (subjectsData.data || []).map(subject => ({
     id: subject.id,
     name: subject.subject_name,
