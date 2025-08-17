@@ -33,10 +33,59 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
   
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
+  const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding')
+  const isProtectedPage = request.nextUrl.pathname.startsWith('/subjects') || 
+                         request.nextUrl.pathname.startsWith('/subject/') ||
+                         request.nextUrl.pathname.startsWith('/dashboard')
   
-  // Redirect authenticated users away from auth pages
-  if (user && isAuthPage && !request.nextUrl.pathname.includes('/callback')) {
-    return NextResponse.redirect(new URL('/subjects', request.url))
+  // Redirect unauthenticated users trying to access protected pages
+  if (!user && (isProtectedPage || isOnboardingPage)) {
+    return NextResponse.redirect(new URL('/auth/signin', request.url))
+  }
+  
+  // For authenticated users
+  if (user) {
+    // Redirect away from auth pages (except callback)
+    if (isAuthPage && !request.nextUrl.pathname.includes('/callback')) {
+      // Check onboarding status before redirecting
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('onboarding_completed')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (!profile || !profile.onboarding_completed) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+      return NextResponse.redirect(new URL('/dashboard/study', request.url))
+    }
+    
+    // Check onboarding status for protected pages
+    if (isProtectedPage && !isOnboardingPage) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('onboarding_completed')
+        .eq('user_id', user.id)
+        .single()
+      
+      // Redirect to onboarding if not completed
+      if (!profile || !profile.onboarding_completed) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
+    }
+    
+    // Redirect away from onboarding if already completed
+    if (isOnboardingPage) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('onboarding_completed')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (profile && profile.onboarding_completed) {
+        return NextResponse.redirect(new URL('/dashboard/study', request.url))
+      }
+    }
   }
   
   return supabaseResponse

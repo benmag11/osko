@@ -9,9 +9,9 @@ import { parseSearchParams } from '@/lib/utils/url-filters'
 import { ExamSidebar } from '@/components/layout/exam-sidebar'
 import { 
   SidebarProvider, 
-  SidebarTrigger,
   SidebarInset 
 } from '@/components/ui/sidebar'
+import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
 import { FilterBadges } from '@/components/filters/filter-badges'
 import { QuestionList } from '@/components/questions/question-list'
 import { Separator } from '@/components/ui/separator'
@@ -41,12 +41,10 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   return (
     <SidebarProvider defaultOpen>
       <ExamSidebar subject={subject} topics={topics} years={years} filters={filters} />
+      <FloatingSidebarTrigger />
       <SidebarInset>
-        <div className="sticky top-0 z-10 flex h-14 items-center px-4">
-          <SidebarTrigger className="h-10 w-10 bg-transparent hover:bg-accent/50" />
-        </div>
-        <main className="min-h-[calc(100vh-3.5rem)] bg-exam-background">
-          <div className="px-8 pb-8">
+        <main className="min-h-screen bg-exam-background">
+          <div className="px-8 py-8">
             <div className="mx-auto max-w-4xl space-y-8">
               <h1 className="text-[40px] font-bold text-exam-neutral-dark">
                 {subject.name} - {subject.level} Level

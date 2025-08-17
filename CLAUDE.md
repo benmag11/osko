@@ -124,6 +124,47 @@ The application implements comprehensive error handling:
 - AbortSignal support for cancelled requests
 
 
+## Authentication
+
+The application uses Supabase Auth for user authentication with the following features:
+
+### Auth Flow
+1. **Sign Up** (`/auth/signup`): 
+   - Email/password registration with email confirmation
+   - Social OAuth providers (Apple, Google) - UI present but not yet configured
+   - Redirects to confirmation page after signup
+   - Email verification required before access
+
+2. **Sign In** (`/auth/signin`):
+   - Email/password authentication
+   - Social OAuth providers (Apple, Google) - UI present but not yet configured
+   - Redirects to `/subjects` after successful login
+
+3. **Auth Callback** (`/auth/callback`):
+   - Handles OAuth and magic link callbacks
+   - Exchanges auth code for session
+   - Checks onboarding status and redirects accordingly
+
+### Middleware Protection
+The `middleware.ts` file enforces authentication and onboarding flow:
+- Protected routes: `/subjects`, `/subject/*` require authentication
+- Unauthenticated users redirected to `/auth/signin`
+- Authenticated users redirected away from auth pages
+- Onboarding flow enforced via `user_profiles.onboarding_completed` check
+- Users without completed onboarding redirected to `/onboarding`
+
+### Server Actions
+Authentication server actions in `src/app/auth/actions.ts`:
+- `signUp()`: Creates new account with email verification
+- `signIn()`: Authenticates existing users
+- `signOut()`: Clears session and redirects to home
+- `getUser()`: Returns current authenticated user
+
+### Components
+- `SignUpForm`: Client component with form validation and error handling
+- `LoginForm`: Client component with form validation and error handling
+- Both forms use `useFormStatus` for loading states
+
 ## Key Dependencies
 
 - **motion**: Animation library (v12) used for UI components like TypewriterWord
