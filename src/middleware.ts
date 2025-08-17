@@ -34,8 +34,7 @@ export async function middleware(request: NextRequest) {
   
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
   const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding')
-  const isProtectedPage = request.nextUrl.pathname.startsWith('/subjects') || 
-                         request.nextUrl.pathname.startsWith('/subject/') ||
+  const isProtectedPage = request.nextUrl.pathname.startsWith('/subject/') ||
                          request.nextUrl.pathname.startsWith('/dashboard')
   
   // Redirect unauthenticated users trying to access protected pages

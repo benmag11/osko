@@ -41,8 +41,8 @@ export default function OnboardingPage() {
         return
       }
 
-      // Redirect to subjects page after successful onboarding
-      router.push('/subjects')
+      // Redirect to dashboard page after successful onboarding
+      router.push('/dashboard')
     } catch (error) {
       console.error('Error during onboarding:', error)
       setIsSubmitting(false)

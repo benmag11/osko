@@ -1,7 +1,12 @@
+import { Suspense } from 'react'
 import Image from 'next/image'
-import { SignUpForm } from "@/components/auth/signup-form"
+import { OTPVerificationForm } from "@/components/auth/otp-verification-form"
 
-export default function SignUpPage() {
+function VerificationContent() {
+  return <OTPVerificationForm />
+}
+
+export default function VerifyPage() {
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
@@ -15,7 +20,13 @@ export default function SignUpPage() {
             className="h-auto w-auto"
           />
         </a>
-        <SignUpForm />
+        <Suspense fallback={
+          <div className="flex items-center justify-center">
+            <div className="text-muted-foreground">Loading...</div>
+          </div>
+        }>
+          <VerificationContent />
+        </Suspense>
       </div>
     </div>
   )

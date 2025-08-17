@@ -9,14 +9,10 @@ export async function signUp(formData: FormData) {
   const password = formData.get('password') as string
   
   const supabase = await createServerSupabaseClient()
-  const origin = (await headers()).get('origin')
   
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback`,
-    },
   })
   
   if (error) {
@@ -27,7 +23,8 @@ export async function signUp(formData: FormData) {
     return { error: 'An account with this email already exists' }
   }
   
-  redirect('/auth/confirm')
+  // Redirect to verification page with email as query parameter
+  redirect(`/auth/verify?email=${encodeURIComponent(email)}`)
 }
 
 export async function signIn(formData: FormData) {
@@ -58,4 +55,51 @@ export async function getUser() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   return user
+}
+
+export async function verifyOtp(email: string, token: string) {
+  const supabase = await createServerSupabaseClient()
+  
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
+  })
+  
+  if (error) {
+    return { error: error.message }
+  }
+  
+  // Check if user has completed onboarding
+  if (data?.user) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('onboarding_completed')
+      .eq('user_id', data.user.id)
+      .single()
+    
+    // If no profile or onboarding not completed, redirect to onboarding
+    if (!profile || !profile.onboarding_completed) {
+      redirect('/onboarding')
+    }
+  }
+  
+  redirect('/dashboard/study')
+}
+
+export async function resendOtp(email: string) {
+  const supabase = await createServerSupabaseClient()
+  
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: false,
+    },
+  })
+  
+  if (error) {
+    return { error: error.message }
+  }
+  
+  return { success: true }
 }
