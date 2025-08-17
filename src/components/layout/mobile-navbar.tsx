@@ -1,0 +1,39 @@
+"use client"
+
+import * as React from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Menu } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useSidebar } from "@/components/ui/sidebar"
+
+export function MobileNavbar() {
+  const { setOpenMobile } = useSidebar()
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 block lg:hidden bg-white border-b border-exam-border">
+      <div className="flex items-center justify-between h-14 px-4">
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo.svg"
+            alt="Osko"
+            width={76}
+            height={20}
+            priority
+            className="h-5 w-auto"
+          />
+        </Link>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setOpenMobile(true)}
+          className="h-10 w-10"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+    </header>
+  )
+}

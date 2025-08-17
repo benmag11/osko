@@ -12,6 +12,7 @@ import {
   SidebarInset 
 } from '@/components/ui/sidebar'
 import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
+import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilterBadges } from '@/components/filters/filter-badges'
 import { QuestionList } from '@/components/questions/question-list'
 import { Separator } from '@/components/ui/separator'
@@ -40,10 +41,11 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
 
   return (
     <SidebarProvider defaultOpen>
+      <MobileNavbar />
       <ExamSidebar subject={subject} topics={topics} years={years} filters={filters} />
       <FloatingSidebarTrigger />
       <SidebarInset>
-        <main className="min-h-screen bg-exam-background">
+        <main className="min-h-screen bg-exam-background pt-14 lg:pt-0">
           <div className="px-8 py-8">
             <div className="mx-auto max-w-4xl space-y-8">
               <h1 className="text-[40px] font-bold text-exam-neutral-dark">
