@@ -212,3 +212,49 @@ Build a pixel-perfect landing page for Osko based on provided mobile and desktop
 
 ### Files Modified
 - src/app/page.tsx (updated from placeholder to full landing page)
+
+---
+
+## Sidebar Icon Alignment Issue - Analysis Complete
+
+### Problem Identified
+The 3 filter icons (Search, ListFilter, CalendarSearch) are not aligned with the SubjectSwitcher and NavUser icons in the sidebar.
+
+### Root Cause Analysis
+After comparing with the original shadcn sidebar-07 implementation:
+
+1. **SubjectSwitcher** (top of sidebar):
+   - Icon is wrapped in a styled container: `<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">`
+   - Creates an 8x8 box with background color
+   - Icon itself is only size-4 inside this container
+
+2. **NavUser** (bottom of sidebar):
+   - Uses Avatar component with fixed size: `h-8 w-8 rounded-lg`
+   - Creates an 8x8 container similar to SubjectSwitcher
+
+3. **Filter Icons** (middle of sidebar):
+   - Icons rendered directly without wrapper: `{Icon && <Icon />}`
+   - No container, so they appear smaller
+   - Default Lucide icon size without explicit sizing
+
+### Solution Options
+
+**Option 1: Add icon wrappers to filters (Recommended)**
+- Wrap filter icons in similar 8x8 containers to match SubjectSwitcher/NavUser
+- Maintains visual consistency with existing design
+- Minimal code changes required
+
+**Option 2: Remove wrappers from SubjectSwitcher/NavUser**
+- Simplify to match original sidebar-07 pattern
+- More extensive changes required
+- Would change the visual design significantly
+
+### Files to Modify (Option 1)
+- `src/components/filters/collapsible-filter.tsx` - Add icon wrapper in SidebarMenuButton
+- `src/components/filters/search-filter.tsx` - Add icon wrapper in SidebarMenuButton
+
+### Implementation Plan
+1. Update CollapsibleFilter component to wrap icon in styled container
+2. Update SearchFilter component to wrap icon in styled container
+3. Ensure consistent 8x8 sizing across all sidebar icons
+4. Test in both expanded and collapsed sidebar states
