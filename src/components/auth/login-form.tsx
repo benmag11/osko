@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label"
 import { signIn } from '@/app/auth/actions'
 import { useState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { GoogleSignInButton, AppleSignInButton } from '@/components/auth/oauth-buttons'
+import { GoogleSignInButton } from '@/components/auth/oauth-buttons'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -46,21 +46,18 @@ export function LoginForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>
-            Login with your Apple or Google account
+            Login with your Google account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleSubmit}>
-            <div className="grid gap-6">
-              <div className="flex flex-col gap-4">
-                <AppleSignInButton />
-                <GoogleSignInButton />
-              </div>
-              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
-              </div>
+          <div className="grid gap-6">
+            <GoogleSignInButton />
+            <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+              <span className="bg-card text-muted-foreground relative z-10 px-2">
+                Or continue with
+              </span>
+            </div>
+            <form action={handleSubmit}>
               <div className="grid gap-6">
                 <div className="grid gap-3">
                   <Label htmlFor="email">Email</Label>
@@ -83,14 +80,14 @@ export function LoginForm({
                 )}
                 <SubmitButton />
               </div>
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <a href="/auth/signup" className="underline underline-offset-4 hover:text-primary">
-                  Sign up
-                </a>
-              </div>
+            </form>
+            <div className="text-center text-sm">
+              Don&apos;t have an account?{" "}
+              <a href="/auth/signup" className="underline underline-offset-4 hover:text-primary">
+                Sign up
+              </a>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">

@@ -131,13 +131,13 @@ The application uses Supabase Auth for user authentication with the following fe
 ### Auth Flow
 1. **Sign Up** (`/auth/signup`): 
    - Email/password registration with email confirmation
-   - Social OAuth providers (Apple, Google) - UI present but not yet configured
+   - Google OAuth authentication
    - Redirects to confirmation page after signup
    - Email verification required before access
 
 2. **Sign In** (`/auth/signin`):
    - Email/password authentication
-   - Social OAuth providers (Apple, Google) - UI present but not yet configured
+   - Google OAuth authentication
    - Redirects to `/subjects` after successful login
 
 3. **Auth Callback** (`/auth/callback`):
