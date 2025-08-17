@@ -11,7 +11,7 @@ interface SelectedSubjectCardProps {
 
 export function SelectedSubjectCard({ subject, level, onRemove }: SelectedSubjectCardProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-2 rounded-lg bg-[#f5f5f5] hover:bg-[#eeeeee] transition-colors group">
+    <div className="flex items-center justify-between px-4 py-2 rounded-lg bg-[#f5f5f5] hover:bg-[#eeeeee] transition-colors">
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <p className="text-sm font-medium truncate">{subject}</p>
         <p className="text-xs text-[#757575]">{level}</p>
@@ -20,7 +20,7 @@ export function SelectedSubjectCard({ subject, level, onRemove }: SelectedSubjec
         variant="ghost"
         size="sm"
         onClick={onRemove}
-        className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="h-7 w-7 p-0 text-[#9e9e9e] hover:text-[#757575] hover:bg-[#e0e0e0] transition-colors"
       >
         <X className="h-4 w-4" />
       </Button>

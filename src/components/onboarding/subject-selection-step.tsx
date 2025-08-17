@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { SubjectCard } from './subject-card'
@@ -82,44 +81,11 @@ export function SubjectSelectionStep({
         <p className="text-[#757575]">Choose the subjects you&apos;re studying and their levels</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Side - Subject Selection Grid */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9e9e9e]" />
-            <Input
-              type="text"
-              placeholder="Search subjects..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Subject Cards Grid */}
-          <ScrollArea className="h-[560px] pr-4">
-            <div className="grid grid-cols-2 gap-3">
-              {filteredSubjects.map((subject) => (
-                <SubjectCard
-                  key={subject}
-                  subject={subject}
-                  selectedLevel={selectedSubjects.get(subject) || null}
-                  onSelectLevel={(level) => handleSubjectLevelSelect(subject, level)}
-                />
-              ))}
-            </div>
-            {filteredSubjects.length === 0 && (
-              <p className="text-center text-[#9e9e9e] mt-8">
-                No subjects found matching &quot;{searchTerm}&quot;
-              </p>
-            )}
-          </ScrollArea>
-        </div>
-
-        {/* Right Side - Selected Subjects */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-4 border-[#e5e5e5]">
+      {/* Use flex column on mobile, grid on desktop */}
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
+        {/* Selected Subjects - First on mobile, second on desktop */}
+        <div className="order-1 lg:order-2 lg:col-span-1">
+          <Card className="lg:sticky lg:top-4 border-[#e5e5e5]">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">
                 Selected Subjects ({selectedSubjects.size})
@@ -129,7 +95,8 @@ export function SubjectSelectionStep({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <ScrollArea className="h-[350px] pr-4">
+              {/* ScrollArea only on desktop, natural flow on mobile */}
+              <div className="lg:h-[350px] lg:overflow-y-auto lg:pr-4">
                 {selectedSubjects.size === 0 ? (
                   <p className="text-sm text-[#9e9e9e] text-center py-8">
                     No subjects selected yet
@@ -146,7 +113,7 @@ export function SubjectSelectionStep({
                     ))}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
 
               <div className="space-y-2 pt-3 border-t">
                 <Button
@@ -167,6 +134,40 @@ export function SubjectSelectionStep({
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Subject Selection Grid - Second on mobile, first on desktop */}
+        <div className="order-2 lg:order-1 lg:col-span-2 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9e9e9e]" />
+            <Input
+              type="text"
+              placeholder="Search subjects..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Subject Cards Grid - ScrollArea only on desktop */}
+          <div className="lg:h-[560px] lg:overflow-y-auto lg:pr-4">
+            <div className="grid grid-cols-2 gap-3">
+              {filteredSubjects.map((subject) => (
+                <SubjectCard
+                  key={subject}
+                  subject={subject}
+                  selectedLevel={selectedSubjects.get(subject) || null}
+                  onSelectLevel={(level) => handleSubjectLevelSelect(subject, level)}
+                />
+              ))}
+            </div>
+            {filteredSubjects.length === 0 && (
+              <p className="text-center text-[#9e9e9e] mt-8">
+                No subjects found matching &quot;{searchTerm}&quot;
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
