@@ -1,42 +1,33 @@
-'use client'
-
-import Link from 'next/link'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-export function Navigation() {
+export function LandingNavigation() {
   return (
-    <nav className="absolute top-0 left-0 right-0 z-50 px-6 py-[11px]">
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/logo.svg"
-              alt="Studyclix"
-              width={280}
-              height={80}
-              priority
-              className="h-16 w-auto lg:h-20"
-            />
+    <header className="bg-white border-b">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/logo.svg"
+            alt="Osko"
+            width={76}
+            height={20}
+            priority
+          />
+        </Link>
+        
+        <nav className="flex items-center gap-4">
+          <Link
+            href="/auth/signin"
+            className="text-sm font-medium hover:text-gray-600 transition-colors"
+          >
+            Log in
           </Link>
-          
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              className="text-gray-700 hover:text-gray-900 hover:bg-transparent text-lg font-['Helvetica_Neue',sans-serif]"
-              asChild
-            >
-              <Link href="/auth/signin">Sign in</Link>
-            </Button>
-            <Button
-              className="bg-[#0275de] text-white hover:bg-[#0263c2] text-lg font-['Helvetica_Neue',sans-serif]"
-              asChild
-            >
-              <Link href="/auth/signup">Sign up</Link>
-            </Button>
-          </div>
-        </div>
+          <Button asChild size="sm">
+            <Link href="/auth/signup">Sign up</Link>
+          </Button>
+        </nav>
       </div>
-    </nav>
+    </header>
   )
 }

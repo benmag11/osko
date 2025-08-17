@@ -1,11 +1,17 @@
-import { Navigation } from '@/components/landing/navigation'
+import { LandingNavigation } from '@/components/landing/navigation'
 import { HeroSection } from '@/components/landing/hero-section'
+import { ExamShowcase } from '@/components/landing/exam-showcase'
+import { CTASection } from '@/components/landing/cta-section'
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen bg-white">
-      <Navigation />
-      <HeroSection />
-    </main>
+    <div className="min-h-screen bg-white">
+      <LandingNavigation />
+      <main className="container mx-auto px-4">
+        <HeroSection />
+        <ExamShowcase />
+        <CTASection />
+      </main>
+    </div>
   )
 }
