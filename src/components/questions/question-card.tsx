@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import type { Question } from '@/lib/types/database'
-import { cn } from '@/lib/utils'
 
 interface QuestionCardProps {
   question: Question
@@ -57,30 +56,28 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
           />
         </div>
         
-        <div className={showMarkingScheme ? "border-2 border-primary rounded-b-xl" : ""}>
-          <Button
-            onClick={toggleMarkingScheme}
-            variant="ghost"
-            className={cn(
-              "w-full rounded-none py-3 text-primary hover:bg-primary/5",
-              showMarkingScheme && "bg-primary/10"
-            )}
-          >
-            {showMarkingScheme ? (
-              <>
-                <ChevronUp className="mr-2 h-4 w-4" />
-                Hide marking scheme
-              </>
-            ) : (
-              <>
-                <ChevronDown className="mr-2 h-4 w-4" />
-                Show marking scheme
-              </>
-            )}
-          </Button>
+        <div className="bg-primary/10 rounded-b-xl">
+          <div className="flex justify-center py-4">
+            <Button
+              onClick={toggleMarkingScheme}
+              className="bg-[#438FD5] hover:bg-[#3A7FC2] text-white"
+            >
+              {showMarkingScheme ? (
+                <>
+                  <ChevronUp className="mr-1 h-4 w-4" />
+                  Hide marking scheme
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="mr-1 h-4 w-4" />
+                  Show marking scheme
+                </>
+              )}
+            </Button>
+          </div>
           
           {showMarkingScheme && (
-            <div className="bg-primary/5 p-4">
+            <div className="px-4 pb-4">
               <Image
                 src={question.marking_scheme_image_url}
                 alt={`Marking scheme for question ${question.question_number}`}
