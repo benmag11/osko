@@ -65,7 +65,7 @@ export function SignUpForm({
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="supercoolemail@gmail.com"
                     required
                   />
                 </div>
