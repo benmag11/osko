@@ -1,6 +1,6 @@
 import * as React from "react"
 
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 1024
 
 export function useIsMobile() {
   // Initialize with false to match server-side rendering
@@ -9,8 +9,8 @@ export function useIsMobile() {
   const [isInitialized, setIsInitialized] = React.useState(false)
 
   React.useEffect(() => {
-    // Match Tailwind's md breakpoint exactly (min-width: 768px)
-    // So mobile is anything below 768px
+    // Match Tailwind's lg breakpoint exactly (min-width: 1024px)
+    // So mobile is anything below 1024px (includes tablets)
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 0.02}px)`)
     const onChange = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
