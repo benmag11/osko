@@ -38,7 +38,7 @@ export function SubjectCard({
               onClick={() => onSelectSubject(higherSubject)}
               className={cn(
                 "flex-1 h-7 text-xs",
-                selectedLevel === 'Higher' && "bg-blue-600 hover:bg-blue-700 text-white"
+                selectedLevel === 'Higher' && "bg-blue-600 hover:bg-blue-700 text-white" // Higher level style
               )}
             >
               Higher
@@ -51,7 +51,7 @@ export function SubjectCard({
               onClick={() => onSelectSubject(ordinarySubject)}
               className={cn(
                 "flex-1 h-7 text-xs",
-                selectedLevel === 'Ordinary' && "bg-green-600 hover:bg-green-700 text-white"
+                selectedLevel === 'Ordinary' && "bg-green-600 hover:bg-green-700 text-white" // Ordinary level style
               )}
             >
               Ordinary

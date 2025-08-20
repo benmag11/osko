@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
 
-interface Subject {
+interface SubjectWithSlug {
   id: string
   name: string
   level: string
@@ -13,7 +13,7 @@ interface Subject {
 
 interface StudyPageClientProps {
   userName: string
-  subjects: Subject[]
+  subjects: SubjectWithSlug[]
 }
 
 export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {

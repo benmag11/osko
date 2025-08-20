@@ -14,25 +14,31 @@ export default async function StudyPage() {
     redirect('/auth/signin')
   }
 
-  // Fetch user profile for name
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('name')
-    .eq('user_id', user.id)
-    .single()
+  try {
+    // Fetch user profile and subjects in parallel for better performance
+    const [profileResult, userSubjects] = await Promise.all([
+      supabase
+        .from('user_profiles')
+        .select('name')
+        .eq('user_id', user.id)
+        .single(),
+      getUserSubjects(user.id)
+    ])
 
-  const userName = formatName(profile?.name || 'Student')
-  
-  // Fetch user subjects with full subject details using JOIN
-  const userSubjects = await getUserSubjects(user.id)
-  
-  // Transform to include slugs
-  const subjectsWithSlugs = userSubjects.map(userSubject => ({
-    id: userSubject.subject.id,
-    name: userSubject.subject.name,
-    level: userSubject.subject.level,
-    slug: generateSlug(userSubject.subject)
-  }))
+    const userName = formatName(profileResult.data?.name || 'Student')
+    
+    // Transform to include slugs
+    const subjectsWithSlugs = userSubjects.map(userSubject => ({
+      id: userSubject.subject.id,
+      name: userSubject.subject.name,
+      level: userSubject.subject.level,
+      slug: generateSlug(userSubject.subject)
+    }))
 
-  return <StudyPageClient userName={userName} subjects={subjectsWithSlugs} />
+    return <StudyPageClient userName={userName} subjects={subjectsWithSlugs} />
+  } catch (error) {
+    console.error('Error loading dashboard:', error)
+    // Fallback to empty state if there's an error
+    return <StudyPageClient userName="Student" subjects={[]} />
+  }
 }

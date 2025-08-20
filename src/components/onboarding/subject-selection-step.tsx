@@ -138,7 +138,9 @@ export function SubjectSelectionStep({
                       <SelectedSubjectCard
                         key={subject.id}
                         subject={subject.name}
-                        level={subject.level as 'Higher' | 'Ordinary'}
+                        level={subject.level === 'Higher' || subject.level === 'Ordinary' 
+                          ? subject.level 
+                          : 'Ordinary'} // Safe fallback
                         onRemove={() => removeSubject(subject.id)}
                       />
                     ))}

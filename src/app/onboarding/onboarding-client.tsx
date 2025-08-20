@@ -25,6 +25,7 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
     subjectIds: []
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleNameSubmit = (name: string) => {
     setFormData(prev => ({ ...prev, name }))
@@ -33,12 +34,13 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
 
   const handleSubjectsSubmit = async (subjectIds: string[]) => {
     setIsSubmitting(true)
+    setError(null)
     try {
       const updatedData = { ...formData, subjectIds }
       const result = await saveOnboardingData(updatedData)
       
       if (result.error) {
-        console.error('Error saving onboarding data:', result.error)
+        setError(result.error)
         setIsSubmitting(false)
         return
       }
@@ -47,6 +49,7 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
       router.push('/dashboard/study')
     } catch (error) {
       console.error('Error during onboarding:', error)
+      setError('An unexpected error occurred. Please try again.')
       setIsSubmitting(false)
     }
   }
@@ -74,6 +77,11 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
           
           {currentStep === 2 && (
             <div className="animate-in fade-in duration-300">
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                  {error}
+                </div>
+              )}
               <SubjectSelectionStep
                 subjects={subjects}
                 onNext={handleSubjectsSubmit}

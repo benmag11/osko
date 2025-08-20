@@ -103,22 +103,6 @@ export async function saveUserSubjects(
   }
 }
 
-export async function clearUserSubjects(userId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient()
-  
-  const { error } = await supabase
-    .from('user_subjects')
-    .delete()
-    .eq('user_id', userId)
-
-  if (error) {
-    console.error('Error clearing user subjects:', error)
-    return { success: false, error: 'Failed to clear subjects' }
-  }
-
-  return { success: true }
-}
-
 export async function getSubjectsByIds(ids: string[]): Promise<Subject[]> {
   if (ids.length === 0) return []
   
