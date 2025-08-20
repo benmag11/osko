@@ -11,8 +11,8 @@ export function FloatingSidebarTrigger() {
   return (
     <div
       className={cn(
-        "fixed top-4 z-50 transition-[left] duration-200 ease-linear hidden lg:block",
-        state === "expanded" ? "left-[26rem]" : "left-[5rem]"
+        "fixed top-[0.5rem] z-50 transition-[left] duration-200 ease-linear hidden lg:block",
+        state === "expanded" ? "left-[26rem]" : "left-[3.5rem]"
       )}
     >
       <SidebarTrigger className="h-10 w-10 bg-white shadow-md hover:bg-accent/50" />
