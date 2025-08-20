@@ -1,8 +1,21 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
-import { ListFilter } from 'lucide-react'
-import { CollapsibleFilter } from './collapsible-filter'
+import { ChevronRight, ListFilter } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+} from '@/components/ui/sidebar'
 import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
 import type { Topic, Filters } from '@/lib/types/database'
 
@@ -13,24 +26,45 @@ interface TopicFilterProps {
 
 export function TopicFilter({ topics, filters }: TopicFilterProps) {
   const { toggleTopic } = useFilterUpdates(filters)
-  
-  const filterItems = useMemo(() => 
-    topics.map(topic => ({
-      id: topic.id,
-      label: topic.name
-    })), [topics])
-
-  const handleToggle = useCallback((id: string | number) => {
-    toggleTopic(id as string)
-  }, [toggleTopic])
 
   return (
-    <CollapsibleFilter
-      title="Study by topic"
-      icon={ListFilter}
-      items={filterItems}
-      selectedIds={filters.topicIds}
-      onToggle={handleToggle}
-    />
+    <SidebarGroup>
+      <SidebarGroupLabel>Topics</SidebarGroupLabel>
+      <SidebarMenu>
+        <Collapsible
+          asChild
+          defaultOpen={true}
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip="Study by topic">
+                <ListFilter />
+                <span>Study by topic</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {topics.map((topic) => (
+                  <SidebarMenuSubItem key={topic.id}>
+                    <label className="flex cursor-pointer items-center gap-3 px-2 py-1.5">
+                      <Checkbox
+                        checked={filters.topicIds?.includes(topic.id)}
+                        onCheckedChange={() => toggleTopic(topic.id)}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">
+                        {topic.name}
+                      </span>
+                    </label>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      </SidebarMenu>
+    </SidebarGroup>
   )
 }

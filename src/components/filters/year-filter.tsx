@@ -1,8 +1,21 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
-import { CalendarSearch } from 'lucide-react'
-import { CollapsibleFilter } from './collapsible-filter'
+import { ChevronRight, CalendarSearch } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+} from '@/components/ui/sidebar'
 import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
 import type { Filters } from '@/lib/types/database'
 
@@ -13,24 +26,45 @@ interface YearFilterProps {
 
 export function YearFilter({ years, filters }: YearFilterProps) {
   const { toggleYear } = useFilterUpdates(filters)
-  
-  const filterItems = useMemo(() => 
-    years.map(year => ({
-      id: year,
-      label: year.toString()
-    })), [years])
-
-  const handleToggle = useCallback((id: string | number) => {
-    toggleYear(id as number)
-  }, [toggleYear])
 
   return (
-    <CollapsibleFilter
-      title="Study by year"
-      icon={CalendarSearch}
-      items={filterItems}
-      selectedIds={filters.years}
-      onToggle={handleToggle}
-    />
+    <SidebarGroup>
+      <SidebarGroupLabel>Years</SidebarGroupLabel>
+      <SidebarMenu>
+        <Collapsible
+          asChild
+          defaultOpen={true}
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip="Study by year">
+                <CalendarSearch />
+                <span>Study by year</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {years.map((year) => (
+                  <SidebarMenuSubItem key={year}>
+                    <label className="flex cursor-pointer items-center gap-3 px-2 py-1.5">
+                      <Checkbox
+                        checked={filters.years?.includes(year)}
+                        onCheckedChange={() => toggleYear(year)}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">
+                        {year}
+                      </span>
+                    </label>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      </SidebarMenu>
+    </SidebarGroup>
   )
 }

@@ -5,6 +5,7 @@ import { Search, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -38,11 +39,12 @@ export function SearchFilter({ filters }: SearchFilterProps) {
 
   return (
     <SidebarGroup>
+      <SidebarGroupLabel>Search</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Search by keyword" className="justify-start">
+          <SidebarMenuButton tooltip="Search by keyword">
             <Search />
-            {!isCollapsed && <span>Search by keyword</span>}
+            <span>Search by keyword</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
