@@ -51,7 +51,7 @@ export function SubjectSelectionStep({
       grouped.set(subject.name, existing)
     })
     
-    return Array.from(grouped.values()).sort((a, b) => a.name.localeCompare(b.name))
+    return Array.from(grouped.values()) // Already sorted from database
   }, [subjects])
 
   // Filter subjects based on search term
@@ -64,9 +64,8 @@ export function SubjectSelectionStep({
 
   // Get selected subjects with their details
   const selectedSubjectsWithDetails = useMemo(() => {
-    return subjects
-      .filter(s => selectedSubjectIds.has(s.id))
-      .sort((a, b) => a.name.localeCompare(b.name))
+    return subjects.filter(s => selectedSubjectIds.has(s.id))
+    // Subjects are already sorted from database
   }, [subjects, selectedSubjectIds])
 
   const handleSubjectToggle = (subject: Subject) => {

@@ -36,8 +36,7 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
     setIsSubmitting(true)
     setError(null)
     try {
-      const updatedData = { ...formData, subjectIds }
-      const result = await saveOnboardingData(updatedData)
+      const result = await saveOnboardingData({ ...formData, subjectIds })
       
       if (result.error) {
         setError(result.error)

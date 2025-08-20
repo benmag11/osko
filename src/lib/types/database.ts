@@ -59,7 +59,6 @@ export interface Subject {
   id: string
   name: string
   level: 'Higher' | 'Ordinary' | 'Foundation'
-  display_order: number
   created_at: string
 }
 
@@ -67,7 +66,6 @@ export interface Topic {
   id: string
   name: string
   subject_id: string
-  display_order: number
   created_at: string
 }
 

@@ -82,7 +82,7 @@ export async function getUserProfile() {
   }
 
   // Get user subjects with joined subject details
-  const { data: subjects, error: subjectsError } = await supabase
+  const { data: subjects } = await supabase
     .from('user_subjects')
     .select(`
       *,

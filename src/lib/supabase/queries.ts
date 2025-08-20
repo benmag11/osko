@@ -48,7 +48,8 @@ export async function getSubjects(): Promise<Subject[]> {
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
-      .order('display_order', { ascending: true })
+      .order('name', { ascending: true })
+      .order('level', { ascending: true })
       
     if (error) {
       console.error('Error fetching subjects:', error)
@@ -117,7 +118,7 @@ export async function getTopics(subjectId: string): Promise<Topic[]> {
       .from('topics')
       .select('*')
       .eq('subject_id', subjectId)
-      .order('display_order', { ascending: true })
+      .order('name', { ascending: true })
       
     if (error) {
       console.error('Error fetching topics:', error)

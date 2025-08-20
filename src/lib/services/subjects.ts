@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Subject, UserSubject, UserSubjectWithSubject } from '@/lib/types/database'
+import type { Subject, UserSubjectWithSubject } from '@/lib/types/database'
 
 export async function getAllSubjects(): Promise<Subject[]> {
   const supabase = await createClient()
@@ -8,7 +8,6 @@ export async function getAllSubjects(): Promise<Subject[]> {
     .from('subjects')
     .select('*')
     .in('level', ['Higher', 'Ordinary'])
-    .order('display_order')
     .order('name')
     .order('level')
 
@@ -112,7 +111,8 @@ export async function getSubjectsByIds(ids: string[]): Promise<Subject[]> {
     .from('subjects')
     .select('*')
     .in('id', ids)
-    .order('display_order')
+    .order('name')
+    .order('level')
 
   if (error) {
     console.error('Error fetching subjects by ids:', error)
