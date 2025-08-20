@@ -8,6 +8,16 @@ const FILTER_PARAM_MAP = {
   examTypes: 'types',
 } as const
 
+// Type guard to check if value is a string array
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string')
+}
+
+// Type guard to check if value is a number array
+function isNumberArray(value: unknown): value is number[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'number')
+}
+
 // Helper to serialize filter values to URL parameters
 function serializeFilterValue<K extends keyof Omit<Filters, 'subjectId'>>(
   key: K,
@@ -17,14 +27,24 @@ function serializeFilterValue<K extends keyof Omit<Filters, 'subjectId'>>(
   
   switch (key) {
     case 'searchTerm':
-      return value as string
+      if (typeof value !== 'string') {
+        console.warn(`Expected string for searchTerm, got ${typeof value}`)
+        return null
+      }
+      return value
     case 'topicIds':
     case 'examTypes':
-      const strArray = value as string[]
-      return strArray.length > 0 ? strArray.join(',') : null
+      if (!isStringArray(value)) {
+        console.warn(`Expected string array for ${key}, got`, value)
+        return null
+      }
+      return value.length > 0 ? value.join(',') : null
     case 'years':
-      const numArray = value as number[]
-      return numArray.length > 0 ? numArray.join(',') : null
+      if (!isNumberArray(value)) {
+        console.warn(`Expected number array for years, got`, value)
+        return null
+      }
+      return value.length > 0 ? value.join(',') : null
     default:
       return null
   }
@@ -85,9 +105,11 @@ export function buildFilterUrl(
     const key = filterKey as keyof Omit<Filters, 'subjectId'>
     if (key in filters) {
       const value = filters[key]
-      const serialized = serializeFilterValue(key, value as Filters[typeof key])
-      if (serialized) {
-        params.set(paramName, serialized)
+      if (value !== undefined) {
+        const serialized = serializeFilterValue(key, value as Filters[typeof key])
+        if (serialized) {
+          params.set(paramName, serialized)
+        }
       }
     }
   })
@@ -107,9 +129,13 @@ export function updateSearchParams(
     const key = filterKey as keyof Omit<Filters, 'subjectId'>
     if (key in updates) {
       const value = updates[key]
-      const serialized = serializeFilterValue(key, value as Filters[typeof key])
-      if (serialized) {
-        params.set(paramName, serialized)
+      if (value !== undefined) {
+        const serialized = serializeFilterValue(key, value as Filters[typeof key])
+        if (serialized) {
+          params.set(paramName, serialized)
+        } else {
+          params.delete(paramName)
+        }
       } else {
         params.delete(paramName)
       }

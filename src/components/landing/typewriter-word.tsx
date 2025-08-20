@@ -1,7 +1,7 @@
 "use client";
 
 import { useAnimate } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface TypewriterSequence {
     text: string;
@@ -31,9 +31,26 @@ export default function TypewriterWord({
     className = "",
 }: TypewriterWordProps) {
     const [scope, animate] = useAnimate();
+    const timeoutIds = useRef<Set<NodeJS.Timeout>>(new Set());
 
     useEffect(() => {
         let isActive = true;
+        let isFirstRun = true;
+
+        const createTimeout = (fn: () => void, delay: number): Promise<void> => {
+            return new Promise((resolve) => {
+                const timeoutId = setTimeout(() => {
+                    timeoutIds.current.delete(timeoutId);
+                    if (isActive) {
+                        fn();
+                        resolve();
+                    } else {
+                        resolve();
+                    }
+                }, delay);
+                timeoutIds.current.add(timeoutId);
+            });
+        };
 
         const typeText = async () => {
             const titleElement =
@@ -41,42 +58,50 @@ export default function TypewriterWord({
             if (!titleElement) return;
 
             while (isActive) {
-                // Reset the text content
-                await animate(scope.current, { opacity: 1 });
-                titleElement.textContent = "";
+                // Don't clear text on first run to avoid hydration mismatch
+                if (!isFirstRun) {
+                    await animate(scope.current, { opacity: 1 });
+                    titleElement.textContent = "";
+                }
 
-                // Wait for initial delay on first run
-                await new Promise((resolve) => setTimeout(resolve, startDelay));
+                // Wait for initial delay
+                await createTimeout(() => {}, startDelay);
+                if (!isActive) break;
 
                 // Process each sequence
-                for (const sequence of sequences) {
+                for (let sequenceIndex = 0; sequenceIndex < sequences.length; sequenceIndex++) {
                     if (!isActive) break;
-
-                    // Type out the sequence text
-                    for (let i = 0; i < sequence.text.length; i++) {
-                        if (!isActive) break;
-                        titleElement.textContent = sequence.text.slice(
-                            0,
-                            i + 1
-                        );
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, typingSpeed)
-                        );
+                    const sequence = sequences[sequenceIndex];
+                    
+                    // On first run, first sequence is already displayed, so skip typing
+                    if (!(isFirstRun && sequenceIndex === 0)) {
+                        // Type out the sequence text
+                        for (let i = 0; i < sequence.text.length; i++) {
+                            if (!isActive) break;
+                            titleElement.textContent = sequence.text.slice(
+                                0,
+                                i + 1
+                            );
+                            await createTimeout(() => {}, typingSpeed);
+                            if (!isActive) break;
+                        }
+                    }
+                    
+                    if (isFirstRun && sequenceIndex === 0) {
+                        isFirstRun = false;
                     }
 
                     // Pause after typing if specified
                     if (sequence.pauseAfter) {
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, sequence.pauseAfter)
-                        );
+                        await createTimeout(() => {}, sequence.pauseAfter);
+                        if (!isActive) break;
                     }
 
                     // Delete the text if specified
                     if (sequence.deleteAfter) {
                         // Small pause before deleting
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, 500)
-                        );
+                        await createTimeout(() => {}, 500);
+                        if (!isActive) break;
 
                         for (let i = sequence.text.length; i > 0; i--) {
                             if (!isActive) break;
@@ -84,9 +109,8 @@ export default function TypewriterWord({
                                 0,
                                 i
                             );
-                            await new Promise((resolve) =>
-                                setTimeout(resolve, typingSpeed / 2)
-                            );
+                            await createTimeout(() => {}, typingSpeed / 2);
+                            if (!isActive) break;
                         }
                     }
                 }
@@ -94,15 +118,20 @@ export default function TypewriterWord({
                 if (!autoLoop || !isActive) break;
 
                 // Wait before starting next loop
-                await new Promise((resolve) => setTimeout(resolve, loopDelay));
+                await createTimeout(() => {}, loopDelay);
             }
         };
 
         typeText();
 
-        // Cleanup function to stop the animation when component unmounts
+        // Cleanup function to clear all timeouts when component unmounts
         return () => {
             isActive = false;
+            // Clear all pending timeouts
+            timeoutIds.current.forEach(timeoutId => {
+                clearTimeout(timeoutId);
+            });
+            timeoutIds.current.clear();
         };
     }, [
         sequences,

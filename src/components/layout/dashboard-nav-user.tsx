@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import {
   LogOut,
   ChevronsUpDown,
@@ -25,47 +24,22 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { signOut } from '@/app/auth/actions'
-import { createClient } from '@/lib/supabase/client'
+import { useUserProfile } from '@/lib/hooks/use-user-profile'
 import { formatName, formatInitials } from '@/lib/utils/format-name'
 
 export function DashboardNavUser() {
   const { isMobile } = useSidebar()
-  const [userInfo, setUserInfo] = useState<{
-    email: string
-    name: string
-    initials: string
-  } | null>(null)
-
-  useEffect(() => {
-    async function loadUserInfo() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('name')
-          .eq('user_id', user.id)
-          .single()
-        
-        const name = profile?.name || 'User'
-        const displayName = formatName(name)
-        const initials = formatInitials(name)
-        
-        setUserInfo({
-          email: user.email || '',
-          name: displayName,
-          initials,
-        })
-      }
-    }
-    
-    loadUserInfo()
-  }, [])
-
-  if (!userInfo) {
+  const { user, profile } = useUserProfile()
+  
+  if (!user) {
     return null
   }
+  
+  const profileData = profile as { full_name?: string; name?: string } | null
+  const name = profileData?.full_name || profileData?.name || 'User'
+  const displayName = formatName(name)
+  const initials = formatInitials(name)
+  const email = user.email || ''
 
   return (
     <SidebarMenu>
@@ -78,12 +52,12 @@ export function DashboardNavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
-                  {userInfo.initials}
+                  {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{userInfo.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{userInfo.email}</span>
+                <span className="truncate font-medium">{displayName}</span>
+                <span className="truncate text-xs text-muted-foreground">{email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -98,12 +72,12 @@ export function DashboardNavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
-                    {userInfo.initials}
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{userInfo.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">{userInfo.email}</span>
+                  <span className="truncate font-medium">{displayName}</span>
+                  <span className="truncate text-xs text-muted-foreground">{email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

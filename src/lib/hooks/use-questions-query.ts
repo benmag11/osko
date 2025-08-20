@@ -31,6 +31,7 @@ export function useQuestionsQuery({
     isFetchingNextPage,
     status,
     isLoading,
+    refetch,
   } = useInfiniteQuery({
     queryKey: queryKeys.infinite(filters),
     queryFn: async ({ pageParam, signal }) => {
@@ -80,9 +81,6 @@ export function useQuestionsQuery({
     hasNextPage,
     loadMoreRef: ref,
     status,
-    refetch: () => {
-      // Invalidate and refetch all pages
-      return fetchNextPage({ cancelRefetch: false })
-    },
+    refetch,
   }
 }

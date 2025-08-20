@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useState } from "react"
 import { NavFilters } from "@/components/layout/nav-filters"
 import { NavUser } from "@/components/layout/nav-user"
 import { SubjectSwitcher } from "@/components/layout/subject-switcher"
@@ -13,7 +12,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import type { Topic, Filters, Subject } from "@/lib/types/database"
-import { createClient } from "@/lib/supabase/client"
+import { useUserProfile } from "@/lib/hooks/use-user-profile"
 import { formatName } from "@/lib/utils/format-name"
 
 interface ExamSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -30,41 +29,17 @@ export function ExamSidebar({
   filters,
   ...props 
 }: ExamSidebarProps) {
-  const [userData, setUserData] = useState<{
-    name: string
-    email: string
-    avatar: string
-  }>({
-    name: "User",
-    email: "",
-    avatar: "",
-  })
-
-  useEffect(() => {
-    async function loadUserData() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('name')
-          .eq('user_id', user.id)
-          .single()
-        
-        const name = profile?.name || user.email?.split('@')[0] || 'User'
-        const displayName = formatName(name)
-        
-        setUserData({
-          name: displayName,
-          email: user.email || '',
-          avatar: '',
-        })
-      }
-    }
-    
-    loadUserData()
-  }, [])
+  const { user, profile } = useUserProfile()
+  
+  const profileData = profile as { full_name?: string; name?: string } | null
+  const name = profileData?.full_name || profileData?.name || user?.email?.split('@')[0] || 'User'
+  const displayName = formatName(name)
+  
+  const userData = {
+    name: displayName,
+    email: user?.email || '',
+    avatar: '',
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>

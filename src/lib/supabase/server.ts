@@ -5,6 +5,7 @@ import type { Database } from '@/lib/types/database'
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
 
+  // Server-side can use process.env directly
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

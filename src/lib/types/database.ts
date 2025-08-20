@@ -61,6 +61,15 @@ export interface Topic {
   created_at: string
 }
 
+// Type for word coordinate information
+export interface WordCoordinate {
+  text: string
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface Question {
   id: string
   subject_id: string
@@ -72,7 +81,7 @@ export interface Question {
   question_image_url: string
   marking_scheme_image_url: string
   full_text: string | null
-  word_coordinates: unknown
+  word_coordinates: WordCoordinate[] | null
   created_at: string
   updated_at: string
   topics?: Array<{

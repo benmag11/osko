@@ -15,7 +15,7 @@ async function withRetry<T>(
   retries = 2,
   delay = 1000
 ): Promise<T> {
-  let lastError: Error
+  let lastError: Error = new Error('Unknown error occurred')
   
   for (let i = 0; i <= retries; i++) {
     try {
@@ -38,7 +38,7 @@ async function withRetry<T>(
     }
   }
   
-  throw lastError!
+  throw lastError
 }
 
 export async function getSubjects(): Promise<Subject[]> {
@@ -169,14 +169,24 @@ export async function getTopics(subjectId: string): Promise<Topic[]> {
 const yearsCache = new Map<string, { data: number[]; timestamp: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
+// Lock to prevent concurrent cache updates
+const cacheLocks = new Map<string, Promise<number[]>>()
+
 export async function getAvailableYears(subjectId: string): Promise<number[]> {
+  // Check if there's already a fetch in progress for this subject
+  const existingFetch = cacheLocks.get(subjectId)
+  if (existingFetch) {
+    return existingFetch
+  }
+  
   // Check cache first
   const cached = yearsCache.get(subjectId)
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data
   }
   
-  return withRetry(async () => {
+  // Create new fetch promise and store it to prevent concurrent fetches
+  const fetchPromise = withRetry(async () => {
     const supabase = await createServerSupabaseClient()
     
     const { data, error } = await supabase
@@ -212,7 +222,15 @@ export async function getAvailableYears(subjectId: string): Promise<number[]> {
     
     console.error('Failed to fetch years after retries:', error)
     return []
+  }).finally(() => {
+    // Clean up the lock after fetch completes
+    cacheLocks.delete(subjectId)
   })
+  
+  // Store the fetch promise to prevent concurrent fetches
+  cacheLocks.set(subjectId, fetchPromise)
+  
+  return fetchPromise
 }
 
 
@@ -235,25 +253,38 @@ export async function searchQuestions(
       throw new Error('Request was cancelled')
     }
     
-    const { data, error } = await supabase.rpc('search_questions_paginated', {
-      p_subject_id: filters.subjectId,
-      p_search_term: filters.searchTerm || null,
-      p_years: filters.years || null,
-      p_topic_ids: filters.topicIds || null,
-      p_exam_types: filters.examTypes || null,
-      p_cursor: cursor || null,
-      p_limit: 20
+    // Create a promise that will race with the abort signal
+    const abortPromise = new Promise<never>((_, reject) => {
+      if (signal) {
+        signal.addEventListener('abort', () => {
+          reject(new Error('Request was cancelled'))
+        })
+      }
     })
     
-    if (error) {
-      console.error('Error searching questions:', error)
+    // Race between the RPC call and the abort signal
+    const data = await Promise.race([
+      supabase.rpc('search_questions_paginated', {
+        p_subject_id: filters.subjectId,
+        p_search_term: filters.searchTerm || null,
+        p_years: filters.years || null,
+        p_topic_ids: filters.topicIds || null,
+        p_exam_types: filters.examTypes || null,
+        p_cursor: cursor || null,
+        p_limit: 20
+      }),
+      abortPromise
+    ])
+    
+    if (data.error) {
+      console.error('Error searching questions:', data.error)
       throw new QueryError(
         'Failed to search questions',
         'QUESTIONS_SEARCH_ERROR',
-        error
+        data.error
       )
     }
     
-    return data as PaginatedResponse
+    return data.data as PaginatedResponse
   })
 }

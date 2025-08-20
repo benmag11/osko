@@ -31,10 +31,23 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
     notFound()
   }
 
-  const [topics, years] = await Promise.all([
-    getTopics(subject.id),
-    getAvailableYears(subject.id),
-  ])
+  // Fetch topics and years with individual error handling
+  let topics: Awaited<ReturnType<typeof getTopics>> = []
+  let years: Awaited<ReturnType<typeof getAvailableYears>> = []
+  
+  try {
+    topics = await getTopics(subject.id)
+  } catch (error) {
+    console.error('Failed to fetch topics:', error)
+    topics = [] // Fallback to empty array
+  }
+  
+  try {
+    years = await getAvailableYears(subject.id)
+  } catch (error) {
+    console.error('Failed to fetch available years:', error)
+    years = [] // Fallback to empty array
+  }
 
   const filters = parseSearchParams(resolvedSearchParams, subject.id)
   const initialData = await searchQuestions(filters)
