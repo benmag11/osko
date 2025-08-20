@@ -21,6 +21,16 @@ export interface Database {
         Insert: QuestionTopic
         Update: Partial<QuestionTopic>
       }
+      user_profiles: {
+        Row: UserProfile
+        Insert: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<UserProfile, 'id' | 'user_id'>>
+      }
+      user_subjects: {
+        Row: UserSubject
+        Insert: Omit<UserSubject, 'id' | 'created_at'>
+        Update: Partial<Omit<UserSubject, 'id' | 'user_id'>>
+      }
     }
     Functions: {
       search_questions_paginated: {
@@ -110,4 +120,24 @@ export interface PaginatedResponse {
     year: number
     question_number: number
   } | null
+}
+
+export interface UserProfile {
+  id: string
+  user_id: string
+  name: string
+  onboarding_completed: boolean | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface UserSubject {
+  id: string
+  user_id: string
+  subject_id: string
+  created_at: string | null
+}
+
+export interface UserSubjectWithSubject extends UserSubject {
+  subject: Subject
 }

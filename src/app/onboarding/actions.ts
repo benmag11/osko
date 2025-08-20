@@ -1,10 +1,11 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import type { OnboardingData } from './page'
+import { createClient } from '@/lib/supabase/server'
+import { saveUserSubjects } from '@/lib/services/subjects'
+import type { OnboardingFormData } from './onboarding-client'
 
-export async function saveOnboardingData(data: OnboardingData) {
-  const supabase = await createServerSupabaseClient()
+export async function saveOnboardingData(data: OnboardingFormData) {
+  const supabase = await createClient()
   
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -29,40 +30,18 @@ export async function saveOnboardingData(data: OnboardingData) {
     return { error: 'Failed to save profile' }
   }
 
-  // Delete existing subjects for this user (in case they're re-onboarding)
-  const { error: deleteError } = await supabase
-    .from('user_subjects')
-    .delete()
-    .eq('user_id', user.id)
-
-  if (deleteError) {
-    console.error('Delete error:', deleteError)
-    return { error: 'Failed to update subjects' }
-  }
-
-  // Insert new subjects
-  if (data.subjects.length > 0) {
-    const subjectsToInsert = data.subjects.map(subject => ({
-      user_id: user.id,
-      subject_name: subject.name,
-      level: subject.level
-    }))
-
-    const { error: subjectsError } = await supabase
-      .from('user_subjects')
-      .insert(subjectsToInsert)
-
-    if (subjectsError) {
-      console.error('Subjects error:', subjectsError)
-      return { error: 'Failed to save subjects' }
-    }
+  // Save user subjects using the service function
+  const result = await saveUserSubjects(user.id, data.subjectIds)
+  
+  if (!result.success) {
+    return { error: result.error || 'Failed to save subjects' }
   }
 
   return { success: true }
 }
 
 export async function checkOnboardingStatus() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   
@@ -80,11 +59,11 @@ export async function checkOnboardingStatus() {
     return { completed: false }
   }
 
-  return { completed: profile.onboarding_completed }
+  return { completed: profile.onboarding_completed || false }
 }
 
 export async function getUserProfile() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   
@@ -102,9 +81,13 @@ export async function getUserProfile() {
     return { error: 'Profile not found' }
   }
 
+  // Get user subjects with joined subject details
   const { data: subjects, error: subjectsError } = await supabase
     .from('user_subjects')
-    .select('*')
+    .select(`
+      *,
+      subject:subjects(*)
+    `)
     .eq('user_id', user.id)
 
   return { 

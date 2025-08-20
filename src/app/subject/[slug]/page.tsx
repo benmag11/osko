@@ -67,7 +67,7 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
 
               <FilterBadges topics={topics} filters={filters} />
               
-              {(filters.searchTerm || filters.topicIds?.length || filters.years?.length) && (
+              {(filters.searchTerms || filters.topicIds?.length || filters.years?.length) && (
                 <Separator className="bg-exam-text-muted/30" />
               )}
 

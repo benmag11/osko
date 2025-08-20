@@ -7,71 +7,102 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 import { SubjectCard } from './subject-card'
 import { SelectedSubjectCard } from './selected-subject-card'
-import type { OnboardingData } from '@/app/onboarding/page'
-
-const SUBJECTS = [
-  'Accounting', 'Agricultural Science', 'Applied Maths', 'Art', 
-  'Biology', 'Business', 'Chemistry', 'Classical Studies',
-  'Computer Science', 'Construction Studies', 'Design & Communication Graphics',
-  'Economics', 'Engineering', 'English', 'French', 'Geography',
-  'German', 'History', 'Home Economics', 'Irish', 'Italian',
-  'Japanese', 'LCVP', 'Mathematics', 'Music', 'Phys-Chem',
-  'Physical Education', 'Physics', 'Politics and Society',
-  'Religious Education', 'Spanish', 'Technology'
-].sort()
+import type { Subject } from '@/lib/types/database'
 
 interface SubjectSelectionStepProps {
-  onNext: (subjects: OnboardingData['subjects']) => void
+  subjects: Subject[]
+  onNext: (subjectIds: string[]) => void
   onBack: () => void
-  initialSubjects?: OnboardingData['subjects']
+  initialSubjectIds?: string[]
   isSubmitting?: boolean
 }
 
+interface GroupedSubject {
+  name: string
+  higher?: Subject
+  ordinary?: Subject
+}
+
 export function SubjectSelectionStep({ 
+  subjects,
   onNext, 
   onBack, 
-  initialSubjects = [],
+  initialSubjectIds = [],
   isSubmitting = false
 }: SubjectSelectionStepProps) {
-  const [selectedSubjects, setSelectedSubjects] = useState<Map<string, 'Higher' | 'Ordinary'>>(
-    new Map(initialSubjects.map(s => [s.name, s.level]))
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(
+    new Set(initialSubjectIds)
   )
   const [searchTerm, setSearchTerm] = useState('')
 
+  // Group subjects by name for display
+  const groupedSubjects = useMemo(() => {
+    const grouped = new Map<string, GroupedSubject>()
+    
+    subjects.forEach(subject => {
+      const existing = grouped.get(subject.name) || { name: subject.name }
+      
+      if (subject.level === 'Higher') {
+        existing.higher = subject
+      } else if (subject.level === 'Ordinary') {
+        existing.ordinary = subject
+      }
+      
+      grouped.set(subject.name, existing)
+    })
+    
+    return Array.from(grouped.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [subjects])
+
   // Filter subjects based on search term
   const filteredSubjects = useMemo(() => {
-    if (!searchTerm) return SUBJECTS
-    return SUBJECTS.filter(subject => 
-      subject.toLowerCase().includes(searchTerm.toLowerCase())
+    if (!searchTerm) return groupedSubjects
+    return groupedSubjects.filter(subject => 
+      subject.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  }, [searchTerm])
+  }, [searchTerm, groupedSubjects])
 
-  const handleSubjectLevelSelect = (subject: string, level: 'Higher' | 'Ordinary') => {
-    const newSelected = new Map(selectedSubjects)
+  // Get selected subjects with their details
+  const selectedSubjectsWithDetails = useMemo(() => {
+    return subjects
+      .filter(s => selectedSubjectIds.has(s.id))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [subjects, selectedSubjectIds])
+
+  const handleSubjectToggle = (subject: Subject) => {
+    const newSelected = new Set(selectedSubjectIds)
     
-    // If clicking the same level that's already selected, deselect
-    if (newSelected.get(subject) === level) {
-      newSelected.delete(subject)
+    if (newSelected.has(subject.id)) {
+      newSelected.delete(subject.id)
     } else {
-      // Otherwise, set or update the level
-      newSelected.set(subject, level)
+      // Remove any other level of the same subject
+      const otherLevelSubject = subjects.find(
+        s => s.name === subject.name && s.id !== subject.id
+      )
+      if (otherLevelSubject) {
+        newSelected.delete(otherLevelSubject.id)
+      }
+      newSelected.add(subject.id)
     }
     
-    setSelectedSubjects(newSelected)
+    setSelectedSubjectIds(newSelected)
   }
 
-  const removeSubject = (subject: string) => {
-    const newSelected = new Map(selectedSubjects)
-    newSelected.delete(subject)
-    setSelectedSubjects(newSelected)
+  const removeSubject = (subjectId: string) => {
+    const newSelected = new Set(selectedSubjectIds)
+    newSelected.delete(subjectId)
+    setSelectedSubjectIds(newSelected)
   }
 
   const handleSubmit = () => {
-    const subjects = Array.from(selectedSubjects.entries()).map(([name, level]) => ({
-      name,
-      level
-    }))
-    onNext(subjects)
+    onNext(Array.from(selectedSubjectIds))
+  }
+
+  // Get the selected level for a subject group
+  const getSelectedLevel = (group: GroupedSubject): 'Higher' | 'Ordinary' | null => {
+    if (group.higher && selectedSubjectIds.has(group.higher.id)) return 'Higher'
+    if (group.ordinary && selectedSubjectIds.has(group.ordinary.id)) return 'Ordinary'
+    return null
   }
 
   return (
@@ -88,7 +119,7 @@ export function SubjectSelectionStep({
           <Card className="lg:sticky lg:top-4 border-[#e5e5e5]">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">
-                Selected Subjects ({selectedSubjects.size})
+                Selected Subjects ({selectedSubjectsWithDetails.length})
               </CardTitle>
               <CardDescription className="text-sm">
                 Your chosen subjects and levels
@@ -97,18 +128,18 @@ export function SubjectSelectionStep({
             <CardContent className="space-y-3">
               {/* ScrollArea only on desktop, natural flow on mobile */}
               <div className="lg:h-[350px] lg:overflow-y-auto lg:pr-4">
-                {selectedSubjects.size === 0 ? (
+                {selectedSubjectsWithDetails.length === 0 ? (
                   <p className="text-sm text-[#9e9e9e] text-center py-8">
                     No subjects selected yet
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {Array.from(selectedSubjects.entries()).map(([subject, level]) => (
+                    {selectedSubjectsWithDetails.map((subject) => (
                       <SelectedSubjectCard
-                        key={subject}
-                        subject={subject}
-                        level={level}
-                        onRemove={() => removeSubject(subject)}
+                        key={subject.id}
+                        subject={subject.name}
+                        level={subject.level as 'Higher' | 'Ordinary'}
+                        onRemove={() => removeSubject(subject.id)}
                       />
                     ))}
                   </div>
@@ -118,7 +149,7 @@ export function SubjectSelectionStep({
               <div className="space-y-2 pt-3 border-t">
                 <Button
                   onClick={handleSubmit}
-                  disabled={selectedSubjects.size === 0 || isSubmitting}
+                  disabled={selectedSubjectsWithDetails.length === 0 || isSubmitting}
                   className="w-full"
                 >
                   {isSubmitting ? 'Saving...' : 'Continue'}
@@ -153,12 +184,14 @@ export function SubjectSelectionStep({
           {/* Subject Cards Grid - ScrollArea only on desktop */}
           <div className="lg:h-[560px] lg:overflow-y-auto lg:pr-4">
             <div className="grid grid-cols-2 gap-3">
-              {filteredSubjects.map((subject) => (
+              {filteredSubjects.map((group) => (
                 <SubjectCard
-                  key={subject}
-                  subject={subject}
-                  selectedLevel={selectedSubjects.get(subject) || null}
-                  onSelectLevel={(level) => handleSubjectLevelSelect(subject, level)}
+                  key={group.name}
+                  subjectName={group.name}
+                  higherSubject={group.higher}
+                  ordinarySubject={group.ordinary}
+                  selectedLevel={getSelectedLevel(group)}
+                  onSelectSubject={handleSubjectToggle}
                 />
               ))}
             </div>
