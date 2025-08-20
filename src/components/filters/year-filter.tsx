@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -29,7 +28,6 @@ export function YearFilter({ years, filters }: YearFilterProps) {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Years</SidebarGroupLabel>
       <SidebarMenu>
         <Collapsible
           asChild
@@ -38,7 +36,7 @@ export function YearFilter({ years, filters }: YearFilterProps) {
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton tooltip="Study by year">
+              <SidebarMenuButton tooltip="Study by year" className="font-medium text-sidebar-foreground/90">
                 <CalendarSearch />
                 <span>Study by year</span>
                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />

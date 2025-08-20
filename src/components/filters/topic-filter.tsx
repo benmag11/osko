@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -29,7 +28,6 @@ export function TopicFilter({ topics, filters }: TopicFilterProps) {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Topics</SidebarGroupLabel>
       <SidebarMenu>
         <Collapsible
           asChild
@@ -38,7 +36,7 @@ export function TopicFilter({ topics, filters }: TopicFilterProps) {
         >
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <SidebarMenuButton tooltip="Study by topic">
+              <SidebarMenuButton tooltip="Study by topic" className="font-medium text-sidebar-foreground/90">
                 <ListFilter />
                 <span>Study by topic</span>
                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
