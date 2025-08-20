@@ -26,7 +26,7 @@ export interface Database {
       search_questions_paginated: {
         Args: {
           p_subject_id: string
-          p_search_term?: string | null
+          p_search_terms?: string[] | null
           p_years?: number[] | null
           p_topic_ids?: string[] | null
           p_exam_types?: string[] | null
@@ -98,7 +98,7 @@ export interface QuestionTopic {
 
 export interface Filters {
   subjectId: string
-  searchTerm?: string
+  searchTerms?: string[]
   years?: number[]
   topicIds?: string[]
   examTypes?: string[]

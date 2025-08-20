@@ -2,7 +2,6 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useTransition } from 'react'
-import { useDebouncedCallback } from 'use-debounce'
 import { updateSearchParams } from '@/lib/utils/url-filters'
 import type { Filters } from '@/lib/types/database'
 
@@ -21,12 +20,18 @@ export function useFilterUpdates(filters: Filters) {
     })
   }, [pathname, router, searchParams])
 
-  const debouncedSearchUpdate = useDebouncedCallback(
-    (searchTerm: string) => {
-      updateUrl({ searchTerm: searchTerm || undefined })
-    },
-    300
-  )
+  const addSearchTerm = useCallback((term: string) => {
+    const current = filters.searchTerms || []
+    if (!current.includes(term)) {
+      updateUrl({ searchTerms: [...current, term] })
+    }
+  }, [filters.searchTerms, updateUrl])
+
+  const removeSearchTerm = useCallback((term: string) => {
+    const current = filters.searchTerms || []
+    const updated = current.filter(t => t !== term)
+    updateUrl({ searchTerms: updated.length > 0 ? updated : undefined })
+  }, [filters.searchTerms, updateUrl])
 
   const toggleTopic = useCallback((topicId: string) => {
     const current = filters.topicIds || []
@@ -50,7 +55,8 @@ export function useFilterUpdates(filters: Filters) {
 
   return {
     updateUrl,
-    debouncedSearchUpdate,
+    addSearchTerm,
+    removeSearchTerm,
     toggleTopic,
     toggleYear,
     clearAllFilters,

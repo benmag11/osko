@@ -266,7 +266,7 @@ export async function searchQuestions(
     const data = await Promise.race([
       supabase.rpc('search_questions_paginated', {
         p_subject_id: filters.subjectId,
-        p_search_term: filters.searchTerm || null,
+        p_search_terms: filters.searchTerms || null,
         p_years: filters.years || null,
         p_topic_ids: filters.topicIds || null,
         p_exam_types: filters.examTypes || null,

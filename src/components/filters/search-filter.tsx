@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Search } from 'lucide-react'
+import { useState } from 'react'
+import { Search, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   SidebarGroup,
@@ -18,14 +18,23 @@ interface SearchFilterProps {
 }
 
 export function SearchFilter({ filters }: SearchFilterProps) {
-  const { debouncedSearchUpdate } = useFilterUpdates(filters)
-  const [value, setValue] = useState(filters.searchTerm || '')
+  const { addSearchTerm } = useFilterUpdates(filters)
+  const [value, setValue] = useState('')
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
 
-  useEffect(() => {
-    setValue(filters.searchTerm || '')
-  }, [filters.searchTerm])
+  const handleAddKeyword = () => {
+    if (value.trim()) {
+      addSearchTerm(value.trim())
+      setValue('')
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddKeyword()
+    }
+  }
 
   return (
     <SidebarGroup>
@@ -39,15 +48,23 @@ export function SearchFilter({ filters }: SearchFilterProps) {
       </SidebarMenu>
       {!isCollapsed && (
         <div className="px-3 py-2">
-          <Input
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value)
-              debouncedSearchUpdate(e.target.value)
-            }}
-            placeholder="Try typing 'prove'"
-            className="h-8 text-sm"
-          />
+          <div className="flex gap-2">
+            <Input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Try typing 'prove'"
+              className="h-8 text-sm flex-1"
+            />
+            <button
+              type="button"
+              onClick={handleAddKeyword}
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-input bg-transparent transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              aria-label="Add search keyword"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
     </SidebarGroup>

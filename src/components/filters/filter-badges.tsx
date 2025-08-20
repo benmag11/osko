@@ -12,10 +12,10 @@ interface FilterBadgesProps {
 }
 
 export function FilterBadges({ topics, filters }: FilterBadgesProps) {
-  const { toggleTopic, toggleYear, updateUrl, clearAllFilters } = useFilterUpdates(filters)
+  const { toggleTopic, toggleYear, removeSearchTerm, clearAllFilters } = useFilterUpdates(filters)
   
   const hasFilters = !!(
-    filters.searchTerm ||
+    filters.searchTerms?.length ||
     filters.topicIds?.length ||
     filters.years?.length
   )
@@ -32,21 +32,22 @@ export function FilterBadges({ topics, filters }: FilterBadgesProps) {
       </h2>
       
       <div className="flex flex-wrap items-center gap-3">
-        {filters.searchTerm && (
+        {filters.searchTerms?.map((term) => (
           <Badge 
+            key={term}
             variant="outline"
             className="flex h-[34px] items-center gap-1.5 rounded-[10px] border-exam-border-secondary bg-white px-3"
           >
             <button
-              onClick={() => updateUrl({ searchTerm: undefined })}
+              onClick={() => removeSearchTerm(term)}
               className="flex items-center"
             >
               <X className="h-4 w-4 text-[#404040]" />
             </button>
             <span className="text-exam-text-muted">Keyword :</span>
-            <span className="text-primary">&apos;{filters.searchTerm}&apos;</span>
+            <span className="text-primary">&apos;{term}&apos;</span>
           </Badge>
-        )}
+        ))}
 
         {filters.topicIds?.map((topicId) => (
           <Badge 

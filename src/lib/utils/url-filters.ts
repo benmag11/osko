@@ -2,7 +2,7 @@ import type { Filters } from '@/lib/types/database'
 
 // Mapping between filter keys and URL parameter names
 const FILTER_PARAM_MAP = {
-  searchTerm: 'q',
+  searchTerms: 'q',
   topicIds: 'topics',
   years: 'years',
   examTypes: 'types',
@@ -26,12 +26,7 @@ function serializeFilterValue<K extends keyof Omit<Filters, 'subjectId'>>(
   if (!value) return null
   
   switch (key) {
-    case 'searchTerm':
-      if (typeof value !== 'string') {
-        console.warn(`Expected string for searchTerm, got ${typeof value}`)
-        return null
-      }
-      return value
+    case 'searchTerms':
     case 'topicIds':
     case 'examTypes':
       if (!isStringArray(value)) {
@@ -51,18 +46,16 @@ function serializeFilterValue<K extends keyof Omit<Filters, 'subjectId'>>(
 }
 
 // Overloaded function signatures for proper typing
-function deserializeFilterValue(key: 'searchTerm', value: string | undefined): string | undefined
-function deserializeFilterValue(key: 'topicIds' | 'examTypes', value: string | undefined): string[] | undefined
+function deserializeFilterValue(key: 'searchTerms' | 'topicIds' | 'examTypes', value: string | undefined): string[] | undefined
 function deserializeFilterValue(key: 'years', value: string | undefined): number[] | undefined
 function deserializeFilterValue(
   key: keyof Omit<Filters, 'subjectId'>,
   value: string | undefined
-): string | string[] | number[] | undefined {
+): string[] | number[] | undefined {
   if (!value) return undefined
   
   switch (key) {
-    case 'searchTerm':
-      return value
+    case 'searchTerms':
     case 'topicIds':
     case 'examTypes':
       return value.split(',').filter(Boolean)
@@ -87,7 +80,7 @@ export function parseSearchParams(
 
   return {
     subjectId,
-    searchTerm: deserializeFilterValue('searchTerm', getValue(FILTER_PARAM_MAP.searchTerm)),
+    searchTerms: deserializeFilterValue('searchTerms', getValue(FILTER_PARAM_MAP.searchTerms)),
     topicIds: deserializeFilterValue('topicIds', getValue(FILTER_PARAM_MAP.topicIds)),
     years: deserializeFilterValue('years', getValue(FILTER_PARAM_MAP.years)),
     examTypes: deserializeFilterValue('examTypes', getValue(FILTER_PARAM_MAP.examTypes)),
