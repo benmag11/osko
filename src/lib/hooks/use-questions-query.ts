@@ -3,7 +3,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useInView } from 'react-intersection-observer'
 import { useEffect, useMemo } from 'react'
-import { searchQuestions } from '@/lib/supabase/queries'
+import { searchQuestionsClient } from '@/lib/supabase/client-queries'
 import { queryKeys } from '@/lib/queries/query-keys'
 import type { Question, Filters, PaginatedResponse } from '@/lib/types/database'
 
@@ -35,7 +35,7 @@ export function useQuestionsQuery({
   } = useInfiniteQuery({
     queryKey: queryKeys.infinite(filters),
     queryFn: async ({ pageParam, signal }) => {
-      return searchQuestions(filters, pageParam, signal)
+      return searchQuestionsClient(filters, pageParam, signal)
     },
     initialPageParam: null as { year: number; question_number: number } | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor,
