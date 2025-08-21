@@ -3,28 +3,38 @@ import * as React from "react"
 const MOBILE_BREAKPOINT = 1024
 
 export function useIsMobile() {
-  // Initialize with false to match server-side rendering
-  // This prevents hydration mismatch since server always renders as desktop initially
-  const [isMobile, setIsMobile] = React.useState(false)
-  const [isInitialized, setIsInitialized] = React.useState(false)
+  // Start with undefined to indicate we haven't checked yet
+  // This allows components to handle the loading state appropriately
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
   React.useEffect(() => {
-    // Match Tailwind's lg breakpoint exactly (min-width: 1024px)
-    // So mobile is anything below 1024px (includes tablets)
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 0.02}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    // Create a function to check mobile state
+    const checkMobile = () => {
+      return window.innerWidth < MOBILE_BREAKPOINT
     }
     
-    // Set initial state and mark as initialized
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    setIsInitialized(true)
+    // Set the initial value immediately
+    setIsMobile(checkMobile())
     
-    mql.addEventListener("change", onChange)
-    return () => mql.removeEventListener("change", onChange)
+    // Create media query listener for responsive changes
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    
+    // Handler for media query changes
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches)
+    }
+    
+    // Add event listener
+    mql.addEventListener("change", handleChange)
+    
+    // Cleanup
+    return () => {
+      mql.removeEventListener("change", handleChange)
+    }
   }, [])
 
-  // During SSR and initial hydration, always return false to match server rendering
-  // This ensures consistent behavior and prevents hydration mismatches
-  return isInitialized ? isMobile : false
+  // Return the actual state
+  // undefined = still loading (during SSR and initial hydration)
+  // boolean = actual mobile/desktop state after hydration
+  return isMobile
 }
