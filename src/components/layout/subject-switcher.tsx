@@ -3,7 +3,6 @@
 import { BookOpen, ChevronsUpDown } from "lucide-react"
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -12,6 +11,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { SubjectDropdown } from "@/components/layout/subject-dropdown"
+import { useUserSubjects } from "@/lib/hooks/use-user-subjects"
+import { useUserProfile } from "@/lib/hooks/use-user-profile"
 import type { Subject } from "@/lib/types/database"
 
 interface SubjectSwitcherProps {
@@ -20,6 +22,8 @@ interface SubjectSwitcherProps {
 
 export function SubjectSwitcher({ subject }: SubjectSwitcherProps) {
   const { isMobile } = useSidebar()
+  const { user } = useUserProfile()
+  const { subjects, isLoading } = useUserSubjects(user?.id)
 
   return (
     <SidebarMenu>
@@ -40,16 +44,12 @@ export function SubjectSwitcher({ subject }: SubjectSwitcherProps) {
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            align="start"
-            side={isMobile ? "bottom" : "right"}
-            sideOffset={4}
-          >
-            <div className="p-2 text-sm text-muted-foreground">
-              Currently viewing {subject.name}
-            </div>
-          </DropdownMenuContent>
+          <SubjectDropdown 
+            subjects={subjects}
+            currentSubject={subject}
+            isLoading={isLoading}
+            isMobile={isMobile}
+          />
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
