@@ -48,7 +48,7 @@ export function YearFilter({ years, filters }: YearFilterProps) {
                   <SidebarMenuSubItem key={year}>
                     <label className="flex cursor-pointer items-center gap-3 px-2 py-1.5">
                       <Checkbox
-                        checked={filters.years?.includes(year)}
+                        checked={filters.years?.includes(year) ?? false}
                         onCheckedChange={() => toggleYear(year)}
                         className="h-4 w-4"
                       />

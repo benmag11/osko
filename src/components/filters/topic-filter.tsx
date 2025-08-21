@@ -48,7 +48,7 @@ export function TopicFilter({ topics, filters }: TopicFilterProps) {
                   <SidebarMenuSubItem key={topic.id}>
                     <label className="flex cursor-pointer items-center gap-3 px-2 py-1.5">
                       <Checkbox
-                        checked={filters.topicIds?.includes(topic.id)}
+                        checked={filters.topicIds?.includes(topic.id) ?? false}
                         onCheckedChange={() => toggleTopic(topic.id)}
                         className="h-4 w-4"
                       />
