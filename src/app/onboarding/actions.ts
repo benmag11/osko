@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { saveUserSubjects } from '@/lib/services/subjects'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 export interface OnboardingFormData {

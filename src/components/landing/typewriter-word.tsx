@@ -127,10 +127,13 @@ export default function TypewriterWord({
         // Cleanup function to clear all timeouts when component unmounts
         return () => {
             isActive = false;
+            // Copy the Set to avoid ref value changes during cleanup
+            const timeouts = new Set(timeoutIds.current);
             // Clear all pending timeouts
-            timeoutIds.current.forEach(timeoutId => {
+            timeouts.forEach(timeoutId => {
                 clearTimeout(timeoutId);
             });
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             timeoutIds.current.clear();
         };
     }, [

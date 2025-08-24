@@ -55,6 +55,7 @@ export function OTPVerificationForm({
     if (value.length === 6) {
       await handleVerify(value)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email])
   
   const handleVerify = async (otpValue?: string) => {
@@ -72,7 +73,7 @@ export function OTPVerificationForm({
       } else {
         setIsSuccess(true)
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.')
       setOtp('')
     } finally {
@@ -94,7 +95,7 @@ export function OTPVerificationForm({
         setResendCooldown(60)
         setOtp('')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to resend code. Please try again.')
     } finally {
       setIsResending(false)

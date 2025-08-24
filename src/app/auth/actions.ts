@@ -118,7 +118,7 @@ export async function verifyOtp(email: string, token: string) {
         redirect('/onboarding')
       }
     } catch (error) {
-      if ((error as any)?.name === 'NEXT_REDIRECT') {
+      if (error instanceof Error && error.message?.includes('NEXT_REDIRECT')) {
         throw error
       }
       console.error('Error checking onboarding status:', error)
