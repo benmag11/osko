@@ -1,17 +1,21 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { NameStep } from '@/components/onboarding/name-step'
 import { SubjectSelectionStep } from '@/components/onboarding/subject-selection-step'
 import { ProgressIndicator } from '@/components/onboarding/progress-indicator'
-import { saveOnboardingData, type OnboardingFormData, type ServerActionError } from './actions'
+import { saveOnboardingData, type OnboardingFormData } from './actions'
 import type { Subject } from '@/lib/types/database'
 
 interface OnboardingClientProps {
   subjects: Subject[]
 }
 
+type ErrorCode = 'AUTH_ERROR' | 'PROFILE_ERROR' | 'SUBJECTS_ERROR' | 'UNKNOWN_ERROR'
+
 export function OnboardingClient({ subjects }: OnboardingClientProps) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<OnboardingFormData>({
@@ -19,7 +23,7 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
     subjectIds: []
   })
   const [error, setError] = useState<string | null>(null)
-  const [errorCode, setErrorCode] = useState<ServerActionError['code'] | null>(null)
+  const [errorCode, setErrorCode] = useState<ErrorCode | null>(null)
 
   const handleNameSubmit = (name: string) => {
     // Clear any previous errors when moving forward
@@ -29,7 +33,7 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
     setCurrentStep(2)
   }
 
-  const handleSubjectsSubmit = async (subjectIds: string[]) => {
+  const handleSubjectsSubmit = (subjectIds: string[]) => {
     // Clear previous errors
     setError(null)
     setErrorCode(null)
@@ -40,34 +44,22 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
     
     // Use startTransition for better UX with server actions
     startTransition(async () => {
-      try {
-        const result = await saveOnboardingData(updatedFormData)
+      const result = await saveOnboardingData(updatedFormData)
+      
+      if (result.success) {
+        // Navigate to the dashboard
+        router.push(result.redirectUrl)
+      } else {
+        // Handle error
+        setError(result.error)
+        setErrorCode(result.code || null)
         
-        // If we get here, it means there was an error
-        // (successful saves will redirect and not return)
-        if (result && result.error) {
-          setError(result.error)
-          setErrorCode(result.code || null)
-          
-          // If auth error, we might need to redirect to login
-          if (result.code === 'AUTH_ERROR') {
-            // Give user time to read the error before potential redirect
-            setTimeout(() => {
-              window.location.href = '/auth/signin'
-            }, 3000)
-          }
+        // If auth error, redirect to login after a delay
+        if (result.code === 'AUTH_ERROR') {
+          setTimeout(() => {
+            router.push('/auth/signin')
+          }, 3000)
         }
-      } catch (error) {
-        // Handle NEXT_REDIRECT (this is expected for successful saves)
-        if (error instanceof Error && error.message?.includes('NEXT_REDIRECT')) {
-          // This is expected behavior - the redirect is happening
-          return
-        }
-        
-        // Handle actual unexpected errors
-        console.error('Unexpected error during onboarding:', error)
-        setError('An unexpected error occurred. Please refresh the page and try again.')
-        setErrorCode('UNKNOWN_ERROR')
       }
     })
   }

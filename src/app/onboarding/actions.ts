@@ -10,96 +10,90 @@ export interface OnboardingFormData {
   subjectIds: string[]
 }
 
-export interface ServerActionError {
-  error: string
-  code?: 'AUTH_ERROR' | 'PROFILE_ERROR' | 'SUBJECTS_ERROR' | 'UNKNOWN_ERROR'
-}
+export type ServerActionResult = 
+  | { success: true; redirectUrl: string }
+  | { success: false; error: string; code?: 'AUTH_ERROR' | 'PROFILE_ERROR' | 'SUBJECTS_ERROR' | 'UNKNOWN_ERROR' }
 
 export async function saveOnboardingData(
   data: OnboardingFormData
-): Promise<ServerActionError | never> {
+): Promise<ServerActionResult> {
   const supabase = await createClient()
   
-  try {
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
-      console.error('Authentication error during onboarding:', userError)
-      return { 
-        error: 'You must be logged in to complete onboarding. Please sign in and try again.',
-        code: 'AUTH_ERROR'
-      }
-    }
-
-    // Validate input data
-    if (!data.name || data.name.trim().length < 1) {
-      return {
-        error: 'Please enter your name to continue.',
-        code: 'PROFILE_ERROR'
-      }
-    }
-
-    if (!data.subjectIds || data.subjectIds.length === 0) {
-      return {
-        error: 'Please select at least one subject to continue.',
-        code: 'SUBJECTS_ERROR'
-      }
-    }
-
-    // Start a transaction by performing operations sequentially
-    // First, create or update user profile
-    const { error: profileError } = await supabase
-      .from('user_profiles')
-      .upsert({
-        user_id: user.id,
-        name: data.name.trim(),
-        onboarding_completed: true,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id)
-
-    if (profileError) {
-      console.error('Profile save error:', profileError)
-      return { 
-        error: 'Failed to save your profile. Please try again.',
-        code: 'PROFILE_ERROR'
-      }
-    }
-
-    // Save user subjects using the service function
-    const result = await saveUserSubjects(user.id, data.subjectIds)
-    
-    if (!result.success) {
-      console.error('Subjects save error:', result.error)
-      // Roll back profile update if subjects fail
-      await supabase
-        .from('user_profiles')
-        .update({ onboarding_completed: false })
-        .eq('user_id', user.id)
-      
-      return { 
-        error: result.error || 'Failed to save your subjects. Please try again.',
-        code: 'SUBJECTS_ERROR'
-      }
-    }
-
-    // Revalidate the dashboard page to ensure fresh data
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/study')
-    
-    // Redirect to dashboard after successful save
-    // This will throw a NEXT_REDIRECT which is expected behavior
-    redirect('/dashboard/study')
-  } catch (error) {
-    // This catch will only handle unexpected errors
-    // redirect() throws NEXT_REDIRECT which should not be caught
-    console.error('Unexpected error during onboarding:', error)
-    return {
-      error: 'An unexpected error occurred. Please refresh the page and try again.',
-      code: 'UNKNOWN_ERROR'
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    console.error('Authentication error during onboarding:', userError)
+    return { 
+      success: false,
+      error: 'You must be logged in to complete onboarding. Please sign in and try again.',
+      code: 'AUTH_ERROR'
     }
   }
+
+  // Validate input data
+  if (!data.name || data.name.trim().length < 1) {
+    return {
+      success: false,
+      error: 'Please enter your name to continue.',
+      code: 'PROFILE_ERROR'
+    }
+  }
+
+  if (!data.subjectIds || data.subjectIds.length === 0) {
+    return {
+      success: false,
+      error: 'Please select at least one subject to continue.',
+      code: 'SUBJECTS_ERROR'
+    }
+  }
+
+  // Start a transaction by performing operations sequentially
+  // First, create or update user profile
+  const { error: profileError } = await supabase
+    .from('user_profiles')
+    .upsert({
+      user_id: user.id,
+      name: data.name.trim(),
+      onboarding_completed: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('user_id', user.id)
+
+  if (profileError) {
+    console.error('Profile save error:', profileError)
+    return { 
+      success: false,
+      error: 'Failed to save your profile. Please try again.',
+      code: 'PROFILE_ERROR'
+    }
+  }
+
+  // Save user subjects using the service function
+  const result = await saveUserSubjects(user.id, data.subjectIds)
+  
+  if (!result.success) {
+    console.error('Subjects save error:', result.error)
+    // Roll back profile update if subjects fail
+    await supabase
+      .from('user_profiles')
+      .update({ onboarding_completed: false })
+      .eq('user_id', user.id)
+    
+    return { 
+      success: false,
+      error: result.error || 'Failed to save your subjects. Please try again.',
+      code: 'SUBJECTS_ERROR'
+    }
+  }
+
+  // Revalidate the dashboard page to ensure fresh data
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/study')
+  
+  // Return success with redirect URL instead of using redirect()
+  // This avoids the NEXT_REDIRECT error in Next.js 15
+  return { success: true, redirectUrl: '/dashboard/study' }
 }
 
 export async function checkOnboardingStatus(): Promise<{

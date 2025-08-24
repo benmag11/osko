@@ -1,6 +1,6 @@
 import { getAllSubjects } from '@/lib/services/subjects'
 import { OnboardingClient } from './onboarding-client'
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Complete Your Profile - Onboarding',
