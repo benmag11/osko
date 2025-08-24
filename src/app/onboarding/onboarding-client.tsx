@@ -1,56 +1,82 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useTransition } from 'react'
 import { NameStep } from '@/components/onboarding/name-step'
 import { SubjectSelectionStep } from '@/components/onboarding/subject-selection-step'
 import { ProgressIndicator } from '@/components/onboarding/progress-indicator'
-import { saveOnboardingData } from './actions'
+import { saveOnboardingData, type OnboardingFormData, type ServerActionError } from './actions'
 import type { Subject } from '@/lib/types/database'
-
-export interface OnboardingFormData {
-  name: string
-  subjectIds: string[]
-}
 
 interface OnboardingClientProps {
   subjects: Subject[]
 }
 
 export function OnboardingClient({ subjects }: OnboardingClientProps) {
-  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<OnboardingFormData>({
     name: '',
     subjectIds: []
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<ServerActionError['code'] | null>(null)
 
   const handleNameSubmit = (name: string) => {
+    // Clear any previous errors when moving forward
+    setError(null)
+    setErrorCode(null)
     setFormData(prev => ({ ...prev, name }))
     setCurrentStep(2)
   }
 
   const handleSubjectsSubmit = async (subjectIds: string[]) => {
-    setIsSubmitting(true)
+    // Clear previous errors
     setError(null)
-    try {
-      const result = await saveOnboardingData({ ...formData, subjectIds })
-      
-      if (result.error) {
-        setError(result.error)
-        setIsSubmitting(false)
-        return
+    setErrorCode(null)
+    
+    // Update form data
+    const updatedFormData = { ...formData, subjectIds }
+    setFormData(updatedFormData)
+    
+    // Use startTransition for better UX with server actions
+    startTransition(async () => {
+      try {
+        const result = await saveOnboardingData(updatedFormData)
+        
+        // If we get here, it means there was an error
+        // (successful saves will redirect and not return)
+        if (result && result.error) {
+          setError(result.error)
+          setErrorCode(result.code || null)
+          
+          // If auth error, we might need to redirect to login
+          if (result.code === 'AUTH_ERROR') {
+            // Give user time to read the error before potential redirect
+            setTimeout(() => {
+              window.location.href = '/auth/signin'
+            }, 3000)
+          }
+        }
+      } catch (error) {
+        // Handle NEXT_REDIRECT (this is expected for successful saves)
+        if (error instanceof Error && error.message?.includes('NEXT_REDIRECT')) {
+          // This is expected behavior - the redirect is happening
+          return
+        }
+        
+        // Handle actual unexpected errors
+        console.error('Unexpected error during onboarding:', error)
+        setError('An unexpected error occurred. Please refresh the page and try again.')
+        setErrorCode('UNKNOWN_ERROR')
       }
+    })
+  }
 
-      // Redirect to dashboard page after successful onboarding
-      router.push('/dashboard/study')
-    } catch (error) {
-      console.error('Error during onboarding:', error)
-      setError('An unexpected error occurred. Please try again.')
-      setIsSubmitting(false)
-    }
+  const handleBack = () => {
+    // Clear errors when going back
+    setError(null)
+    setErrorCode(null)
+    setCurrentStep(1)
   }
 
   return (
@@ -77,16 +103,30 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
           {currentStep === 2 && (
             <div className="animate-in fade-in duration-300">
               {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                  {error}
+                <div className={`mb-4 p-4 rounded-lg border ${
+                  errorCode === 'AUTH_ERROR' 
+                    ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                    : 'bg-red-50 border-red-200 text-red-700'
+                }`}>
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="font-medium">{error}</p>
+                      {errorCode === 'AUTH_ERROR' && (
+                        <p className="text-sm mt-1 opacity-90">Redirecting to sign in...</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
               <SubjectSelectionStep
                 subjects={subjects}
                 onNext={handleSubjectsSubmit}
-                onBack={() => setCurrentStep(1)}
+                onBack={handleBack}
                 initialSubjectIds={formData.subjectIds}
-                isSubmitting={isSubmitting}
+                isSubmitting={isPending}
               />
             </div>
           )}
