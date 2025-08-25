@@ -12,8 +12,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import type { Topic, Filters, Subject } from "@/lib/types/database"
-import { useUserProfile } from "@/lib/hooks/use-user-profile"
-import { formatName } from "@/lib/utils/format-name"
 
 interface ExamSidebarProps extends React.ComponentProps<typeof Sidebar> {
   subject: Subject
@@ -29,18 +27,6 @@ export function ExamSidebar({
   filters,
   ...props 
 }: ExamSidebarProps) {
-  const { user, profile } = useUserProfile()
-  
-  const profileData = profile as { full_name?: string; name?: string } | null
-  const name = profileData?.full_name || profileData?.name || user?.email?.split('@')[0] || 'User'
-  const displayName = formatName(name)
-  
-  const userData = {
-    name: displayName,
-    email: user?.email || '',
-    avatar: '',
-  }
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -50,7 +36,7 @@ export function ExamSidebar({
         <NavFilters topics={topics} years={years} filters={filters} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={userData} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

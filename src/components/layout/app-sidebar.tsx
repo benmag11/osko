@@ -10,7 +10,7 @@ import {
   Settings,
 } from 'lucide-react'
 
-import { DashboardNavUser } from '@/components/layout/dashboard-nav-user'
+import { NavUser } from '@/components/layout/nav-user'
 import {
   Sidebar,
   SidebarContent,
@@ -92,7 +92,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <DashboardNavUser />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
