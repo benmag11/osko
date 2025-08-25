@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { CACHE_TIMES } from '@/lib/config/cache'
+import { queryKeys } from '@/lib/queries/query-keys'
+import { useState, useEffect } from 'react'
 
 interface UserProfile {
   user_id: string
@@ -25,26 +27,47 @@ interface UseUserProfileReturn {
 
 /**
  * Custom hook to fetch and cache user data and profile
- * Prevents duplicate requests across components
+ * Uses user-scoped cache keys to prevent data leakage
  */
 export function useUserProfile(): UseUserProfileReturn {
   const supabase = createClient()
+  const [userId, setUserId] = useState<string | null>(null)
+  
+  // Get initial user ID
+  useEffect(() => {
+    const getInitialUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUserId(user?.id ?? null)
+    }
+    getInitialUser()
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null)
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [supabase])
   
   const { data, isLoading, error } = useQuery({
-    queryKey: ['user-profile'],
+    queryKey: userId ? queryKeys.user.profile(userId) : ['user-profile-anonymous'],
     queryFn: async () => {
-      // Get authenticated user
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      // Validate session before fetching
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
-      if (userError) {
-        throw userError
-      }
-      
-      if (!user) {
+      if (sessionError || !session) {
         return { user: null, profile: null }
       }
       
-      // Get user profile
+      // Check if session is expired
+      if (session.expires_at && session.expires_at * 1000 < Date.now()) {
+        console.warn('Session expired, returning null')
+        return { user: null, profile: null }
+      }
+      
+      const user = session.user
+      
+      // Get user profile with the validated user ID
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
@@ -61,6 +84,7 @@ export function useUserProfile(): UseUserProfileReturn {
     },
     ...CACHE_TIMES.USER_DATA,
     retry: 1, // Override default retry for auth queries
+    enabled: !!userId, // Only run query if we have a user ID
   })
   
   return {

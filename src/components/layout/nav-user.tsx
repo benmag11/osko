@@ -23,16 +23,22 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { signOut } from '@/app/auth/actions'
 import { useUserProfile } from '@/lib/hooks/use-user-profile'
 import { formatName, formatInitials } from '@/lib/utils/format-name'
+import { clientSignOut } from '@/lib/auth/client-auth'
+import { useQueryClient } from '@tanstack/react-query'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { user, profile } = useUserProfile()
+  const queryClient = useQueryClient()
   
   if (!user) {
     return null
+  }
+  
+  const handleSignOut = async () => {
+    await clientSignOut(queryClient)
   }
   
   const profileData = profile as { full_name?: string; name?: string } | null
@@ -82,7 +88,7 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>
