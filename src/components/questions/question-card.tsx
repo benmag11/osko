@@ -3,7 +3,10 @@
 import { useState, useCallback, memo } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Edit2 } from 'lucide-react'
+import { useIsAdmin } from '@/lib/hooks/use-is-admin'
+import { useTopics } from '@/lib/hooks/use-topics'
+import { QuestionEditModal } from '@/components/admin/question-edit-modal'
 import type { Question } from '@/lib/types/database'
 
 interface QuestionCardProps {
@@ -12,6 +15,9 @@ interface QuestionCardProps {
 
 export const QuestionCard = memo(function QuestionCard({ question }: QuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const { isAdmin } = useIsAdmin()
+  const { topics } = useTopics(question.subject_id)
   
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
@@ -40,9 +46,22 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-exam-neutral">
-        {title}
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-exam-neutral">
+          {title}
+        </h3>
+        {isAdmin && (
+          <Button
+            onClick={() => setShowEditModal(true)}
+            size="sm"
+            variant="outline"
+            className="gap-2"
+          >
+            <Edit2 className="h-4 w-4" />
+            Edit Metadata
+          </Button>
+        )}
+      </div>
       
       <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.25)]">
         <div className="relative w-full bg-white">
@@ -89,6 +108,15 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
           )}
         </div>
       </div>
+      
+      {isAdmin && (
+        <QuestionEditModal
+          question={question}
+          topics={topics || []}
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+        />
+      )}
     </div>
   )
 })

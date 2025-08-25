@@ -125,6 +125,7 @@ export interface UserProfile {
   user_id: string
   name: string
   onboarding_completed: boolean | null
+  is_admin: boolean
   created_at: string | null
   updated_at: string | null
 }
@@ -138,4 +139,22 @@ export interface UserSubject {
 
 export interface UserSubjectWithSubject extends UserSubject {
   subject: Subject
+}
+
+export interface QuestionAuditLog {
+  id: string
+  question_id: string
+  user_id: string | null
+  action: 'update' | 'delete' | 'topic_add' | 'topic_remove'
+  changes: Record<string, any>
+  created_at: string
+}
+
+export interface QuestionUpdatePayload {
+  year?: number
+  paper_number?: number | null
+  question_number?: number
+  question_parts?: string[]
+  exam_type?: 'normal' | 'deferred' | 'supplemental'
+  topic_ids?: string[]
 }

@@ -22,6 +22,16 @@ export const CACHE_TIMES = {
     staleTime: 60 * 1000,        // 1 minute
     gcTime: 5 * 60 * 1000,       // 5 minutes
   },
+  // Topics data (semi-static)
+  TOPICS: {
+    staleTime: 10 * 60 * 1000,   // 10 minutes
+    gcTime: 30 * 60 * 1000,      // 30 minutes
+  },
+  // Questions data
+  QUESTIONS: {
+    staleTime: 1 * 60 * 1000,    // 1 minute
+    gcTime: 10 * 60 * 1000,      // 10 minutes
+  },
 } as const
 
 // Global query configuration
