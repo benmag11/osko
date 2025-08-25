@@ -31,26 +31,33 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
     notFound()
   }
 
-  // Fetch topics and years with individual error handling
-  let topics: Awaited<ReturnType<typeof getTopics>> = []
-  let years: Awaited<ReturnType<typeof getAvailableYears>> = []
-  
-  try {
-    topics = await getTopics(subject.id)
-  } catch (error) {
-    console.error('Failed to fetch topics:', error)
-    topics = [] // Fallback to empty array
-  }
-  
-  try {
-    years = await getAvailableYears(subject.id)
-  } catch (error) {
-    console.error('Failed to fetch available years:', error)
-    years = [] // Fallback to empty array
-  }
-
+  // Parse filters early as it doesn't depend on other data
   const filters = parseSearchParams(resolvedSearchParams, subject.id)
-  const initialData = await searchQuestions(filters)
+
+  // Fetch all data in parallel for optimal performance
+  const [topicsResult, yearsResult, questionsResult] = await Promise.allSettled([
+    getTopics(subject.id),
+    getAvailableYears(subject.id),
+    searchQuestions(filters)
+  ])
+
+  // Extract data with proper error handling
+  const topics = topicsResult.status === 'fulfilled' ? topicsResult.value : []
+  const years = yearsResult.status === 'fulfilled' ? yearsResult.value : []
+  const initialData = questionsResult.status === 'fulfilled' 
+    ? questionsResult.value 
+    : { questions: [], hasMore: false, next_cursor: null }
+
+  // Log errors for monitoring but don't break the page
+  if (topicsResult.status === 'rejected') {
+    console.error('Failed to fetch topics:', topicsResult.reason)
+  }
+  if (yearsResult.status === 'rejected') {
+    console.error('Failed to fetch available years:', yearsResult.reason)
+  }
+  if (questionsResult.status === 'rejected') {
+    console.error('Failed to fetch initial questions:', questionsResult.reason)
+  }
 
   return (
     <SidebarProvider defaultOpen>

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getUserSubjectsClient } from '@/lib/services/subjects-client'
 import { generateSlug } from '@/lib/utils/slug'
 import type { Subject } from '@/lib/types/database'
+import { CACHE_TIMES } from '@/lib/config/cache'
 
 interface SubjectWithSlug extends Subject {
   slug: string
@@ -36,9 +37,8 @@ export function useUserSubjects(userId: string | undefined): UseUserSubjectsRetu
       }))
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 1,
+    ...CACHE_TIMES.USER_DATA,
+    retry: 1, // Override default retry for user data
   })
   
   return {

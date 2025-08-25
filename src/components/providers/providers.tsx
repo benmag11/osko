@@ -2,22 +2,10 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { QUERY_CONFIG } from '@/lib/config/cache'
 
 function makeQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        // With server-side rendering, we usually want to set some default staleTime
-        // to avoid refetching immediately on the client
-        staleTime: 60 * 1000, // 1 minute
-        gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-        retry: 3,
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        refetchOnWindowFocus: false,
-        refetchOnMount: true,
-      },
-    },
-  })
+  return new QueryClient(QUERY_CONFIG)
 }
 
 let browserQueryClient: QueryClient | undefined = undefined

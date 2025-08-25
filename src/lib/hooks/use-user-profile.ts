@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
+import { CACHE_TIMES } from '@/lib/config/cache'
 
 interface UserProfile {
   user_id: string
@@ -57,9 +58,8 @@ export function useUserProfile(): UseUserProfileReturn {
       
       return { user, profile }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-    retry: 1,
+    ...CACHE_TIMES.USER_DATA,
+    retry: 1, // Override default retry for auth queries
   })
   
   return {

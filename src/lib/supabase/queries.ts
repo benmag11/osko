@@ -137,28 +137,8 @@ export async function getTopics(subjectId: string): Promise<Topic[]> {
   })
 }
 
-// Cache for available years to reduce database calls
-const yearsCache = new Map<string, { data: number[]; timestamp: number }>()
-const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
-
-// Lock to prevent concurrent cache updates
-const cacheLocks = new Map<string, Promise<number[]>>()
-
 export async function getAvailableYears(subjectId: string): Promise<number[]> {
-  // Check if there's already a fetch in progress for this subject
-  const existingFetch = cacheLocks.get(subjectId)
-  if (existingFetch) {
-    return existingFetch
-  }
-  
-  // Check cache first
-  const cached = yearsCache.get(subjectId)
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data
-  }
-  
-  // Create new fetch promise and store it to prevent concurrent fetches
-  const fetchPromise = withRetry(async () => {
+  return withRetry(async () => {
     const supabase = await createServerSupabaseClient()
     
     const { data, error } = await supabase
@@ -175,34 +155,11 @@ export async function getAvailableYears(subjectId: string): Promise<number[]> {
       )
     }
     
-    const years = data as number[]
-    
-    // Update cache
-    yearsCache.set(subjectId, {
-      data: years,
-      timestamp: Date.now()
-    })
-    
-    return years
+    return data as number[]
   }).catch(error => {
-    // Try to return cached data even if expired
-    const cached = yearsCache.get(subjectId)
-    if (cached) {
-      console.warn('Using stale cached years due to error:', error)
-      return cached.data
-    }
-    
     console.error('Failed to fetch years after retries:', error)
     return []
-  }).finally(() => {
-    // Clean up the lock after fetch completes
-    cacheLocks.delete(subjectId)
   })
-  
-  // Store the fetch promise to prevent concurrent fetches
-  cacheLocks.set(subjectId, fetchPromise)
-  
-  return fetchPromise
 }
 
 
