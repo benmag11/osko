@@ -1,6 +1,6 @@
 'use client'
 
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, type Query } from '@tanstack/react-query'
 import { getCacheStats } from './cache-utils'
 
 /**
@@ -116,7 +116,7 @@ export function installCacheInspector(queryClient: QueryClient) {
       getStats: () => ReturnType<typeof getCacheStats>
       verifyCleared: () => boolean
       clearAll: () => void
-      getQueries: () => ReturnType<QueryClient['getQueryCache']['getAll']>
+      getQueries: () => Query[]
     }
   }
   

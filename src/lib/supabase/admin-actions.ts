@@ -1,8 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from './server'
-import { QueryError } from '@/lib/errors'
-import type { QuestionUpdatePayload, QuestionAuditLog } from '@/lib/types/database'
+import type { QuestionUpdatePayload } from '@/lib/types/database'
 
 async function verifyAdmin(): Promise<boolean> {
   const supabase = await createServerSupabaseClient()
@@ -39,13 +38,24 @@ export async function updateQuestionMetadata(
       .single()
     
     // Update question metadata
-    const updateData: any = {}
+    interface QuestionUpdate {
+      year?: number
+      paper_number?: number | null
+      question_number?: number
+      question_parts?: string[]
+      exam_type?: 'normal' | 'deferred' | 'supplemental'
+      updated_at: string
+    }
+    
+    const updateData: QuestionUpdate = {
+      updated_at: new Date().toISOString()
+    }
+    
     if (updates.year !== undefined) updateData.year = updates.year
     if (updates.paper_number !== undefined) updateData.paper_number = updates.paper_number
     if (updates.question_number !== undefined) updateData.question_number = updates.question_number
     if (updates.question_parts !== undefined) updateData.question_parts = updates.question_parts
     if (updates.exam_type !== undefined) updateData.exam_type = updates.exam_type
-    updateData.updated_at = new Date().toISOString()
     
     const { error: updateError } = await supabase
       .from('questions')

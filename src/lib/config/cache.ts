@@ -42,7 +42,6 @@ export const QUERY_CONFIG: QueryClientConfig = {
       staleTime: CACHE_TIMES.DYNAMIC_DATA.staleTime,
       gcTime: CACHE_TIMES.DYNAMIC_DATA.gcTime,
       
-      // Retry configuration - reduced from 3 to 1 for better UX
       retry: 1,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
       

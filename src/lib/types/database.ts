@@ -141,12 +141,18 @@ export interface UserSubjectWithSubject extends UserSubject {
   subject: Subject
 }
 
+// Type for audit log changes based on the action type
+export type AuditLogChanges = 
+  | { before: Partial<Question>; after: QuestionUpdatePayload } // for 'update' action
+  | { deletedData: Question } // for 'delete' action  
+  | { topicId: string; topicName: string } // for 'topic_add' or 'topic_remove' actions
+
 export interface QuestionAuditLog {
   id: string
   question_id: string
   user_id: string | null
   action: 'update' | 'delete' | 'topic_add' | 'topic_remove'
-  changes: Record<string, any>
+  changes: AuditLogChanges
   created_at: string
 }
 
