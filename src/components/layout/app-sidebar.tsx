@@ -53,13 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Image
-                    src="/logo - icon.svg"
-                    alt="osko"
-                    width={16}
-                    height={16}
-                    className="size-4"
-                  />
+                  <span className="text-xs font-bold">O</span>
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-serif font-semibold text-warm-text-primary">osko</span>

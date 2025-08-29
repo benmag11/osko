@@ -15,12 +15,12 @@ export function MobileNavbar() {
       <div className="flex items-center justify-between h-14 px-4">
         <Link href="/" className="flex items-center">
           <Image
-            src="/LOGO -full.svg"
+            src="/logo-full.svg"
             alt="Osko"
             width={76}
             height={20}
             priority
-            className="h-5 w-auto"
+            className="h-5"
           />
         </Link>
         

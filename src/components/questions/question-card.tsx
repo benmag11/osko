@@ -92,12 +92,13 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
           )}
         </div>
         
-        <div className="bg-cream-100 rounded-b-xl border-t border-stone-200">
+        <div className="bg-[#F5F4ED] rounded-b-xl border-t border-stone-300">
           <div className="flex justify-center py-4">
             {hasValidMarkingScheme ? (
               <Button
                 onClick={toggleMarkingScheme}
-                className="bg-salmon-500 hover:bg-salmon-600 text-cream-50 font-sans"
+                variant="default"
+                className="font-sans"
               >
                 {showMarkingScheme ? (
                   <>
