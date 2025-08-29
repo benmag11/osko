@@ -25,20 +25,20 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
   }
 
   return (
-    <main className="min-h-screen bg-exam-background">
+    <main className="min-h-screen bg-cream-50">
       <div className="px-8 py-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12">
-            <h1 className="text-4xl font-bold text-exam-neutral-dark mb-2">
+            <h1 className="text-4xl font-serif font-bold text-warm-text-primary mb-2">
               {getGreeting()}, {userName}
             </h1>
-            <p className="text-lg text-exam-text-secondary">
+            <p className="text-lg font-sans text-warm-text-secondary">
               What are you studying today?
             </p>
           </div>
 
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-exam-neutral-dark">
+            <h2 className="text-2xl font-serif font-semibold text-warm-text-primary">
               Your subjects
             </h2>
             
@@ -53,7 +53,7 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
                     className="block"
                   >
                     <Card 
-                      className="p-6 bg-white border-exam-border hover:border-exam-border-secondary hover:shadow-md transition-all duration-200 cursor-pointer"
+                      className="p-6 bg-cream-100 border-stone-200 hover:border-stone-300 hover:shadow-md transition-all duration-200 cursor-pointer"
                     >
                       <div className="flex items-start space-x-4">
                         <div className="p-3 bg-exam-background rounded-lg">

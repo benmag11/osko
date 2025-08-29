@@ -12,10 +12,10 @@ export function FilterTag({ label, onRemove }: FilterTagProps) {
     <button
       type="button"
       onClick={onRemove}
-      className="inline-flex items-center justify-center gap-3 rounded-md border border-stone-300 bg-cream-50 px-4 py-2 text-base font-sans font-normal text-warm-text-secondary transition-colors hover:border-salmon-400 hover:bg-cream-100"
+      className="group inline-flex items-center justify-center gap-3 rounded-md border border-stone-300 bg-cream-50 px-4 py-2 text-base font-sans font-normal text-warm-text-secondary transition-colors hover:border-stone-300 hover:bg-cream-100"
       aria-label={`Remove ${label} filter`}
     >
-      <SquareX className="h-5 w-5 text-warm-text-secondary" />
+      <SquareX className="h-5 w-5 text-warm-text-secondary transition-colors group-hover:text-salmon-500" />
       {label}
     </button>
   )

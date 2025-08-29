@@ -11,7 +11,7 @@ export function MobileNavbar() {
   const { setOpenMobile } = useSidebar()
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 block lg:hidden bg-white border-b border-exam-border">
+    <header className="fixed top-0 left-0 right-0 z-50 block lg:hidden bg-cream-50 border-b border-stone-200">
       <div className="flex items-center justify-between h-14 px-4">
         <Link href="/" className="flex items-center">
           <Image

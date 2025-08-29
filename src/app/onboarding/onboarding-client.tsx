@@ -97,8 +97,8 @@ export function OnboardingClient({ subjects }: OnboardingClientProps) {
               {error && (
                 <div className={`mb-4 p-4 rounded-lg border ${
                   errorCode === 'AUTH_ERROR' 
-                    ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                    : 'bg-red-50 border-red-200 text-red-700'
+                    ? 'bg-cream-100 border-coral-400 text-coral-500'
+                    : 'bg-cream-100 border-salmon-500 text-salmon-600'
                 }`}>
                   <div className="flex items-start gap-2">
                     <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">

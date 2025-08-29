@@ -56,7 +56,7 @@ export function NameStep({ onNext, initialName = '' }: NameStepProps) {
                 aria-describedby={error ? 'name-error' : undefined}
               />
               {error && (
-                <p id="name-error" className="text-sm text-red-500 mt-1">
+                <p id="name-error" className="text-sm text-salmon-600 mt-1 font-sans">
                   {error}
                 </p>
               )}

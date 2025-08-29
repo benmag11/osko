@@ -52,7 +52,7 @@ export function TopicFilter({ topics, filters }: TopicFilterProps) {
                         onCheckedChange={() => toggleTopic(topic.id)}
                         className="h-4 w-4"
                       />
-                      <span className="text-sm">
+                      <span className="text-sm font-sans text-warm-text-secondary">
                         {topic.name}
                       </span>
                     </label>

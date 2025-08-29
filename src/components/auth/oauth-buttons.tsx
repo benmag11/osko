@@ -58,7 +58,7 @@ export function GoogleSignInButton() {
         Sign in with Google
       </OAuthButton>
       {error && (
-        <p className="text-sm text-red-500 mt-2">{error}</p>
+        <p className="text-sm text-salmon-600 mt-2 font-sans">{error}</p>
       )}
     </form>
   )
@@ -97,7 +97,7 @@ export function GoogleSignUpButton() {
         Sign up with Google
       </OAuthButton>
       {error && (
-        <p className="text-sm text-red-500 mt-2">{error}</p>
+        <p className="text-sm text-salmon-600 mt-2 font-sans">{error}</p>
       )}
     </form>
   )

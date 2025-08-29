@@ -27,8 +27,8 @@ export function SubjectCard({
     <Card className="border-[#e5e5e5] transition-shadow">
       <CardContent className="px-4 py-1 space-y-2">
         <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-[#757575] flex-shrink-0" />
-          <h3 className="font-medium text-base text-left truncate">{subjectName}</h3>
+          <Icon className="h-4 w-4 text-warm-text-muted flex-shrink-0" />
+          <h3 className="font-serif font-medium text-base text-warm-text-primary text-left truncate">{subjectName}</h3>
         </div>
         <div className="flex gap-2">
           {higherSubject && (
@@ -38,7 +38,7 @@ export function SubjectCard({
               onClick={() => onSelectSubject(higherSubject)}
               className={cn(
                 "flex-1 h-7 text-xs",
-                selectedLevel === 'Higher' && "bg-blue-600 hover:bg-blue-700 text-white" // Higher level style
+                selectedLevel === 'Higher' && "bg-salmon-500 hover:bg-salmon-600 text-cream-50" // Higher level style
               )}
             >
               Higher
@@ -51,7 +51,7 @@ export function SubjectCard({
               onClick={() => onSelectSubject(ordinarySubject)}
               className={cn(
                 "flex-1 h-7 text-xs",
-                selectedLevel === 'Ordinary' && "bg-green-600 hover:bg-green-700 text-white" // Ordinary level style
+                selectedLevel === 'Ordinary' && "bg-coral-500 hover:bg-coral-400 text-cream-50" // Ordinary level style
               )}
             >
               Ordinary

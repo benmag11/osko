@@ -51,18 +51,18 @@ export function SubjectDropdown({
       {/* Back to Dashboard */}
       <DropdownMenuItem 
         onClick={handleDashboardClick}
-        className="flex items-center gap-2.5 px-3 py-1.5 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-2.5 px-3 py-1.5 cursor-pointer hover:bg-cream-100 transition-colors"
       >
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100">
-          <Home className="h-3.5 w-3.5 text-gray-600" />
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-stone-100">
+          <Home className="h-3.5 w-3.5 text-warm-text-muted" />
         </div>
-        <span className="text-sm font-medium text-gray-900">Back to dashboard</span>
+        <span className="text-sm font-medium font-sans text-warm-text-primary">Back to dashboard</span>
       </DropdownMenuItem>
       
       <DropdownMenuSeparator className="my-1.5" />
       
       {/* My Subjects Section */}
-      <DropdownMenuLabel className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+      <DropdownMenuLabel className="px-3 py-1 text-xs font-sans font-semibold text-warm-text-muted uppercase tracking-wider">
         My Subjects
       </DropdownMenuLabel>
       
@@ -80,7 +80,7 @@ export function SubjectDropdown({
             ))}
           </div>
         ) : subjects.length === 0 ? (
-          <div className="px-3 py-4 text-sm text-gray-500 text-center">
+          <div className="px-3 py-4 text-sm text-warm-text-muted text-center font-sans">
             No subjects enrolled
           </div>
         ) : (
@@ -96,15 +96,15 @@ export function SubjectDropdown({
                   className={cn(
                     "flex items-center gap-2.5 px-3 py-1.5 cursor-pointer transition-all",
                     isActive ? 
-                      "bg-gradient-to-r from-blue-50 to-blue-50/50 text-blue-900" : 
-                      "hover:bg-gray-50"
+                      "bg-gradient-to-r from-cream-100 to-cream-200 text-warm-text-primary" : 
+                      "hover:bg-cream-50"
                   )}
                 >
                   <div className={cn(
                     "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
                     isActive ? 
-                      "bg-gradient-to-br from-blue-500 to-blue-600 text-white" : 
-                      "bg-gray-100"
+                      "bg-gradient-to-br from-salmon-500 to-salmon-600 text-cream-50" : 
+                      "bg-cream-200"
                   )}>
                     <Icon className="h-3.5 w-3.5" />
                   </div>
@@ -112,17 +112,17 @@ export function SubjectDropdown({
                     <div className="flex items-center gap-1.5">
                       <span className={cn(
                         "text-sm font-medium truncate leading-tight",
-                        isActive ? "text-blue-900" : "text-gray-900"
+                        isActive ? "text-warm-text-primary font-semibold" : "text-warm-text-secondary"
                       )}>
                         {subject.name}
                       </span>
                       {isActive && (
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-salmon-500 animate-pulse" />
                       )}
                     </div>
                     <span className={cn(
                       "text-xs leading-tight",
-                      isActive ? "text-blue-700" : "text-gray-500"
+                      isActive ? "text-salmon-600" : "text-warm-text-muted"
                     )}>
                       {subject.level} Level
                     </span>

@@ -74,7 +74,7 @@ export function LoginForm({
                   <Input id="password" name="password" type="password" required />
                 </div>
                 {error && (
-                  <div className="text-sm text-red-500 text-center">
+                  <div className="text-sm text-salmon-600 text-center font-sans">
                     {error}
                   </div>
                 )}

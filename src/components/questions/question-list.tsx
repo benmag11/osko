@@ -24,7 +24,7 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-xl text-red-600">Error loading questions</p>
+        <p className="text-xl text-salmon-600 font-serif">Error loading questions</p>
         <p className="mt-2 text-exam-text-muted">Please try refreshing the page</p>
       </div>
     )

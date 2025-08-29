@@ -52,7 +52,7 @@ export function YearFilter({ years, filters }: YearFilterProps) {
                         onCheckedChange={() => toggleYear(year)}
                         className="h-4 w-4"
                       />
-                      <span className="text-sm">
+                      <span className="text-sm font-sans text-warm-text-secondary">
                         {year}
                       </span>
                     </label>
