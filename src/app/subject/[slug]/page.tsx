@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sidebar'
 import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
-import { AppliedFiltersSection } from '@/components/filters/applied-filters-section'
+import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-display'
 import { QuestionList } from '@/components/questions/question-list'
 
 interface PageProps {
@@ -67,7 +67,7 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
         <main className="min-h-screen bg-exam-background pt-14 lg:pt-0">
           <div className="px-8 py-8">
             <div className="mx-auto max-w-4xl space-y-8">
-              <AppliedFiltersSection topics={topics} filters={filters} />
+              <AppliedFiltersDisplay topics={topics} filters={filters} />
 
               <QuestionList 
                 initialData={initialData}

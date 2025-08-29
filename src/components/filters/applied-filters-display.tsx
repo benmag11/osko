@@ -1,16 +1,16 @@
 'use client'
 
-import { FilterPill } from './filter-pill'
-import { ClearAllButton } from './clear-all-button'
+import { FilterTag } from './filter-tag'
+import { ClearFiltersButton } from './clear-filters-button'
 import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
 import type { Topic, Filters } from '@/lib/types/database'
 
-interface AppliedFiltersSectionProps {
+interface AppliedFiltersDisplayProps {
   topics: Topic[]
   filters: Filters
 }
 
-export function AppliedFiltersSection({ topics, filters }: AppliedFiltersSectionProps) {
+export function AppliedFiltersDisplay({ topics, filters }: AppliedFiltersDisplayProps) {
   const { toggleTopic, toggleYear, removeSearchTerm, clearAllFilters } = useFilterUpdates(filters)
   
   const hasFilters = !!(
@@ -33,7 +33,7 @@ export function AppliedFiltersSection({ topics, filters }: AppliedFiltersSection
         
         <div className="flex flex-wrap items-start gap-2">
           {filters.searchTerms?.map((term) => (
-            <FilterPill
+            <FilterTag
               key={term}
               label={`Keyword: '${term}'`}
               onRemove={() => removeSearchTerm(term)}
@@ -41,7 +41,7 @@ export function AppliedFiltersSection({ topics, filters }: AppliedFiltersSection
           ))}
 
           {filters.topicIds?.map((topicId) => (
-            <FilterPill
+            <FilterTag
               key={topicId}
               label={getTopicName(topicId)}
               onRemove={() => toggleTopic(topicId)}
@@ -49,14 +49,14 @@ export function AppliedFiltersSection({ topics, filters }: AppliedFiltersSection
           ))}
 
           {filters.years?.map((year) => (
-            <FilterPill
+            <FilterTag
               key={year}
               label={year.toString()}
               onRemove={() => toggleYear(year)}
             />
           ))}
 
-          <ClearAllButton onClick={clearAllFilters} />
+          <ClearFiltersButton onClick={clearAllFilters} />
         </div>
       </div>
       
