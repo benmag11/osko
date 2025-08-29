@@ -196,23 +196,23 @@
 }
 
 :root {
-  --sidebar: 60 80% 99.5%;
-  --sidebar-foreground: 19 20% 21%;
-  --sidebar-primary: 13 63% 60%;
-  --sidebar-primary-foreground: 60 67% 99%;
-  --sidebar-accent: 40 23% 95%;
-  --sidebar-accent-foreground: 19 30% 27%;
-  --sidebar-border: 20 6% 90%;
-  --sidebar-ring: 13 63% 60%;
+  --sidebar: 60 80% 99.5%; /* Same as card background */
+  --sidebar-foreground: 19 20% 3%; /* Same as foreground */
+  --sidebar-primary: 0 0% 25%; /* Dark grey for icon backgrounds */
+  --sidebar-primary-foreground: 0 0% 95%; /* Light text on dark grey */
+  --sidebar-accent: 40 23% 95%; /* Same as muted/secondary */
+  --sidebar-accent-foreground: 19 30% 27%; /* Same as secondary-foreground */
+  --sidebar-border: 20 6% 90%; /* Same as border */
+  --sidebar-ring: 13 63% 60%; /* Same as ring (salmon) */
 }
 
 .dark {
-  --sidebar: 20 10% 12%;
-  --sidebar-foreground: 40 23% 95%;
-  --sidebar-primary: 13 63% 60%;
-  --sidebar-primary-foreground: 60 67% 99%;
-  --sidebar-accent: 19 15% 20%;
-  --sidebar-accent-foreground: 40 23% 95%;
-  --sidebar-border: 19 15% 20%;
-  --sidebar-ring: 13 63% 60%;
+  --sidebar: 20 10% 12%; /* Same as dark card */
+  --sidebar-foreground: 40 23% 95%; /* Same as dark foreground */
+  --sidebar-primary: 0 0% 30%; /* Slightly lighter grey for dark mode */
+  --sidebar-primary-foreground: 0 0% 95%; /* Light text on dark grey */
+  --sidebar-accent: 19 15% 20%; /* Same as dark muted/secondary */
+  --sidebar-accent-foreground: 40 23% 95%; /* Same as dark secondary-foreground */
+  --sidebar-border: 19 15% 20%; /* Same as dark border */
+  --sidebar-ring: 13 63% 60%; /* Same as ring (salmon) */
 }

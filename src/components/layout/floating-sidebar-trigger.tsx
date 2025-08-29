@@ -15,7 +15,7 @@ export function FloatingSidebarTrigger() {
         state === "expanded" ? "left-[26rem]" : "left-[3.5rem]"
       )}
     >
-      <SidebarTrigger className="h-10 w-10 bg-cream-50 hover:bg-cream-100 border border-stone-200" />
+      <SidebarTrigger className="h-10 w-10 bg-cream-50 hover:bg-cream-200 hover:border-stone-300 hover:scale-105 border border-stone-200 transition-all duration-200 ease-in-out" />
     </div>
   )
 }

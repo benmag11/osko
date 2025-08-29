@@ -8,7 +8,7 @@ export function LandingNavigation() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/logo.svg"
+            src="/LOGO -full.svg"
             alt="Osko"
             width={76}
             height={20}

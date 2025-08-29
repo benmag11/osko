@@ -1,6 +1,6 @@
 "use client"
 
-import { BookOpen, ChevronsUpDown } from "lucide-react"
+import { ChevronsUpDown } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,6 +14,7 @@ import {
 import { SubjectDropdown } from "@/components/layout/subject-dropdown"
 import { useUserSubjects } from "@/lib/hooks/use-user-subjects"
 import { useUserProfile } from "@/lib/hooks/use-user-profile"
+import { getSubjectIcon } from "@/lib/utils/subject-icons"
 import type { Subject } from "@/lib/types/database"
 
 interface SubjectSwitcherProps {
@@ -24,6 +25,8 @@ export function SubjectSwitcher({ subject }: SubjectSwitcherProps) {
   const { isMobile } = useSidebar()
   const { user } = useUserProfile()
   const { subjects, isLoading } = useUserSubjects(user?.id)
+  
+  const SubjectIcon = getSubjectIcon(subject.name)
 
   return (
     <SidebarMenu>
@@ -35,7 +38,7 @@ export function SubjectSwitcher({ subject }: SubjectSwitcherProps) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <BookOpen className="size-4" />
+                <SubjectIcon className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-serif font-semibold text-warm-text-primary">{subject.name}</span>

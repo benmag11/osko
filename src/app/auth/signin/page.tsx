@@ -8,7 +8,7 @@ export default function LoginPage() {
       <div className="flex w-full max-w-sm flex-col gap-6">
         <Link href="/" className="flex items-center justify-center">
           <Image
-            src="/logo.svg"
+            src="/LOGO -full.svg"
             alt="Osko"
             width={76}
             height={20}
