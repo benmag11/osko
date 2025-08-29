@@ -68,6 +68,7 @@ const config: Config = {
         },
         // Warm accent colors
         "salmon": {
+          300: "#dda896ff",
           400: "#E59C84",
           500: "#D97757",
           600: "#C2410C",
@@ -75,6 +76,23 @@ const config: Config = {
         "coral": {
           400: "#FB923C",
           500: "#EA580C",
+        },
+        // Blue colors for contrast and interactive elements
+        "sky": {
+          50: "#f4faffff",
+          100: "#E0F2FE",
+          200: "#BAE6FD",
+          300: "#7DD3FC",
+          400: "#38BDF8",
+          500: "#0EA5E9",
+          600: "#0284C7",
+          700: "#0369A1",
+          800: "#075985",
+        },
+        "slate-blue": {
+          400: "#94A3B8",
+          500: "#64748B",
+          600: "#475569",
         },
         // Warm text colors
         "warm": {

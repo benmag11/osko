@@ -97,8 +97,8 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
             {hasValidMarkingScheme ? (
               <Button
                 onClick={toggleMarkingScheme}
-                variant="default"
-                className="font-sans"
+                variant="outline"
+                className="border-stone-400 bg-cream-50 text-stone-700 hover:bg-stone-100 hover:border-stone-500 hover:text-stone-800 font-sans"
               >
                 {showMarkingScheme ? (
                   <>

@@ -201,7 +201,7 @@
   --sidebar-primary: 0 0% 25%; /* Dark grey for icon backgrounds */
   --sidebar-primary-foreground: 0 0% 95%; /* Light text on dark grey */
   --sidebar-accent: 40 23% 95%; /* Same as muted/secondary */
-  --sidebar-accent-foreground: 19 30% 27%; /* Same as secondary-foreground */
+  --sidebar-accent-foreground: 0 0% 20%; /* Dark text for better contrast */
   --sidebar-border: 20 6% 90%; /* Same as border */
   --sidebar-ring: 13 63% 60%; /* Same as ring (salmon) */
 }
