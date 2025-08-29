@@ -13,9 +13,8 @@ import {
 } from '@/components/ui/sidebar'
 import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
-import { FilterBadges } from '@/components/filters/filter-badges'
+import { AppliedFiltersSection } from '@/components/filters/applied-filters-section'
 import { QuestionList } from '@/components/questions/question-list'
-import { Separator } from '@/components/ui/separator'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -68,15 +67,7 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
         <main className="min-h-screen bg-exam-background pt-14 lg:pt-0">
           <div className="px-8 py-8">
             <div className="mx-auto max-w-4xl space-y-8">
-              <h1 className="text-[40px] font-bold text-exam-neutral-dark">
-                {subject.name} - {subject.level} Level
-              </h1>
-
-              <FilterBadges topics={topics} filters={filters} />
-              
-              {(filters.searchTerms || filters.topicIds?.length || filters.years?.length) && (
-                <Separator className="bg-exam-text-muted/30" />
-              )}
+              <AppliedFiltersSection topics={topics} filters={filters} />
 
               <QuestionList 
                 initialData={initialData}

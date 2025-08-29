@@ -67,6 +67,11 @@ const config: Config = {
         "exam-text-muted": "#757575",
         "exam-neutral": "#525252",
         "exam-neutral-dark": "#2c2c2c",
+        "filter-section-bg": "#f5f4ed",
+        "filter-section-border": "#f0eee6",
+        "filter-pill-bg": "#fffefb",
+        "filter-pill-border": "#d0d0d0",
+        "filter-clear-text": "#e59c84",
       },
       borderRadius: {
         lg: "var(--radius)",
