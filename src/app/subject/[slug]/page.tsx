@@ -64,7 +64,7 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
       <ExamSidebar subject={subject} topics={topics} years={years} filters={filters} />
       <FloatingSidebarTrigger />
       <SidebarInset>
-        <main className="min-h-screen bg-exam-background pt-14 lg:pt-0">
+        <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
           <div className="px-8 py-8">
             <div className="mx-auto max-w-4xl space-y-8">
               <AppliedFiltersDisplay topics={topics} filters={filters} />

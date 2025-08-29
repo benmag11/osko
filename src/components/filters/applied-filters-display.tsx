@@ -27,7 +27,7 @@ export function AppliedFiltersDisplay({ topics, filters }: AppliedFiltersDisplay
   return (
     <div className="relative w-full rounded-[20px] bg-[#f5f4ed]">
       <div className="flex flex-col gap-[41px] p-[35px]">
-        <h2 className="font-serif text-[40px] font-normal leading-[29.892px] text-[#2e2e2e]">
+        <h2 className="font-serif text-[40px] font-semibold leading-[29.892px] text-warm-text-primary">
           Applied filters
         </h2>
         

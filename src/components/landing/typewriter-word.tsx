@@ -161,7 +161,7 @@ export default function TypewriterWord({
         <span ref={scope} className={className}>
             <span
                 data-typewriter
-                className="inline-block border-r-2 border-gray-700 pr-1"
+                className="inline-block border-r-2 border-salmon-500 pr-1 font-serif"
             >
                 {sequences[0].text}
             </span>

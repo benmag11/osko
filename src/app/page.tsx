@@ -5,7 +5,7 @@ import { CTASection } from '@/components/landing/cta-section'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-cream-50">
       <LandingNavigation />
       <main className="container mx-auto px-4">
         <HeroSection />

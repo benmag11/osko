@@ -58,7 +58,7 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-exam-neutral">
+        <h3 className="text-lg font-serif font-semibold text-warm-text-primary">
           {title}
         </h3>
         {isAdmin && (
@@ -74,8 +74,8 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
         )}
       </div>
       
-      <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.25)]">
-        <div className="relative w-full bg-white">
+      <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.15)]">
+        <div className="relative w-full bg-cream-50">
           {hasValidQuestionImage ? (
             <Image
               src={question.question_image_url!}
@@ -86,18 +86,18 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
               priority={false}
             />
           ) : (
-            <div className="flex items-center justify-center h-48 bg-gray-100">
-              <p className="text-gray-500">Question image not available</p>
+            <div className="flex items-center justify-center h-48 bg-stone-100">
+              <p className="text-warm-text-muted">Question image not available</p>
             </div>
           )}
         </div>
         
-        <div className="bg-primary/10 rounded-b-xl">
+        <div className="bg-cream-100 rounded-b-xl border-t border-stone-200">
           <div className="flex justify-center py-4">
             {hasValidMarkingScheme ? (
               <Button
                 onClick={toggleMarkingScheme}
-                className="bg-[#438FD5] hover:bg-[#3A7FC2] text-white"
+                className="bg-salmon-500 hover:bg-salmon-600 text-cream-50 font-sans"
               >
                 {showMarkingScheme ? (
                   <>
@@ -112,7 +112,7 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
                 )}
               </Button>
             ) : (
-              <p className="text-sm text-gray-500">No marking scheme available</p>
+              <p className="text-sm font-sans text-warm-text-muted">No marking scheme available</p>
             )}
           </div>
           

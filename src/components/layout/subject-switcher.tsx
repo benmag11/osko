@@ -38,8 +38,8 @@ export function SubjectSwitcher({ subject }: SubjectSwitcherProps) {
                 <BookOpen className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{subject.name}</span>
-                <span className="truncate text-xs">{subject.level} Level</span>
+                <span className="truncate font-serif font-semibold text-warm-text-primary">{subject.name}</span>
+                <span className="truncate text-xs font-sans text-warm-text-muted">{subject.level} Level</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>

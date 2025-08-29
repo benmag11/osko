@@ -9,7 +9,7 @@ export function ClearFiltersButton({ onClick }: ClearFiltersButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center rounded-md border border-[rgb(217,119,87)] bg-[#fffefb] px-5 py-2 text-base font-normal text-[rgb(217,119,87)] transition-colors hover:border-[rgb(194,65,12)] hover:bg-orange-50 hover:text-[rgb(194,65,12)]"
+      className="inline-flex items-center justify-center rounded-md border border-salmon-500 bg-cream-50 px-5 py-2 text-base font-sans font-medium text-salmon-500 transition-colors hover:border-salmon-600 hover:bg-cream-100 hover:text-salmon-600"
     >
       Clear all
     </button>
