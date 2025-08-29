@@ -1,0 +1,7 @@
+You have a super comprehensive task. We need to compltely restyle our whole website, and extract a consistent style-sheet that we can use consisting of a completely new set of colors. We need to follow absolute best practice tailwind styling practices. This requires a comprehensive understanding of every single file in the project. We need to extract all our current colors and move to new ones.
+
+ Here is a list of colors that should be implemented, and then correctly implemented into the correct files:\ / #FFFEFB for exam-viewer background and for background on all pages. \ #FFFEFD for the sidebar background. \ Come up with suitable colors for other different types of text, lay out in best practice tailwind practices, for headers, body text, sidebar, etc, im not sure, jsut do what you know is best practice.\
+
+ Our 'current-filters' box is correctly using some of the colors we want to implement. We want to move to warmer colors. Exttract all colors from this current filters section and its buttons, i.e. the clear-filters-button and filter-tag. 
+
+Our fonts should be a mix of Source Serif Pro and Source Sans Pro only, with these implemented everywhere throughout the webstie thta it is reasonable, obviously not for OTP verification boxes and stuff, but within reason. And you should plan which should take which. Again, these need to be set in tailwind then applied everywhere throughout the site. This needs to be a comprehensive overhaul resulting in tailwind best practices in every single component and every single file.

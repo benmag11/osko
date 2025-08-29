@@ -23,13 +23,12 @@ npx tsc --noEmit
 
 The project uses Tailwind CSS v4 with the new configuration format in `tailwind.config.ts`.
 
-
 ## Architecture Overview
 
 This is a Next.js 15 application for browsing and studying past exam papers, built with:
 - **Framework**: Next.js 15.4.6 with App Router and React Server Components
 - **Database**: Supabase (PostgreSQL with RPC functions)
-- **Styling**: Tailwind CSS with shadcn/ui components
+- **Styling**: Tailwind CSS v4 with shadcn/ui components
 - **State Management**: TanStack Query v5 for server state
 - **Type Safety**: TypeScript with strict mode enabled
 
@@ -51,7 +50,8 @@ This is a Next.js 15 application for browsing and studying past exam papers, bui
    - `/components/questions/`: Question display components (question-card, question-list)
    - `/components/landing/`: Landing page specific components (hero-section, cta-section, typewriter-word)
    - `/components/providers/`: React Query provider setup with SSR support
-   - `/components/kokonutui/`: Custom UI components library (e.g., type-writer)
+   - `/components/auth/`: Authentication forms and OAuth components
+   - `/components/onboarding/`: User onboarding flow components
 
 4. **Type System**:
    - Database types defined in `src/lib/types/database.ts`
@@ -65,6 +65,8 @@ This is a Next.js 15 application for browsing and studying past exam papers, bui
 src/
 ├── app/                    # Next.js app router pages
 │   ├── subject/[slug]/    # Dynamic subject pages with not-found handling
+│   ├── auth/              # Authentication pages and server actions
+│   ├── dashboard/         # User dashboard pages
 │   └── layout.tsx         # Root layout with Providers wrapper
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui base components
@@ -72,6 +74,8 @@ src/
 │   ├── layout/           # Layout and navigation components
 │   ├── questions/        # Question display with infinite scroll
 │   ├── landing/          # Landing page components
+│   ├── auth/             # Authentication forms
+│   ├── onboarding/       # Onboarding flow components
 │   └── providers/        # QueryClient provider with SSR support
 └── lib/                  # Core utilities
     ├── supabase/         # Database client (server/client variants)
@@ -87,6 +91,8 @@ Main tables:
 - `topics`: Topics within subjects with display_order
 - `questions`: Exam questions with year, paper_number, question_number, exam_type (normal/deferred/supplemental)
 - `question_topics`: Many-to-many relationship between questions and topics
+- `user_profiles`: User profile data with onboarding_completed flag
+- `user_subjects`: User's selected subjects
 
 Key RPC functions:
 - `search_questions_paginated`: Cursor-based pagination with multi-filter support
@@ -97,7 +103,7 @@ Key RPC functions:
 The project uses shadcn/ui components configured in `components.json`:
 - Base color: slate
 - CSS variables enabled
-- Components installed: avatar, badge, button, checkbox, collapsible, dropdown-menu, input, separator, sheet, sidebar, skeleton, tooltip
+- Components installed: avatar, badge, button, checkbox, collapsible, dialog, dropdown-menu, input, input-otp, label, progress, scroll-area, select, separator, sheet, sidebar, skeleton, sonner, tooltip
 
 To add new components:
 ```bash
@@ -119,10 +125,10 @@ The application implements comprehensive error handling:
 - TanStack Query with 1-minute stale time, 10-minute cache time
 - Server-side rendering for initial page loads
 - Cursor-based pagination for efficient large dataset handling
-- Debounced search inputs with `use-debounce` hook
+- Debounced search inputs
 - Request deduplication via React Query
 - AbortSignal support for cancelled requests
-
+- Infinite scroll with intersection observer
 
 ## Authentication
 
@@ -138,7 +144,7 @@ The application uses Supabase Auth for user authentication with the following fe
 2. **Sign In** (`/auth/signin`):
    - Email/password authentication
    - Google OAuth authentication
-   - Redirects to `/subjects` after successful login
+   - Redirects to `/dashboard/study` after successful login
 
 3. **Auth Callback** (`/auth/callback`):
    - Handles OAuth and magic link callbacks
@@ -147,7 +153,7 @@ The application uses Supabase Auth for user authentication with the following fe
 
 ### Middleware Protection
 The `middleware.ts` file enforces authentication and onboarding flow:
-- Protected routes: `/subjects`, `/subject/*` require authentication
+- Protected routes: `/subject/*`, `/dashboard/*` require authentication
 - Unauthenticated users redirected to `/auth/signin`
 - Authenticated users redirected away from auth pages
 - Onboarding flow enforced via `user_profiles.onboarding_completed` check
@@ -160,18 +166,13 @@ Authentication server actions in `src/app/auth/actions.ts`:
 - `signOut()`: Clears session and redirects to home
 - `getUser()`: Returns current authenticated user
 
-### Components
-- `SignUpForm`: Client component with form validation and error handling
-- `LoginForm`: Client component with form validation and error handling
-- Both forms use `useFormStatus` for loading states
-
 ## Key Dependencies
 
 - **motion**: Animation library (v12) used for UI components like TypewriterWord
 - **@tanstack/react-query**: Server state management with built-in caching
 - **@supabase/supabase-js**: Database client for PostgreSQL operations
 - **lucide-react**: Icon library used throughout the application
-- **use-debounce**: Hook for debouncing user inputs in search/filters
+- **react-intersection-observer**: Handles infinite scroll triggering
 
 ## Landing Page Architecture
 
@@ -189,4 +190,17 @@ A custom typewriter animation component that:
 - Maintains layout stability with fixed container heights
 - Configurable typing speed, delays, and loop behavior
 - Used in the CTA section for engagement
-- Update about this utility function and update the file strucute
+
+## Important Patterns
+
+### Client-Server Data Flow
+1. Server components fetch initial data using server actions
+2. Data passed to client components as props for hydration
+3. Client components use TanStack Query for subsequent updates
+4. URL state synced with filters using Next.js router
+
+### Infinite Scroll Implementation
+- Uses `useInfiniteQuery` from TanStack Query
+- Intersection Observer triggers next page fetch
+- Cursor-based pagination prevents duplicates
+- Automatic deduplication using Map with question IDs
