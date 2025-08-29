@@ -19,6 +19,17 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
   const { isAdmin } = useIsAdmin()
   const { topics } = useTopics(question.subject_id)
   
+  // Check if URLs are valid
+  const hasValidQuestionImage = question.question_image_url && 
+    question.question_image_url !== 'placeholder' &&
+    (question.question_image_url.startsWith('http') || 
+     question.question_image_url.startsWith('/'))
+     
+  const hasValidMarkingScheme = question.marking_scheme_image_url && 
+    question.marking_scheme_image_url !== 'placeholder' &&
+    (question.marking_scheme_image_url.startsWith('http') || 
+     question.marking_scheme_image_url.startsWith('/'))
+  
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
   }, [])
@@ -65,40 +76,50 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
       
       <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.25)]">
         <div className="relative w-full bg-white">
-          <Image
-            src={question.question_image_url}
-            alt={`Question ${question.question_number}`}
-            width={1073}
-            height={800}
-            className="w-full h-auto"
-            priority={false}
-          />
+          {hasValidQuestionImage ? (
+            <Image
+              src={question.question_image_url!}
+              alt={`Question ${question.question_number}`}
+              width={1073}
+              height={800}
+              className="w-full h-auto"
+              priority={false}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-48 bg-gray-100">
+              <p className="text-gray-500">Question image not available</p>
+            </div>
+          )}
         </div>
         
         <div className="bg-primary/10 rounded-b-xl">
           <div className="flex justify-center py-4">
-            <Button
-              onClick={toggleMarkingScheme}
-              className="bg-[#438FD5] hover:bg-[#3A7FC2] text-white"
-            >
-              {showMarkingScheme ? (
-                <>
-                  <ChevronUp className="h-4 w-4" />
-                  Hide marking scheme
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4" />
-                  Show marking scheme
-                </>
-              )}
-            </Button>
+            {hasValidMarkingScheme ? (
+              <Button
+                onClick={toggleMarkingScheme}
+                className="bg-[#438FD5] hover:bg-[#3A7FC2] text-white"
+              >
+                {showMarkingScheme ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Hide marking scheme
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Show marking scheme
+                  </>
+                )}
+              </Button>
+            ) : (
+              <p className="text-sm text-gray-500">No marking scheme available</p>
+            )}
           </div>
           
-          {showMarkingScheme && (
+          {showMarkingScheme && hasValidMarkingScheme && (
             <div className="px-4 pb-4">
               <Image
-                src={question.marking_scheme_image_url}
+                src={question.marking_scheme_image_url!}
                 alt={`Marking scheme for question ${question.question_number}`}
                 width={1073}
                 height={800}

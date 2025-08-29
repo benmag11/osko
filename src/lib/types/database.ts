@@ -86,8 +86,8 @@ export interface Question {
   question_number: number
   question_parts: string[]
   exam_type: 'normal' | 'deferred' | 'supplemental'
-  question_image_url: string
-  marking_scheme_image_url: string
+  question_image_url: string | null
+  marking_scheme_image_url: string | null
   full_text: string | null
   word_coordinates: WordCoordinate[] | null
   created_at: string
