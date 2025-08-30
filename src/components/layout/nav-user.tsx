@@ -55,7 +55,7 @@ export function NavUser() {
       setOpen(true)
       setTimeout(() => {
         setDropdownOpen(true)
-      }, 300)
+      }, 200)
     } else {
       setDropdownOpen(open)
     }

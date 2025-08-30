@@ -39,7 +39,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
   const handleExpandedClick = () => {
     setTimeout(() => {
       inputRef.current?.focus()
-    }, 300)
+    }, 200)
   }
 
   return (

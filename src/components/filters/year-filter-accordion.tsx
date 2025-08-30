@@ -34,7 +34,7 @@ export function YearFilterAccordion({ years, filters }: YearFilterAccordionProps
       setTimeout(() => {
         const trigger = e.currentTarget as HTMLElement
         trigger?.click()
-      }, 300)
+      }, 200)
     }
   }
 

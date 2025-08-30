@@ -34,7 +34,7 @@ export function TopicFilterAccordion({ topics, filters }: TopicFilterAccordionPr
       setTimeout(() => {
         const trigger = e.currentTarget as HTMLElement
         trigger?.click()
-      }, 300)
+      }, 200)
     }
   }
 

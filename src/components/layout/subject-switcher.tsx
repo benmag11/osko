@@ -36,7 +36,7 @@ export function SubjectSwitcher({ subject }: SubjectSwitcherProps) {
       setOpen(true)
       setTimeout(() => {
         setDropdownOpen(true)
-      }, 300)
+      }, 200)
     } else {
       setDropdownOpen(open)
     }
