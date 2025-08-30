@@ -1,6 +1,6 @@
 export default function StatisticsPage() {
   return (
-    <main className="min-h-screen bg-exam-background">
+    <div className="flex-1 bg-exam-background">
       <div className="px-8 py-8">
         <div className="mx-auto max-w-6xl">
           <h1 className="text-4xl font-bold text-exam-neutral-dark mb-4">
@@ -11,6 +11,6 @@ export default function StatisticsPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

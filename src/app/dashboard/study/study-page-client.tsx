@@ -25,7 +25,7 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
   }
 
   return (
-    <main className="min-h-screen bg-cream-50">
+    <div className="flex-1 bg-cream-50">
       <div className="px-8 py-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12">
@@ -76,6 +76,6 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
