@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Search, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
@@ -22,6 +22,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
   const inputRef = useRef<HTMLInputElement>(null)
+  const shouldFocusOnExpand = useRef(false)
 
   const handleAddKeyword = () => {
     if (value.trim()) {
@@ -37,10 +38,15 @@ export function SearchFilter({ filters }: SearchFilterProps) {
   }
 
   const handleExpandedClick = () => {
-    setTimeout(() => {
-      inputRef.current?.focus()
-    }, 200)
+    shouldFocusOnExpand.current = true
   }
+
+  useEffect(() => {
+    if (!isCollapsed && shouldFocusOnExpand.current && inputRef.current) {
+      inputRef.current.focus()
+      shouldFocusOnExpand.current = false
+    }
+  }, [isCollapsed])
 
   return (
     <div>
@@ -50,7 +56,6 @@ export function SearchFilter({ filters }: SearchFilterProps) {
             tooltip="Search by keyword" 
             className="font-medium text-sidebar-foreground/90"
             onExpandedClick={handleExpandedClick}
-            expandDelay={200}
           >
             <Search />
             <span className="text-base">Search by keyword</span>

@@ -6,13 +6,11 @@ import type { ComponentProps } from 'react'
 
 interface CollapsibleSidebarMenuButtonProps extends ComponentProps<typeof SidebarMenuButton> {
   onExpandedClick?: () => void
-  expandDelay?: number
 }
 
 export function CollapsibleSidebarMenuButton({
   onClick,
   onExpandedClick,
-  expandDelay = 0,
   children,
   ...props
 }: CollapsibleSidebarMenuButtonProps) {
@@ -24,16 +22,11 @@ export function CollapsibleSidebarMenuButton({
       e.preventDefault()
       e.stopPropagation()
       setOpen(true)
-      
-      if (onExpandedClick && expandDelay > 0) {
-        setTimeout(onExpandedClick, expandDelay)
-      } else if (onExpandedClick) {
-        onExpandedClick()
-      }
+      onExpandedClick?.()
     } else {
       onClick?.(e)
     }
-  }, [isCollapsed, setOpen, onClick, onExpandedClick, expandDelay])
+  }, [isCollapsed, setOpen, onClick, onExpandedClick])
 
   return (
     <SidebarMenuButton

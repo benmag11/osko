@@ -31,10 +31,11 @@ export function YearFilterAccordion({ years, filters }: YearFilterAccordionProps
       e.preventDefault()
       e.stopPropagation()
       setOpen(true)
+      // Trigger accordion immediately on next tick
       setTimeout(() => {
         const trigger = e.currentTarget as HTMLElement
         trigger?.click()
-      }, 200)
+      }, 0)
     }
   }
 

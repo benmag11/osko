@@ -39,12 +39,17 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
     ? question.question_parts.map(part => `(${part})`).join(', ')
     : ''
   
-  // Build title with new format: [year] - Paper [paper_number] - Question [question_number] - [subparts]
+  // Build title with format: [year] - Paper [paper_number] - [Deferred] - Question [question_number] - [subparts]
   let title = `${question.year}`
   
   // Add paper number if it exists
   if (question.paper_number) {
     title += ` - Paper ${question.paper_number}`
+  }
+  
+  // Add "Deferred" as a separate segment if exam_type is deferred
+  if (question.exam_type === 'deferred') {
+    title += ' - Deferred'
   }
   
   // Add question number
