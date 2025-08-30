@@ -1,7 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from './server'
-import type { QuestionUpdatePayload } from '@/lib/types/database'
+import type { QuestionUpdatePayload, QuestionAuditLog } from '@/lib/types/database'
 
 async function verifyAdmin(): Promise<boolean> {
   const supabase = await createServerSupabaseClient()

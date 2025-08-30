@@ -6,7 +6,8 @@ import type {
   Subject, 
   Topic, 
   Filters, 
-  PaginatedResponse 
+  PaginatedResponse,
+  QuestionCursor 
 } from '@/lib/types/database'
 
 // Error handling wrapper with retry logic
@@ -165,7 +166,7 @@ export async function getAvailableYears(subjectId: string): Promise<number[]> {
 
 export async function searchQuestions(
   filters: Filters,
-  cursor?: { year: number; question_number: number } | null,
+  cursor?: QuestionCursor | null,
   signal?: AbortSignal
 ): Promise<PaginatedResponse> {
   // For React Query, we don't need request deduplication as it handles that
