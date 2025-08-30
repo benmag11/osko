@@ -58,7 +58,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
             <button
               type="button"
               onClick={handleAddKeyword}
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-stone-300 bg-transparent transition-colors hover:bg-cream-200 hover:text-warm-text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-salmon-500/30"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-stone-300 bg-transparent transition-colors hover:border-salmon-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-salmon-500/30"
               aria-label="Add search keyword"
             >
               <Plus className="h-4 w-4" />
