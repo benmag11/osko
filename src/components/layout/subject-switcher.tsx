@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { ChevronsUpDown } from "lucide-react"
 import {
   DropdownMenu,
@@ -22,20 +23,34 @@ interface SubjectSwitcherProps {
 }
 
 export function SubjectSwitcher({ subject }: SubjectSwitcherProps) {
-  const { isMobile } = useSidebar()
+  const { isMobile, state, setOpen } = useSidebar()
   const { user } = useUserProfile()
   const { subjects, isLoading } = useUserSubjects(user?.id)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const isCollapsed = state === 'collapsed'
   
   const SubjectIcon = getSubjectIcon(subject.name)
+
+  const handleOpenChange = (open: boolean) => {
+    if (open && isCollapsed) {
+      setOpen(true)
+      setTimeout(() => {
+        setDropdownOpen(true)
+      }, 300)
+    } else {
+      setDropdownOpen(open)
+    }
+  }
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={handleOpenChange}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              tooltip={isCollapsed ? subject.name : undefined}
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                 <SubjectIcon className="size-4" />

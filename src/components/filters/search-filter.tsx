@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Search, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { CollapsibleSidebarMenuButton } from '@/components/ui/collapsible-sidebar-menu-button'
 import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
 import type { Filters } from '@/lib/types/database'
 
@@ -21,6 +21,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
   const [value, setValue] = useState('')
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleAddKeyword = () => {
     if (value.trim()) {
@@ -35,20 +36,32 @@ export function SearchFilter({ filters }: SearchFilterProps) {
     }
   }
 
+  const handleExpandedClick = () => {
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 300)
+  }
+
   return (
     <div>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Search by keyword" className="font-medium text-sidebar-foreground/90">
+          <CollapsibleSidebarMenuButton 
+            tooltip="Search by keyword" 
+            className="font-medium text-sidebar-foreground/90"
+            onExpandedClick={handleExpandedClick}
+            expandDelay={200}
+          >
             <Search />
             <span className="text-base">Search by keyword</span>
-          </SidebarMenuButton>
+          </CollapsibleSidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
       {!isCollapsed && (
         <div className="px-3 pt-2">
           <div className="flex gap-2">
             <Input
+              ref={inputRef}
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyPress={handleKeyPress}

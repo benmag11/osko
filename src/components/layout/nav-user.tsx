@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   LogOut,
   ChevronsUpDown,
@@ -29,9 +30,11 @@ import { clientSignOut } from '@/lib/auth/client-auth'
 import { useQueryClient } from '@tanstack/react-query'
 
 export function NavUser() {
-  const { isMobile } = useSidebar()
+  const { isMobile, state, setOpen } = useSidebar()
   const { user, profile } = useUserProfile()
   const queryClient = useQueryClient()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const isCollapsed = state === 'collapsed'
   
   if (!user) {
     return null
@@ -47,14 +50,26 @@ export function NavUser() {
   const initials = formatInitials(name)
   const email = user.email || ''
 
+  const handleOpenChange = (open: boolean) => {
+    if (open && isCollapsed) {
+      setOpen(true)
+      setTimeout(() => {
+        setDropdownOpen(true)
+      }, 300)
+    } else {
+      setDropdownOpen(open)
+    }
+  }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={handleOpenChange}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              tooltip={isCollapsed ? displayName : undefined}
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
