@@ -196,7 +196,7 @@
 }
 
 :root {
-  --sidebar: 60 80% 99.5%; /* Same as card background */
+  --sidebar: 60 80% 99.5%; /* Pure white background */
   --sidebar-foreground: 19 20% 3%; /* Same as foreground */
   --sidebar-primary: 0 0% 25%; /* Dark grey for icon backgrounds */
   --sidebar-primary-foreground: 0 0% 95%; /* Light text on dark grey */
