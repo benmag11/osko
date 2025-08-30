@@ -40,17 +40,19 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div>
       {questions.map((question, index) => (
         <div key={question.id}>
           {index > 0 && (
-            <Separator className="mb-8 bg-exam-text-muted/30" />
+            <div className="py-20">
+              <Separator className="bg-exam-text-muted/30" />
+            </div>
           )}
           <QuestionCard question={question} />
         </div>
       ))}
       
-      <div ref={loadMoreRef} className="h-20">
+      <div ref={loadMoreRef} className="h-20 mt-8">
         {isFetchingNextPage && (
           <div className="flex justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />

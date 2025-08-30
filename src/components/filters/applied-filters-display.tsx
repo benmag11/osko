@@ -19,8 +19,6 @@ export function AppliedFiltersDisplay({ topics, filters }: AppliedFiltersDisplay
     filters.years?.length
   )
 
-  if (!hasFilters) return null
-
   const getTopicName = (id: string) => 
     topics.find(t => t.id === id)?.name || ''
 
@@ -31,32 +29,42 @@ export function AppliedFiltersDisplay({ topics, filters }: AppliedFiltersDisplay
           Applied filters
         </h2>
         
-        <div className="flex flex-wrap items-start gap-2">
-          {filters.searchTerms?.map((term) => (
-            <FilterTag
-              key={term}
-              label={`Keyword: '${term}'`}
-              onRemove={() => removeSearchTerm(term)}
-            />
-          ))}
+        <div className="flex min-h-[40px] flex-wrap items-start gap-2">
+          {hasFilters ? (
+            <>
+              {filters.searchTerms?.map((term) => (
+                <FilterTag
+                  key={term}
+                  label={`Keyword: '${term}'`}
+                  onRemove={() => removeSearchTerm(term)}
+                />
+              ))}
 
-          {filters.topicIds?.map((topicId) => (
-            <FilterTag
-              key={topicId}
-              label={getTopicName(topicId)}
-              onRemove={() => toggleTopic(topicId)}
-            />
-          ))}
+              {filters.topicIds?.map((topicId) => (
+                <FilterTag
+                  key={topicId}
+                  label={getTopicName(topicId)}
+                  onRemove={() => toggleTopic(topicId)}
+                />
+              ))}
 
-          {filters.years?.map((year) => (
-            <FilterTag
-              key={year}
-              label={year.toString()}
-              onRemove={() => toggleYear(year)}
-            />
-          ))}
+              {filters.years?.map((year) => (
+                <FilterTag
+                  key={year}
+                  label={year.toString()}
+                  onRemove={() => toggleYear(year)}
+                />
+              ))}
 
-          <ClearFiltersButton onClick={clearAllFilters} />
+              <ClearFiltersButton onClick={clearAllFilters} />
+            </>
+          ) : (
+            <div className="flex h-[40px] items-center">
+              <p className="font-sans text-lg text-warm-text-muted">
+                No filters applied... Select some topics to get started!
+              </p>
+            </div>
+          )}
         </div>
       </div>
       
