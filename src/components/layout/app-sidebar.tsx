@@ -50,24 +50,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size='lg' className="group-data-[collapsible=icon]:!p-1.5" asChild>
-              <Link href="/dashboard/study">
-                <Image 
-                  src="/logo-icon.svg" 
-                  alt="OSKO" 
-                  width={20} 
-                  height={20}
-                  className="w-5 h-5 shrink-0"
-                />
+            <Link 
+              href="/dashboard/study"
+              className="inline-flex items-center gap-2 rounded-md p-2 
+                         group-data-[collapsible=icon]:p-1.5
+                         ml-0 mr-auto
+                         group-data-[collapsible=icon]:mx-auto
+                         transition-[margin,padding] duration-200 ease-linear
+                         focus-visible:outline-none focus-visible:ring-2 
+                         focus-visible:ring-sidebar-ring"
+              aria-label="OSKO - Go to homepage"
+            >
+              <Image 
+                src="/logo-icon.svg" 
+                alt="" 
+                width={20} 
+                height={20}
+                className="w-5 h-5 shrink-0"
+              />
+              <span className="overflow-hidden transition-all duration-200 ease-linear
+                               w-auto opacity-100 max-w-[50px]
+                               group-data-[collapsible=icon]:w-0 
+                               group-data-[collapsible=icon]:opacity-0
+                               group-data-[collapsible=icon]:max-w-0">
                 <Image 
                   src="/logo-text.svg" 
-                  alt="OSKO" 
+                  alt=""
                   width={50} 
                   height={20}
-                  className="h-5 w-auto group-data-[collapsible=icon]:hidden"
+                  className="h-5 w-auto"
                 />
-              </Link>
-            </SidebarMenuButton>
+              </span>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
