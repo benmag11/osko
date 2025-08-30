@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Search, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
-  SidebarGroup,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -37,7 +36,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
   }
 
   return (
-    <SidebarGroup>
+    <div>
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Search by keyword" className="font-medium text-sidebar-foreground/90">
@@ -47,7 +46,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
         </SidebarMenuItem>
       </SidebarMenu>
       {!isCollapsed && (
-        <div className="px-3 py-2">
+        <div className="px-3 pt-2">
           <div className="flex gap-2">
             <Input
               value={value}
@@ -67,6 +66,6 @@ export function SearchFilter({ filters }: SearchFilterProps) {
           </div>
         </div>
       )}
-    </SidebarGroup>
+    </div>
   )
 }
