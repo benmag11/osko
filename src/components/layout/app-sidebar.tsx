@@ -50,16 +50,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="#">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <span className="text-xs font-bold">O</span>
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-serif font-semibold text-warm-text-primary">osko</span>
-                  <span className="truncate text-xs text-warm-text-muted">Enterprise</span>
-                </div>
-              </a>
+            <SidebarMenuButton size='lg' className="group-data-[collapsible=icon]:!p-1.5" asChild>
+              <Link href="/dashboard/study">
+                <Image 
+                  src="/logo-icon.svg" 
+                  alt="OSKO" 
+                  width={20} 
+                  height={20}
+                  className="w-5 h-5 shrink-0"
+                />
+                <Image 
+                  src="/logo-text.svg" 
+                  alt="OSKO" 
+                  width={50} 
+                  height={20}
+                  className="h-5 w-auto group-data-[collapsible=icon]:hidden"
+                />
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -204,3 +204,6 @@ A custom typewriter animation component that:
 - Intersection Observer triggers next page fetch
 - Cursor-based pagination prevents duplicates
 - Automatic deduplication using Map with question IDs
+
+
+# After making changes, there is no need to ever open a dev server or open the browser
