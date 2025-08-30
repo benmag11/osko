@@ -29,16 +29,13 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
       <div className="px-8 py-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12">
-            <h1 className="text-4xl font-serif font-bold text-warm-text-primary mb-2">
-              {getGreeting()}, {userName}
+            <h1 className="text-6xl font-serif font-normal text-warm-text-secondary mb-2">
+              {getGreeting()}, {userName}.
             </h1>
-            <p className="text-lg font-sans text-warm-text-secondary">
-              What are you studying today?
-            </p>
           </div>
 
           <div className="space-y-6">
-            <h2 className="text-2xl font-serif font-semibold text-warm-text-primary">
+            <h2 className="text-2xl font-sans font-normal text-warm-text-muted">
               Your subjects
             </h2>
             
@@ -50,20 +47,20 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
                   <Link 
                     key={subject.id}
                     href={`/subject/${subject.slug}`}
-                    className="block"
+                    className="block group"
                   >
                     <Card 
-                      className="p-6 bg-cream-100 border-stone-200 hover:border-stone-300 hover:shadow-md transition-all duration-200 cursor-pointer"
+                      className="p-4 bg-cream-100 border-2 border-stone-300 group-hover:border-stone-500 group-hover:bg-white transition-colors cursor-pointer"
                     >
-                      <div className="flex items-start space-x-4">
-                        <div className="p-3 bg-exam-background rounded-lg">
-                          <Icon className="h-6 w-6 text-exam-neutral" />
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2.5 bg-exam-background rounded-lg">
+                          <Icon className="h-7 w-7 text-exam-neutral group-hover:text-exam-text-secondary transition-colors" />
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg text-exam-text-primary">
                             {subject.name}
                           </h3>
-                          <p className="text-sm text-exam-text-muted mt-1">
+                          <p className="text-sm text-exam-text-muted">
                             {subject.level} Level
                           </p>
                         </div>

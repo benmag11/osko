@@ -51,6 +51,18 @@ export interface Database {
         }
         Returns: number[]
       }
+      get_user_subjects_sorted: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: Array<{
+          id: string
+          user_id: string
+          subject_id: string
+          created_at: string | null
+          subject: Subject
+        }>
+      }
     }
   }
 }

@@ -196,12 +196,12 @@
 }
 
 :root {
-  --sidebar: 60 80% 99.5%; /* Same as card background */
-  --sidebar-foreground: 19 20% 3%; /* Same as foreground */
+  --sidebar: 0 0% 100%; /* Pure white background */
+  --sidebar-foreground: 19 20% 21%; /* Same as foreground */
   --sidebar-primary: 0 0% 25%; /* Dark grey for icon backgrounds */
   --sidebar-primary-foreground: 0 0% 95%; /* Light text on dark grey */
-  --sidebar-accent: 40 23% 95%; /* Same as muted/secondary */
-  --sidebar-accent-foreground: 0 0% 20%; /* Dark text for better contrast */
+  --sidebar-accent: 0 0% 97%; /* Very light grey for hover states */
+  --sidebar-accent-foreground: 19 20% 21%; /* Dark text for better contrast */
   --sidebar-border: 20 6% 90%; /* Same as border */
   --sidebar-ring: 13 63% 60%; /* Same as ring (salmon) */
 }
