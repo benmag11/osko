@@ -38,7 +38,7 @@ export function TopicFilter({ topics, filters }: TopicFilterProps) {
             <CollapsibleTrigger asChild>
               <SidebarMenuButton tooltip="Study by topic" className="font-medium text-sidebar-foreground/90">
                 <ListFilter />
-                <span>Study by topic</span>
+                <span className="text-base">Study by topic</span>
                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>

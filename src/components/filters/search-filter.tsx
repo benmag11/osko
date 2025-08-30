@@ -42,7 +42,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Search by keyword" className="font-medium text-sidebar-foreground/90">
             <Search />
-            <span>Search by keyword</span>
+            <span className="text-base">Search by keyword</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

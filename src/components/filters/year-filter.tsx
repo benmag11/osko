@@ -38,7 +38,7 @@ export function YearFilter({ years, filters }: YearFilterProps) {
             <CollapsibleTrigger asChild>
               <SidebarMenuButton tooltip="Study by year" className="font-medium text-sidebar-foreground/90">
                 <CalendarSearch />
-                <span>Study by year</span>
+                <span className="text-base">Study by year</span>
                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
