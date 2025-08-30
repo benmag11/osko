@@ -163,6 +163,31 @@ export async function getAvailableYears(subjectId: string): Promise<number[]> {
   })
 }
 
+export async function getAvailableQuestionNumbers(subjectId: string): Promise<number[]> {
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+    
+    const { data, error } = await supabase
+      .rpc('get_available_question_numbers', {
+        p_subject_id: subjectId
+      })
+      
+    if (error) {
+      console.error('Error fetching question numbers:', error)
+      throw new QueryError(
+        'Failed to fetch available question numbers',
+        'QUESTION_NUMBERS_FETCH_ERROR',
+        error
+      )
+    }
+    
+    return data as number[]
+  }).catch(error => {
+    console.error('Failed to fetch question numbers after retries:', error)
+    return []
+  })
+}
+
 
 export async function searchQuestions(
   filters: Filters,
@@ -200,6 +225,7 @@ export async function searchQuestions(
         p_years: filters.years || null,
         p_topic_ids: filters.topicIds || null,
         p_exam_types: filters.examTypes || null,
+        p_question_numbers: filters.questionNumbers || null,
         p_cursor: cursor || null,
         p_limit: 20
       }),

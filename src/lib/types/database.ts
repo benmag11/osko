@@ -51,6 +51,12 @@ export interface Database {
         }
         Returns: number[]
       }
+      get_available_question_numbers: {
+        Args: {
+          p_subject_id: string
+        }
+        Returns: number[]
+      }
     }
   }
 }
@@ -110,6 +116,7 @@ export interface Filters {
   years?: number[]
   topicIds?: string[]
   examTypes?: string[]
+  questionNumbers?: number[]
 }
 
 export interface QuestionCursor {

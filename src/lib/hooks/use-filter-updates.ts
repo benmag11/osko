@@ -49,6 +49,14 @@ export function useFilterUpdates(filters: Filters) {
     updateUrl({ years: updated })
   }, [filters.years, updateUrl])
 
+  const toggleQuestionNumber = useCallback((questionNumber: number) => {
+    const current = filters.questionNumbers || []
+    const updated = current.includes(questionNumber)
+      ? current.filter(q => q !== questionNumber)
+      : [...current, questionNumber]
+    updateUrl({ questionNumbers: updated })
+  }, [filters.questionNumbers, updateUrl])
+
   const clearAllFilters = useCallback(() => {
     router.push(pathname)
   }, [pathname, router])
@@ -59,6 +67,7 @@ export function useFilterUpdates(filters: Filters) {
     removeSearchTerm,
     toggleTopic,
     toggleYear,
+    toggleQuestionNumber,
     clearAllFilters,
     isPending,
   }

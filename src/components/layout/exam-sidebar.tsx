@@ -17,6 +17,7 @@ interface ExamSidebarProps extends React.ComponentProps<typeof Sidebar> {
   subject: Subject
   topics: Topic[]
   years: number[]
+  questionNumbers: number[]
   filters: Filters
 }
 
@@ -24,6 +25,7 @@ export function ExamSidebar({
   subject,
   topics, 
   years, 
+  questionNumbers,
   filters,
   ...props 
 }: ExamSidebarProps) {
@@ -33,7 +35,7 @@ export function ExamSidebar({
         <SubjectSwitcher subject={subject} />
       </SidebarHeader>
       <SidebarContent>
-        <NavFilters topics={topics} years={years} filters={filters} />
+        <NavFilters topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
