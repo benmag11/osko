@@ -1,8 +1,14 @@
 "use client"
 
 import { SearchFilter } from "@/components/filters/search-filter"
-import { TopicFilter } from "@/components/filters/topic-filter"
-import { YearFilter } from "@/components/filters/year-filter"
+import { TopicFilterAccordion } from "@/components/filters/topic-filter-accordion"
+import { YearFilterAccordion } from "@/components/filters/year-filter-accordion"
+import { Accordion } from "@/components/ui/accordion"
+import {
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
 import type { Topic, Filters } from "@/lib/types/database"
 
 interface NavFiltersProps {
@@ -15,8 +21,16 @@ export function NavFilters({ topics, years, filters }: NavFiltersProps) {
   return (
     <>
       <SearchFilter filters={filters} />
-      <TopicFilter topics={topics} filters={filters} />
-      <YearFilter years={years} filters={filters} />
+      <SidebarGroup>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Accordion type="single" collapsible defaultValue="topics" className="w-full">
+              <TopicFilterAccordion topics={topics} filters={filters} />
+              <YearFilterAccordion years={years} filters={filters} />
+            </Accordion>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
     </>
   )
 }
