@@ -85,6 +85,9 @@ export function useUserProfile(): UseUserProfileReturn {
     ...CACHE_TIMES.USER_DATA,
     retry: 1, // Override default retry for auth queries
     enabled: !!userId, // Only run query if we have a user ID
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true, // Refetch on network reconnect
   })
   
   return {

@@ -10,19 +10,16 @@ import { QueryClient } from '@tanstack/react-query'
  * Should be called when user signs out or auth state changes
  */
 export async function invalidateUserCache(queryClient: QueryClient) {
-  // Invalidate all user-specific queries
-  await Promise.all([
-    queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
-    queryClient.invalidateQueries({ queryKey: ['user-subjects'] }),
-    queryClient.invalidateQueries({ queryKey: ['user-preferences'] }),
-    queryClient.invalidateQueries({ queryKey: ['user-progress'] }),
-  ])
+  // Invalidate all queries that start with ['user']
+  // This will match ['user', userId, 'profile'], ['user', userId, 'subjects'], etc.
+  await queryClient.invalidateQueries({ queryKey: ['user'] })
   
-  // Remove the invalidated queries from cache
-  queryClient.removeQueries({ queryKey: ['user-profile'] })
-  queryClient.removeQueries({ queryKey: ['user-subjects'] })
-  queryClient.removeQueries({ queryKey: ['user-preferences'] })
-  queryClient.removeQueries({ queryKey: ['user-progress'] })
+  // Also invalidate the anonymous user profile query if it exists
+  await queryClient.invalidateQueries({ queryKey: ['user-profile-anonymous'] })
+  
+  // Remove the invalidated queries from cache to force fresh data
+  queryClient.removeQueries({ queryKey: ['user'] })
+  queryClient.removeQueries({ queryKey: ['user-profile-anonymous'] })
 }
 
 /**

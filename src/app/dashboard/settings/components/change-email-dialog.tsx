@@ -21,6 +21,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { invalidateUserCache } from '@/lib/cache/cache-utils'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 
 interface ChangeEmailDialogProps {
   open: boolean
@@ -133,10 +134,16 @@ export function ChangeEmailDialog({
         setError(result.error)
         setOtp('')
       } else {
+        // Refresh the session to get the updated email
+        const supabase = createClient()
+        await supabase.auth.refreshSession()
+        
         // Invalidate cache to update email display throughout the app
         await invalidateUserCache(queryClient)
+        
         setEmailChangeSuccess(true)
         setSuccessMessage(result.message || 'Email successfully changed')
+        
         // Close dialog after a short delay to show success
         setTimeout(() => {
           handleClose()
