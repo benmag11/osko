@@ -11,12 +11,13 @@ interface AppliedFiltersDisplayProps {
 }
 
 export function AppliedFiltersDisplay({ topics, filters }: AppliedFiltersDisplayProps) {
-  const { toggleTopic, toggleYear, removeSearchTerm, clearAllFilters } = useFilterUpdates(filters)
+  const { toggleTopic, toggleYear, toggleQuestionNumber, removeSearchTerm, clearAllFilters } = useFilterUpdates(filters)
   
   const hasFilters = !!(
     filters.searchTerms?.length ||
     filters.topicIds?.length ||
-    filters.years?.length
+    filters.years?.length ||
+    filters.questionNumbers?.length
   )
 
   const getTopicName = (id: string) => 
@@ -53,6 +54,14 @@ export function AppliedFiltersDisplay({ topics, filters }: AppliedFiltersDisplay
                   key={year}
                   label={year.toString()}
                   onRemove={() => toggleYear(year)}
+                />
+              ))}
+
+              {filters.questionNumbers?.map((questionNumber) => (
+                <FilterTag
+                  key={questionNumber}
+                  label={`Question ${questionNumber}`}
+                  onRemove={() => toggleQuestionNumber(questionNumber)}
                 />
               ))}
 
