@@ -115,7 +115,7 @@ export function SubjectSelectionStep({
       <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
         {/* Selected Subjects - First on mobile, second on desktop */}
         <div className="order-1 lg:order-2 lg:col-span-1">
-          <Card className="lg:sticky lg:top-4 border-[#e5e5e5]">
+          <Card className="lg:sticky lg:top-4 lg:h-[616px] border-stone-400">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">
                 Selected Subjects ({selectedSubjectsWithDetails.length})
@@ -126,7 +126,7 @@ export function SubjectSelectionStep({
             </CardHeader>
             <CardContent className="space-y-3">
               {/* ScrollArea only on desktop, natural flow on mobile */}
-              <div className="lg:h-[350px] lg:overflow-y-auto lg:pr-4">
+              <div className="lg:h-[378px] lg:overflow-y-auto lg:pr-4">
                 {selectedSubjectsWithDetails.length === 0 ? (
                   <p className="text-sm text-[#9e9e9e] text-center py-8">
                     No subjects selected yet

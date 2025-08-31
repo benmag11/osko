@@ -24,7 +24,7 @@ export function SubjectCard({
   const Icon = getSubjectIcon(subjectName)
   
   return (
-    <Card className="border-[#e5e5e5] transition-shadow">
+    <Card className="bg-white border-stone-400 hover:bg-cream-50 hover:border-stone-500 transition-colors">
       <CardContent className="px-4 py-1 space-y-2">
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-warm-text-muted flex-shrink-0" />
@@ -51,7 +51,7 @@ export function SubjectCard({
               onClick={() => onSelectSubject(ordinarySubject)}
               className={cn(
                 "flex-1 h-7 text-xs",
-                selectedLevel === 'Ordinary' && "bg-coral-500 hover:bg-coral-400 text-cream-50" // Ordinary level style
+                selectedLevel === 'Ordinary' && "bg-sky-500 hover:bg-sky-600 text-cream-50" // Ordinary level style
               )}
             >
               Ordinary
