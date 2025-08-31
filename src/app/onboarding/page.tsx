@@ -1,4 +1,4 @@
-import { getAllSubjects } from '@/lib/services/subjects'
+import { getAllSubjects } from '@/lib/supabase/queries'
 import { OnboardingClient } from './onboarding-client'
 import type { Metadata } from 'next'
 

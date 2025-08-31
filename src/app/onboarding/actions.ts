@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { saveUserSubjects } from '@/lib/services/subjects'
+import { saveUserSubjects } from '@/lib/supabase/queries'
 import { revalidatePath } from 'next/cache'
 
 export interface OnboardingFormData {

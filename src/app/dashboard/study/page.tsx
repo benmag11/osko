@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getUserSubjects } from '@/lib/services/subjects'
+import { getUserSubjects } from '@/lib/supabase/queries'
 import { StudyPageClient } from './study-page-client'
 import { redirect } from 'next/navigation'
 import { formatName } from '@/lib/utils/format-name'

@@ -1,12 +1,11 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getUserSubjectsClient } from '@/lib/services/subjects-client'
+import { getUserSubjectsClient } from '@/lib/supabase/queries-client'
 import { generateSlug } from '@/lib/utils/slug'
 import type { Subject } from '@/lib/types/database'
 import { CACHE_TIMES } from '@/lib/config/cache'
 import { queryKeys } from '@/lib/queries/query-keys'
-import { createClient } from '@/lib/supabase/client'
 
 interface SubjectWithSlug extends Subject {
   slug: string
@@ -21,10 +20,9 @@ interface UseUserSubjectsReturn {
 /**
  * Custom hook to fetch and cache user's enrolled subjects
  * Uses user-scoped cache keys for security
+ * Session validation is handled by middleware and the query function
  */
 export function useUserSubjects(userId: string | undefined): UseUserSubjectsReturn {
-  const supabase = createClient()
-  
   const { data, isLoading, error } = useQuery({
     queryKey: userId ? queryKeys.user.subjects(userId) : ['user-subjects-anonymous'],
     queryFn: async () => {
@@ -32,20 +30,7 @@ export function useUserSubjects(userId: string | undefined): UseUserSubjectsRetu
         return []
       }
       
-      // Validate session before fetching
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError || !session || session.user.id !== userId) {
-        console.warn('Session validation failed in useUserSubjects')
-        return []
-      }
-      
-      // Check if session is expired
-      if (session.expires_at && session.expires_at * 1000 < Date.now()) {
-        console.warn('Session expired in useUserSubjects')
-        return []
-      }
-      
+      // Get user subjects with built-in retry and error handling
       const userSubjects = await getUserSubjectsClient(userId)
       
       // Transform to include slugs for navigation
@@ -56,7 +41,7 @@ export function useUserSubjects(userId: string | undefined): UseUserSubjectsRetu
     },
     enabled: !!userId,
     ...CACHE_TIMES.USER_DATA,
-    retry: 1, // Override default retry for user data
+    retry: 1, // Override default retry for user data (query function already has retry)
   })
   
   return {

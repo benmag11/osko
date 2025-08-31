@@ -6,7 +6,8 @@ import type {
   Subject, 
   Topic, 
   Filters, 
-  PaginatedResponse 
+  PaginatedResponse,
+  UserSubjectWithSubject 
 } from '@/lib/types/database'
 
 // Error handling wrapper with retry logic
@@ -215,5 +216,141 @@ export async function searchQuestions(
     }
     
     return data.data as PaginatedResponse
+  })
+}
+
+// Subject-related queries with proper error handling and retry logic
+
+export async function getAllSubjects(): Promise<Subject[]> {
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+    
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .in('level', ['Higher', 'Ordinary'])
+      .order('name')
+      .order('level')
+    
+    if (error) {
+      console.error('Error fetching all subjects:', error)
+      throw new QueryError(
+        'Failed to fetch subjects',
+        'SUBJECTS_FETCH_ERROR',
+        error
+      )
+    }
+    
+    return data as Subject[]
+  }).catch(error => {
+    // Return empty array as fallback for non-critical errors
+    console.error('Failed to fetch subjects after retries:', error)
+    return []
+  })
+}
+
+export async function getUserSubjects(userId: string): Promise<UserSubjectWithSubject[]> {
+  // Validate user ID format (UUID)
+  if (!userId || !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    console.error('Invalid user ID provided:', userId)
+    return []
+  }
+  
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+    
+    const { data, error } = await supabase
+      .rpc('get_user_subjects_sorted', { p_user_id: userId })
+    
+    if (error) {
+      console.error('Error fetching user subjects:', error)
+      throw new QueryError(
+        'Failed to fetch user subjects',
+        'USER_SUBJECTS_FETCH_ERROR',
+        error
+      )
+    }
+    
+    // Transform the RPC response to match UserSubjectWithSubject interface with type safety
+    type RPCResponse = {
+      id: string
+      user_id: string
+      subject_id: string
+      created_at: string | null
+      subject: Subject
+    }
+    return (data || []).map((item: RPCResponse) => ({
+      id: item.id,
+      user_id: item.user_id,
+      subject_id: item.subject_id,
+      created_at: item.created_at,
+      subject: item.subject
+    }))
+  }).catch(error => {
+    console.error('Failed to fetch user subjects after retries:', error)
+    return []
+  })
+}
+
+export async function saveUserSubjects(
+  userId: string, 
+  subjectIds: string[]
+): Promise<{ success: boolean; error?: string }> {
+  // Input validation
+  if (!userId || !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    return { success: false, error: 'Invalid user ID' }
+  }
+  
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+    
+    // Start a transaction by clearing existing subjects first
+    const { error: deleteError } = await supabase
+      .from('user_subjects')
+      .delete()
+      .eq('user_id', userId)
+    
+    if (deleteError) {
+      console.error('Error clearing user subjects:', deleteError)
+      throw new QueryError(
+        'Failed to clear existing subjects',
+        'SUBJECTS_CLEAR_ERROR',
+        deleteError
+      )
+    }
+    
+    // If no subjects to add, we're done
+    if (subjectIds.length === 0) {
+      return { success: true }
+    }
+    
+    // Prepare the insert data
+    const userSubjects = subjectIds.map(subjectId => ({
+      user_id: userId,
+      subject_id: subjectId
+    }))
+    
+    // Insert new subjects
+    const { error: insertError } = await supabase
+      .from('user_subjects')
+      .insert(userSubjects)
+    
+    if (insertError) {
+      console.error('Error saving user subjects:', insertError)
+      throw new QueryError(
+        'Failed to save subjects',
+        'SUBJECTS_SAVE_ERROR',
+        insertError
+      )
+    }
+    
+    return { success: true }
+  }, 1).catch(error => {
+    // For save operations, only retry once
+    console.error('Failed to save user subjects after retry:', error)
+    return { 
+      success: false, 
+      error: error.message || 'Failed to save subjects. Please try again.' 
+    }
   })
 }
