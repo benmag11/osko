@@ -36,7 +36,7 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
 
           <div className="space-y-6">
             <h2 className="text-2xl font-sans font-normal text-warm-text-muted">
-              Your subjects
+              What are you studying today?
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -54,7 +54,7 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
                     >
                       <div className="flex items-start space-x-3">
                         <div className="p-2.5 bg-exam-background rounded-lg">
-                          <Icon className="h-7 w-7 text-exam-neutral group-hover:text-exam-text-secondary transition-colors" />
+                          <Icon className="h-7 w-7 text-exam-neutral group-hover:text-stone-600 transition-colors" />
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg text-exam-text-primary">

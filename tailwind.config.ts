@@ -68,7 +68,7 @@ const config: Config = {
         },
         // Warm accent colors
         "salmon": {
-          300: "#dda896ff",
+          300: "#dda896",
           400: "#E59C84",
           500: "#D97757",
           600: "#C2410C",
