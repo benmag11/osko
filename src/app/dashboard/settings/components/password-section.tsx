@@ -14,6 +14,60 @@ import { Label } from '@/components/ui/label'
 import { updatePassword } from '../actions'
 import { Eye, EyeOff } from 'lucide-react'
 
+interface PasswordInputProps {
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+  show: boolean
+  onToggle: () => void
+  placeholder?: string
+  autoComplete?: string
+  isLoading: boolean
+}
+
+const PasswordInput = ({ 
+  id, 
+  label, 
+  value, 
+  onChange, 
+  show, 
+  onToggle,
+  placeholder,
+  autoComplete,
+  isLoading
+}: PasswordInputProps) => (
+  <div className="space-y-2">
+    <Label htmlFor={id} className="font-sans">
+      {label}
+    </Label>
+    <div className="relative">
+      <Input
+        id={id}
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        disabled={isLoading}
+        autoComplete={autoComplete}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-warm-text-muted hover:text-warm-text-secondary"
+        tabIndex={-1}
+      >
+        {show ? (
+          <EyeOff className="h-4 w-4" />
+        ) : (
+          <Eye className="h-4 w-4" />
+        )}
+      </button>
+    </div>
+  </div>
+)
+
 export function PasswordSection() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
@@ -38,9 +92,12 @@ export function PasswordSection() {
     setIsLoading(false)
   }
 
-  const handleClose = () => {
-    resetForm()
-    setIsDialogOpen(false)
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Only reset form when actually closing the dialog
+      resetForm()
+    }
+    setIsDialogOpen(open)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,60 +119,10 @@ export function PasswordSection() {
       setIsLoading(false)
       // Close dialog after a short delay to show success message
       setTimeout(() => {
-        handleClose()
+        handleOpenChange(false)
       }, 2000)
     }
   }
-
-  const PasswordInput = ({ 
-    id, 
-    label, 
-    value, 
-    onChange, 
-    show, 
-    onToggle,
-    placeholder,
-    autoComplete
-  }: {
-    id: string
-    label: string
-    value: string
-    onChange: (value: string) => void
-    show: boolean
-    onToggle: () => void
-    placeholder?: string
-    autoComplete?: string
-  }) => (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="font-sans">
-        {label}
-      </Label>
-      <div className="relative">
-        <Input
-          id={id}
-          type={show ? 'text' : 'password'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          disabled={isLoading}
-          autoComplete={autoComplete}
-          className="pr-10"
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-warm-text-muted hover:text-warm-text-secondary"
-          tabIndex={-1}
-        >
-          {show ? (
-            <EyeOff className="h-4 w-4" />
-          ) : (
-            <Eye className="h-4 w-4" />
-          )}
-        </button>
-      </div>
-    </div>
-  )
 
   return (
     <>
@@ -140,7 +147,7 @@ export function PasswordSection() {
         </div>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={handleClose}>
+      <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
         <DialogContent 
           className="sm:max-w-md"
           showCloseButton={true}
@@ -173,6 +180,7 @@ export function PasswordSection() {
                 onToggle={() => setShowCurrentPassword(!showCurrentPassword)}
                 placeholder="Current password"
                 autoComplete="current-password"
+                isLoading={isLoading}
               />
 
               <PasswordInput
@@ -184,6 +192,7 @@ export function PasswordSection() {
                 onToggle={() => setShowNewPassword(!showNewPassword)}
                 placeholder="New password (min. 6 characters)"
                 autoComplete="new-password"
+                isLoading={isLoading}
               />
 
               <PasswordInput
@@ -195,6 +204,7 @@ export function PasswordSection() {
                 onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
                 placeholder="Confirm new password"
                 autoComplete="new-password"
+                isLoading={isLoading}
               />
 
               {error && (
