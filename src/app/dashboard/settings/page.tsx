@@ -36,7 +36,7 @@ export default async function SettingsPage() {
             Account
           </h1>
           
-          <div className="bg-cream-100 rounded-lg border border-stone-200 shadow-sm">
+          <div className="bg-cream-100 rounded-lg border border-stone-300">
             <SettingsClient 
               userEmail={user.email || ''}
               userName={profile?.name || ''}
