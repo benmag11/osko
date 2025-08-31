@@ -5,7 +5,7 @@ import { useInView } from 'react-intersection-observer'
 import { useEffect, useMemo } from 'react'
 import { searchQuestionsClient } from '@/lib/supabase/client-queries'
 import { queryKeys } from '@/lib/queries/query-keys'
-import type { Question, Filters, PaginatedResponse } from '@/lib/types/database'
+import type { Question, Filters, PaginatedResponse, QuestionCursor } from '@/lib/types/database'
 
 interface UseQuestionsQueryOptions {
   filters: Filters
@@ -37,7 +37,7 @@ export function useQuestionsQuery({
     queryFn: async ({ pageParam, signal }) => {
       return searchQuestionsClient(filters, pageParam, signal)
     },
-    initialPageParam: null as { year: number; question_number: number } | null,
+    initialPageParam: null as QuestionCursor | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor,
     enabled,
     // Provide initial data if available (from SSR)

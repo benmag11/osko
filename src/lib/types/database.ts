@@ -40,7 +40,7 @@ export interface Database {
           p_years?: number[] | null
           p_topic_ids?: string[] | null
           p_exam_types?: string[] | null
-          p_cursor?: { year: number; question_number: number } | null
+          p_cursor?: QuestionCursor | null
           p_limit?: number
         }
         Returns: PaginatedResponse
@@ -62,6 +62,12 @@ export interface Database {
           created_at: string | null
           subject: Subject
         }>
+      }
+      get_available_question_numbers: {
+        Args: {
+          p_subject_id: string
+        }
+        Returns: number[]
       }
     }
   }
@@ -122,14 +128,21 @@ export interface Filters {
   years?: number[]
   topicIds?: string[]
   examTypes?: string[]
+  questionNumbers?: number[]
+}
+
+export interface QuestionCursor {
+  sort_key: string  // Primary field for cursor comparison
+  year: number
+  paper_number: number | null
+  exam_type: 'normal' | 'deferred' | 'supplemental'
+  question_number: number
+  question_parts: string[]
 }
 
 export interface PaginatedResponse {
   questions: Question[]
-  next_cursor: {
-    year: number
-    question_number: number
-  } | null
+  next_cursor: QuestionCursor | null
 }
 
 export interface UserProfile {

@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Search, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
-  SidebarGroup,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { CollapsibleSidebarMenuButton } from '@/components/ui/collapsible-sidebar-menu-button'
 import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
 import type { Filters } from '@/lib/types/database'
 
@@ -22,6 +21,8 @@ export function SearchFilter({ filters }: SearchFilterProps) {
   const [value, setValue] = useState('')
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
+  const inputRef = useRef<HTMLInputElement>(null)
+  const shouldFocusOnExpand = useRef(false)
 
   const handleAddKeyword = () => {
     if (value.trim()) {
@@ -36,20 +37,36 @@ export function SearchFilter({ filters }: SearchFilterProps) {
     }
   }
 
+  const handleExpandedClick = () => {
+    shouldFocusOnExpand.current = true
+  }
+
+  useEffect(() => {
+    if (!isCollapsed && shouldFocusOnExpand.current && inputRef.current) {
+      inputRef.current.focus()
+      shouldFocusOnExpand.current = false
+    }
+  }, [isCollapsed])
+
   return (
-    <SidebarGroup>
+    <div>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Search by keyword" className="font-medium text-sidebar-foreground/90">
+          <CollapsibleSidebarMenuButton 
+            tooltip="Search by keyword" 
+            className="font-medium text-sidebar-foreground/90"
+            onExpandedClick={handleExpandedClick}
+          >
             <Search />
             <span className="text-base">Search by keyword</span>
-          </SidebarMenuButton>
+          </CollapsibleSidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
       {!isCollapsed && (
-        <div className="px-3 py-2">
+        <div className="px-3 pt-2">
           <div className="flex gap-2">
             <Input
+              ref={inputRef}
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -59,7 +76,7 @@ export function SearchFilter({ filters }: SearchFilterProps) {
             <button
               type="button"
               onClick={handleAddKeyword}
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-stone-300 bg-transparent transition-colors hover:bg-cream-200 hover:text-warm-text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-salmon-500/30"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-stone-300 bg-transparent transition-colors hover:border-salmon-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-salmon-500/30"
               aria-label="Add search keyword"
             >
               <Plus className="h-4 w-4" />
@@ -67,6 +84,6 @@ export function SearchFilter({ filters }: SearchFilterProps) {
           </div>
         </div>
       )}
-    </SidebarGroup>
+    </div>
   )
 }

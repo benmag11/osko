@@ -6,6 +6,7 @@ const FILTER_PARAM_MAP = {
   topicIds: 'topics',
   years: 'years',
   examTypes: 'types',
+  questionNumbers: 'questions',
 } as const
 
 // Type guard to check if value is a string array
@@ -35,8 +36,9 @@ function serializeFilterValue<K extends keyof Omit<Filters, 'subjectId'>>(
       }
       return value.length > 0 ? value.join(',') : null
     case 'years':
+    case 'questionNumbers':
       if (!isNumberArray(value)) {
-        console.warn(`Expected number array for years, got`, value)
+        console.warn(`Expected number array for ${key}, got`, value)
         return null
       }
       return value.length > 0 ? value.join(',') : null
@@ -47,7 +49,7 @@ function serializeFilterValue<K extends keyof Omit<Filters, 'subjectId'>>(
 
 // Overloaded function signatures for proper typing
 function deserializeFilterValue(key: 'searchTerms' | 'topicIds' | 'examTypes', value: string | undefined): string[] | undefined
-function deserializeFilterValue(key: 'years', value: string | undefined): number[] | undefined
+function deserializeFilterValue(key: 'years' | 'questionNumbers', value: string | undefined): number[] | undefined
 function deserializeFilterValue(
   key: keyof Omit<Filters, 'subjectId'>,
   value: string | undefined
@@ -60,6 +62,7 @@ function deserializeFilterValue(
     case 'examTypes':
       return value.split(',').filter(Boolean)
     case 'years':
+    case 'questionNumbers':
       return value.split(',').map(Number).filter(Boolean)
     default:
       return undefined
@@ -84,6 +87,7 @@ export function parseSearchParams(
     topicIds: deserializeFilterValue('topicIds', getValue(FILTER_PARAM_MAP.topicIds)),
     years: deserializeFilterValue('years', getValue(FILTER_PARAM_MAP.years)),
     examTypes: deserializeFilterValue('examTypes', getValue(FILTER_PARAM_MAP.examTypes)),
+    questionNumbers: deserializeFilterValue('questionNumbers', getValue(FILTER_PARAM_MAP.questionNumbers)),
   }
 }
 

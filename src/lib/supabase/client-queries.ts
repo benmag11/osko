@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from './client'
-import type { Filters, PaginatedResponse } from '@/lib/types/database'
+import type { Filters, PaginatedResponse, QuestionCursor } from '@/lib/types/database'
 
 /**
  * Client-side version of searchQuestions for use with React Query
@@ -9,7 +9,7 @@ import type { Filters, PaginatedResponse } from '@/lib/types/database'
  */
 export async function searchQuestionsClient(
   filters: Filters,
-  cursor?: { year: number; question_number: number } | null,
+  cursor?: QuestionCursor | null,
   signal?: AbortSignal
 ): Promise<PaginatedResponse> {
   // Check if the signal is already aborted

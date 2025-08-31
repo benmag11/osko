@@ -3,6 +3,7 @@ import {
   getSubjectBySlug, 
   getTopics, 
   getAvailableYears,
+  getAvailableQuestionNumbers,
   searchQuestions 
 } from '@/lib/supabase/queries'
 import { parseSearchParams } from '@/lib/utils/url-filters'
@@ -34,15 +35,17 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   const filters = parseSearchParams(resolvedSearchParams, subject.id)
 
   // Fetch all data in parallel for optimal performance
-  const [topicsResult, yearsResult, questionsResult] = await Promise.allSettled([
+  const [topicsResult, yearsResult, questionNumbersResult, questionsResult] = await Promise.allSettled([
     getTopics(subject.id),
     getAvailableYears(subject.id),
+    getAvailableQuestionNumbers(subject.id),
     searchQuestions(filters)
   ])
 
   // Extract data with proper error handling
   const topics = topicsResult.status === 'fulfilled' ? topicsResult.value : []
   const years = yearsResult.status === 'fulfilled' ? yearsResult.value : []
+  const questionNumbers = questionNumbersResult.status === 'fulfilled' ? questionNumbersResult.value : []
   const initialData = questionsResult.status === 'fulfilled' 
     ? questionsResult.value 
     : { questions: [], hasMore: false, next_cursor: null }
@@ -54,6 +57,9 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   if (yearsResult.status === 'rejected') {
     console.error('Failed to fetch available years:', yearsResult.reason)
   }
+  if (questionNumbersResult.status === 'rejected') {
+    console.error('Failed to fetch available question numbers:', questionNumbersResult.reason)
+  }
   if (questionsResult.status === 'rejected') {
     console.error('Failed to fetch initial questions:', questionsResult.reason)
   }
@@ -61,7 +67,7 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   return (
     <SidebarProvider defaultOpen>
       <MobileNavbar />
-      <ExamSidebar subject={subject} topics={topics} years={years} filters={filters} />
+      <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
       <FloatingSidebarTrigger />
       <SidebarInset>
         <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
