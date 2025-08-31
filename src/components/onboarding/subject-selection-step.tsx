@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { SubjectCard } from './subject-card'
 import { SelectedSubjectCard } from './selected-subject-card'
 import type { Subject } from '@/lib/types/database'
@@ -34,6 +35,15 @@ export function SubjectSelectionStep({
     new Set(initialSubjectIds)
   )
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // Input ref for focus management
+  const inputRef = useRef<HTMLInputElement>(null)
+  
+  // Optimized clear handler to prevent unnecessary re-renders
+  const clearSearch = useCallback(() => {
+    setSearchTerm('')
+    inputRef.current?.focus()
+  }, [])
 
   // Group subjects by name for display
   const groupedSubjects = useMemo(() => {
@@ -172,14 +182,28 @@ export function SubjectSelectionStep({
         <div className="order-2 lg:order-1 lg:col-span-2 space-y-4">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9e9e9e]" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 z-10" />
             <Input
+              ref={inputRef}
               type="text"
               placeholder="Search subjects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className={cn(
+                "pl-10",
+                searchTerm && "pr-10"
+              )}
             />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 hover:text-stone-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           {/* Subject Cards Grid - ScrollArea only on desktop */}
