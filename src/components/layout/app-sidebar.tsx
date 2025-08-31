@@ -18,7 +18,6 @@ import {
   SidebarHeader,
   SidebarRail,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -87,7 +86,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.title}>
@@ -95,6 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   asChild 
                   isActive={pathname === item.url}
                   tooltip={item.title}
+                  className="text-[15px]"
                 >
                   <Link href={item.url}>
                     <item.icon />

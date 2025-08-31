@@ -13,7 +13,7 @@ export function EmailSection({ currentEmail }: EmailSectionProps) {
 
   return (
     <div className="px-6 py-5">
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex-1">
           <h3 className="text-base font-serif font-medium text-warm-text-primary mb-2">
             Email
