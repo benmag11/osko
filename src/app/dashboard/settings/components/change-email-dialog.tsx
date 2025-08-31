@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,16 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { verifyPasswordForEmailChange, requestEmailChange } from '../actions'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp'
+import { verifyPasswordForEmailChange, requestEmailChange, verifyEmailChangeOtp, resendEmailChangeOtp } from '../actions'
 import { Eye, EyeOff } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { invalidateUserCache } from '@/lib/cache/cache-utils'
+import { cn } from '@/lib/utils'
 
 interface ChangeEmailDialogProps {
   open: boolean
@@ -30,25 +38,43 @@ export function ChangeEmailDialog({
   const [step, setStep] = useState<Step>('password')
   const [password, setPassword] = useState('')
   const [newEmail, setNewEmail] = useState('')
+  const [otp, setOtp] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isResending, setIsResending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [emailChangeSuccess, setEmailChangeSuccess] = useState(false)
+  const queryClient = useQueryClient()
 
   const resetDialog = () => {
     setStep('password')
     setPassword('')
     setNewEmail('')
+    setOtp('')
     setShowPassword(false)
     setError(null)
     setSuccessMessage(null)
     setIsLoading(false)
+    setResendCooldown(0)
+    setEmailChangeSuccess(false)
   }
 
   const handleClose = () => {
     resetDialog()
     onOpenChange(false)
   }
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,9 +105,78 @@ export function ChangeEmailDialog({
       setIsLoading(false)
     } else {
       setStep('verification')
-      setSuccessMessage(result.message || 'Verification email sent')
+      setSuccessMessage('Verification code sent.')
       setError(null)
       setIsLoading(false)
+      setResendCooldown(60) // Set initial cooldown
+    }
+  }
+
+  // Auto-submit when 6 digits are entered
+  const handleOtpComplete = useCallback(async (value: string) => {
+    if (value.length === 6) {
+      await handleOtpVerification(value)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newEmail])
+
+  const handleOtpVerification = async (otpValue?: string) => {
+    const codeToVerify = otpValue || otp
+    if (codeToVerify.length !== 6) return
+    
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const result = await verifyEmailChangeOtp(newEmail, codeToVerify)
+      if (result.error) {
+        setError(result.error)
+        setOtp('')
+      } else {
+        // Invalidate cache to update email display throughout the app
+        await invalidateUserCache(queryClient)
+        setEmailChangeSuccess(true)
+        setSuccessMessage(result.message || 'Email successfully changed')
+        // Close dialog after a short delay to show success
+        setTimeout(() => {
+          handleClose()
+        }, 2000)
+      }
+    } catch {
+      setError('An error occurred. Please try again.')
+      setOtp('')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return
+    
+    setIsResending(true)
+    setError(null)
+    
+    try {
+      const result = await resendEmailChangeOtp(newEmail)
+      if (result.error) {
+        setError(result.error)
+      } else {
+        setResendCooldown(60)
+        setOtp('')
+        setSuccessMessage('Verification code resent')
+      }
+    } catch {
+      setError('Failed to resend code. Please try again.')
+    } finally {
+      setIsResending(false)
+    }
+  }
+
+  const handleOtpChange = (value: string) => {
+    setOtp(value)
+    setError(null)
+    if (value.length === 6) {
+      handleOtpComplete(value)
     }
   }
 
@@ -163,7 +258,7 @@ export function ChangeEmailDialog({
               <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-email" className="font-sans">
-                    Please enter new email, and we&apos;ll send you a verification code.
+                    Enter your new email address to receive a verification code
                   </Label>
                   <Input
                     id="new-email"
@@ -187,13 +282,13 @@ export function ChangeEmailDialog({
                   disabled={!newEmail || isLoading}
                   className="w-full"
                 >
-                  {isLoading ? 'Sending...' : 'Send verification email'}
+                  {isLoading ? 'Sending...' : 'Send verification code'}
                 </Button>
               </form>
             </>
           )}
 
-          {/* Step 3: Verification Sent */}
+          {/* Step 3: OTP Verification */}
           {step === 'verification' && (
             <>
               <div className="bg-cream-200 rounded-md p-3 border border-stone-200">
@@ -209,31 +304,75 @@ export function ChangeEmailDialog({
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                  <p className="text-sm text-green-800 font-sans">
-                    {successMessage}
+              {emailChangeSuccess ? (
+                <div className="space-y-3">
+                  <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                    <p className="text-sm text-green-800 font-sans text-center">
+                      {successMessage}
+                    </p>
+                  </div>
+                  <p className="text-sm text-warm-text-muted font-sans text-center">
+                    Your email has been successfully changed. This dialog will close automatically.
                   </p>
                 </div>
-                
-                <p className="text-sm text-warm-text-muted font-sans">
-                  Please check your email inbox at <strong>{newEmail}</strong> and click 
-                  the verification link to complete the email change.
-                </p>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="font-sans text-center block">
+                      Enter the 6-digit code sent to {newEmail}
+                    </Label>
+                    
+                    <div className="flex justify-center">
+                      <InputOTP
+                        maxLength={6}
+                        value={otp}
+                        onChange={handleOtpChange}
+                        disabled={isLoading}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} className={cn(error && "border-salmon-600")} />
+                          <InputOTPSlot index={1} className={cn(error && "border-salmon-600")} />
+                          <InputOTPSlot index={2} className={cn(error && "border-salmon-600")} />
+                          <InputOTPSlot index={3} className={cn(error && "border-salmon-600")} />
+                          <InputOTPSlot index={4} className={cn(error && "border-salmon-600")} />
+                          <InputOTPSlot index={5} className={cn(error && "border-salmon-600")} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
 
-                <p className="text-xs text-warm-text-subtle font-sans">
-                  Note: The verification link will expire in 1 hour. You may need to check 
-                  your spam folder.
-                </p>
+                  {error && (
+                    <p className="text-sm text-salmon-600 font-sans text-center">
+                      {error}
+                    </p>
+                  )}
 
-                <Button
-                  onClick={handleClose}
-                  className="w-full"
-                  variant="outline"
-                >
-                  Close
-                </Button>
-              </div>
+                  {successMessage && !error && (
+                    <p className="text-sm text-green-600 font-sans text-center">
+                      {successMessage}
+                    </p>
+                  )}
+
+                  <Button
+                    onClick={() => handleOtpVerification()}
+                    disabled={otp.length !== 6 || isLoading}
+                    className="w-full"
+                  >
+                    {isLoading ? 'Verifying...' : 'Verify and change email'}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={handleResend}
+                    disabled={resendCooldown > 0 || isResending}
+                    className="w-full"
+                  >
+                    {isResending ? 'Sending...' : 
+                     resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 
+                     'Resend code'}
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>

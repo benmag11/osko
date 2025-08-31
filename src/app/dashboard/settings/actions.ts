@@ -96,7 +96,7 @@ export async function requestEmailChange(newEmail: string, password: string) {
     return { error: 'Incorrect password' }
   }
 
-  // Request email change - this will send a verification email to the new address
+  // Request email change - this will send a 6-digit OTP to the new address
   const { error } = await supabase.auth.updateUser({
     email: newEmail,
   })
@@ -105,12 +105,12 @@ export async function requestEmailChange(newEmail: string, password: string) {
     if (error.message.includes('already registered')) {
       return { error: 'This email is already in use' }
     }
-    return { error: 'Failed to update email. Please try again.' }
+    return { error: 'Failed to send verification code. Please try again.' }
   }
 
   return { 
     success: true,
-    message: 'Verification email sent to your new email address'
+    message: 'A 6-digit verification code has been sent to your new email address'
   }
 }
 
@@ -171,7 +171,54 @@ export async function updatePassword(
   }
 }
 
-export async function resendEmailVerification(newEmail: string) {
+export async function verifyEmailChangeOtp(
+  newEmail: string,
+  token: string
+) {
+  if (!newEmail || !token) {
+    return { error: 'Email and verification code are required' }
+  }
+
+  if (token.length !== 6) {
+    return { error: 'Verification code must be 6 digits' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return { error: 'You must be logged in to verify email change' }
+  }
+
+  // Verify the OTP for email change
+  const { error } = await supabase.auth.verifyOtp({
+    email: newEmail,
+    token,
+    type: 'email_change',
+  })
+
+  if (error) {
+    if (error.message.includes('expired')) {
+      return { error: 'Verification code has expired. Please request a new one.' }
+    }
+    if (error.message.includes('invalid')) {
+      return { error: 'Invalid verification code. Please try again.' }
+    }
+    return { error: 'Failed to verify code. Please try again.' }
+  }
+
+  // Email has been successfully changed
+  // The cache invalidation will be handled by the client component
+  return { 
+    success: true,
+    message: 'Email successfully changed',
+    requiresCacheInvalidation: true
+  }
+}
+
+export async function resendEmailChangeOtp(newEmail: string) {
   if (!newEmail) {
     return { error: 'Email is required' }
   }
@@ -185,17 +232,17 @@ export async function resendEmailVerification(newEmail: string) {
     return { error: 'You must be logged in' }
   }
 
-  // Request email change again to resend verification
+  // Request email change again to resend OTP
   const { error } = await supabase.auth.updateUser({
     email: newEmail,
   })
 
   if (error) {
-    return { error: 'Failed to resend verification email. Please try again.' }
+    return { error: 'Failed to resend verification code. Please try again.' }
   }
 
   return { 
     success: true,
-    message: 'Verification email resent'
+    message: 'Verification code resent'
   }
 }
