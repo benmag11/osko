@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from './server'
 import { QueryError } from '@/lib/errors'
+import { buildSearchQueryParams } from './query-builders'
 import type { 
   Subject, 
   Topic, 
@@ -218,18 +219,12 @@ export async function searchQuestions(
       }
     })
     
+    // Build query parameters using shared builder
+    const queryParams = buildSearchQueryParams(filters, cursor, 20)
+    
     // Race between the RPC call and the abort signal
     const data = await Promise.race([
-      supabase.rpc('search_questions_paginated', {
-        p_subject_id: filters.subjectId,
-        p_search_terms: filters.searchTerms || null,
-        p_years: filters.years || null,
-        p_topic_ids: filters.topicIds || null,
-        p_exam_types: filters.examTypes || null,
-        p_question_numbers: filters.questionNumbers || null,
-        p_cursor: cursor || null,
-        p_limit: 20
-      }),
+      supabase.rpc('search_questions_paginated', queryParams),
       abortPromise
     ])
     

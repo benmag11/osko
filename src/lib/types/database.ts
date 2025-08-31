@@ -40,6 +40,7 @@ export interface Database {
           p_years?: number[] | null
           p_topic_ids?: string[] | null
           p_exam_types?: string[] | null
+          p_question_numbers?: number[] | null
           p_cursor?: QuestionCursor | null
           p_limit?: number
         }
