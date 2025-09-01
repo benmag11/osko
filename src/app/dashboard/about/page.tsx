@@ -55,33 +55,7 @@ export default function AboutPage() {
       {/* Divider */}
       <hr className="border-stone-200 mb-12" />
       
-      {/* Additional Sections - Best Practices for About Pages */}
-      <section className="mb-12">
-        <h2 className="text-4xl font-sans font-semibold text-stone-800 mb-6">
-          Our Mission
-        </h2>
-        <div className="prose prose-stone max-w-none">
-          <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-            [Placeholder: Describe OSCO's mission to democratize access to quality Leaving Certificate 
-            preparation materials and help every student achieve their potential.]
-          </p>
-        </div>
-      </section>
 
-      {/* Divider */}
-      <hr className="border-stone-200 mb-12" />
-      
-      <section className="mb-12">
-        <h2 className="text-4xl font-sans font-semibold text-stone-800 mb-6">
-          Get in Touch
-        </h2>
-        <div className="prose prose-stone max-w-none">
-          <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-            [Placeholder: Add contact information, feedback channels, or links to social media where 
-            students and educators can reach out with questions, suggestions, or partnership opportunities.]
-          </p>
-        </div>
-      </section>
     </DashboardPage>
   )
 }
