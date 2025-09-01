@@ -2,20 +2,20 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { SubjectCard } from '@/components/subjects/subject-card'
-import { SelectedSubjectCard } from '@/components/subjects/selected-subject-card'
+import { SubjectCard } from './subject-card'
+import { SelectedSubjectCard } from './selected-subject-card'
 import type { Subject } from '@/lib/types/database'
 
-interface SubjectSelectionStepProps {
+interface SubjectSelectorProps {
   subjects: Subject[]
-  onNext: (subjectIds: string[]) => void
-  onBack: () => void
-  initialSubjectIds?: string[]
-  isSubmitting?: boolean
+  initialSelectedIds?: string[]
+  onSelectionChange?: (subjectIds: string[]) => void
+  isDisabled?: boolean
+  showSelectedPanel?: boolean
+  className?: string
 }
 
 interface GroupedSubject {
@@ -24,15 +24,16 @@ interface GroupedSubject {
   ordinary?: Subject
 }
 
-export function SubjectSelectionStep({ 
+export function SubjectSelector({ 
   subjects,
-  onNext, 
-  onBack, 
-  initialSubjectIds = [],
-  isSubmitting = false
-}: SubjectSelectionStepProps) {
+  initialSelectedIds = [],
+  onSelectionChange,
+  isDisabled = false,
+  showSelectedPanel = true,
+  className
+}: SubjectSelectorProps) {
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(
-    new Set(initialSubjectIds)
+    new Set(initialSelectedIds)
   )
   const [searchTerm, setSearchTerm] = useState('')
   
@@ -78,7 +79,9 @@ export function SubjectSelectionStep({
     // Subjects are already sorted from database
   }, [subjects, selectedSubjectIds])
 
-  const handleSubjectToggle = (subject: Subject) => {
+  const handleSubjectToggle = useCallback((subject: Subject) => {
+    if (isDisabled) return
+    
     const newSelected = new Set(selectedSubjectIds)
     
     if (newSelected.has(subject.id)) {
@@ -95,91 +98,76 @@ export function SubjectSelectionStep({
     }
     
     setSelectedSubjectIds(newSelected)
-  }
+    onSelectionChange?.(Array.from(newSelected))
+  }, [selectedSubjectIds, subjects, isDisabled, onSelectionChange])
 
-  const removeSubject = (subjectId: string) => {
+  const removeSubject = useCallback((subjectId: string) => {
+    if (isDisabled) return
+    
     const newSelected = new Set(selectedSubjectIds)
     newSelected.delete(subjectId)
     setSelectedSubjectIds(newSelected)
-  }
-
-  const handleSubmit = () => {
-    onNext(Array.from(selectedSubjectIds))
-  }
+    onSelectionChange?.(Array.from(newSelected))
+  }, [selectedSubjectIds, isDisabled, onSelectionChange])
 
   // Get the selected level for a subject group
-  const getSelectedLevel = (group: GroupedSubject): 'Higher' | 'Ordinary' | null => {
+  const getSelectedLevel = useCallback((group: GroupedSubject): 'Higher' | 'Ordinary' | null => {
     if (group.higher && selectedSubjectIds.has(group.higher.id)) return 'Higher'
     if (group.ordinary && selectedSubjectIds.has(group.ordinary.id)) return 'Ordinary'
     return null
-  }
+  }, [selectedSubjectIds])
 
   return (
-    <div className="w-full">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-semibold mb-2">Select your subjects</h1>
-        <p className="text-[#757575]">Choose the subjects you&apos;re studying and their levels</p>
-      </div>
-
+    <div className={cn("w-full", className)}>
       {/* Use flex column on mobile, grid on desktop */}
-      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
-        {/* Selected Subjects - First on mobile, second on desktop */}
-        <div className="order-1 lg:order-2 lg:col-span-1">
-          <Card className="lg:sticky lg:top-4 lg:h-[616px] border-stone-400">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">
-                Selected Subjects ({selectedSubjectsWithDetails.length})
-              </CardTitle>
-              <CardDescription className="text-sm">
-                Your chosen subjects and levels
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* ScrollArea only on desktop, natural flow on mobile */}
-              <div className="lg:h-[378px] lg:overflow-y-auto lg:pr-4">
-                {selectedSubjectsWithDetails.length === 0 ? (
-                  <p className="text-sm text-[#9e9e9e] text-center py-8">
-                    No subjects selected yet
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {selectedSubjectsWithDetails.map((subject) => (
-                      <SelectedSubjectCard
-                        key={subject.id}
-                        subject={subject.name}
-                        level={subject.level === 'Higher' || subject.level === 'Ordinary' 
-                          ? subject.level 
-                          : 'Ordinary'} // Safe fallback
-                        onRemove={() => removeSubject(subject.id)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2 pt-3 border-t">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={selectedSubjectsWithDetails.length === 0 || isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting ? 'Saving...' : 'Continue'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={onBack}
-                  disabled={isSubmitting}
-                  className="w-full"
-                >
-                  Back
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className={cn(
+        "flex flex-col gap-6",
+        showSelectedPanel && "lg:grid lg:grid-cols-3"
+      )}>
+        {/* Selected Subjects Panel - First on mobile, second on desktop */}
+        {showSelectedPanel && (
+          <div className="order-1 lg:order-2 lg:col-span-1">
+            <Card className="lg:sticky lg:top-4 border-stone-400">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">
+                  Selected Subjects ({selectedSubjectsWithDetails.length})
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Your chosen subjects and levels
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* ScrollArea only on desktop, natural flow on mobile */}
+                <div className="lg:h-[450px] lg:overflow-y-auto lg:pr-4">
+                  {selectedSubjectsWithDetails.length === 0 ? (
+                    <p className="text-sm text-[#9e9e9e] text-center py-8">
+                      No subjects selected yet
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {selectedSubjectsWithDetails.map((subject) => (
+                        <SelectedSubjectCard
+                          key={subject.id}
+                          subject={subject.name}
+                          level={subject.level === 'Higher' || subject.level === 'Ordinary' 
+                            ? subject.level 
+                            : 'Ordinary'} // Safe fallback
+                          onRemove={() => removeSubject(subject.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Subject Selection Grid - Second on mobile, first on desktop */}
-        <div className="order-2 lg:order-1 lg:col-span-2 space-y-4">
+        <div className={cn(
+          "space-y-4",
+          showSelectedPanel ? "order-2 lg:order-1 lg:col-span-2" : "w-full"
+        )}>
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 z-10" />
@@ -189,6 +177,7 @@ export function SubjectSelectionStep({
               placeholder="Search subjects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              disabled={isDisabled}
               className={cn(
                 "pl-10",
                 searchTerm && "pr-10"
@@ -198,16 +187,17 @@ export function SubjectSelectionStep({
               <button
                 type="button"
                 onClick={clearSearch}
+                disabled={isDisabled}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 hover:text-stone-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-stone-400 hover:text-stone-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-sm disabled:opacity-50"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          {/* Subject Cards Grid - ScrollArea only on desktop */}
-          <div className="lg:h-[560px] lg:overflow-y-auto lg:pr-4">
+          {/* Subject Cards Grid - 2 columns as requested */}
+          <div className="lg:h-[500px] lg:overflow-y-auto lg:pr-4">
             <div className="grid grid-cols-2 gap-3">
               {filteredSubjects.map((group) => (
                 <SubjectCard

@@ -246,3 +246,40 @@ export async function resendEmailChangeOtp(newEmail: string) {
     message: 'Verification code resent'
   }
 }
+
+export async function updateUserSubjects(subjectIds: string[]) {
+  // Validate input
+  if (!Array.isArray(subjectIds)) {
+    return { error: 'Invalid subject selection' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return { error: 'You must be logged in to update your subjects' }
+  }
+
+  // Import the saveUserSubjects function from queries
+  const { saveUserSubjects } = await import('@/lib/supabase/queries')
+  
+  // Use the existing saveUserSubjects function which handles:
+  // - Clearing existing subjects
+  // - Adding new subjects
+  // - Retry logic
+  // - Error handling
+  const result = await saveUserSubjects(user.id, subjectIds)
+  
+  if (!result.success) {
+    return { error: result.error || 'Failed to update subjects. Please try again.' }
+  }
+
+  // Revalidate the settings page to show updated subjects
+  revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/study')
+  
+  return { success: true }
+}

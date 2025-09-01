@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getAllSubjects, getUserSubjects } from '@/lib/supabase/queries'
 import { SettingsClient } from './settings-client'
 
 export default async function SettingsPage() {
@@ -11,7 +12,7 @@ export default async function SettingsPage() {
     return (
       <div className="flex-1 bg-cream-50">
         <div className="px-8 py-8">
-          <div className="mx-auto max-w-3xl">
+          <div className="mx-auto max-w-4xl">
             <p className="text-center text-warm-text-muted">
               Please sign in to view your settings
             </p>
@@ -28,10 +29,19 @@ export default async function SettingsPage() {
     .eq('user_id', user.id)
     .single()
   
+  // Fetch all available subjects and user's current subjects
+  const [allSubjects, userSubjectsData] = await Promise.all([
+    getAllSubjects(),
+    getUserSubjects(user.id)
+  ])
+  
+  // Extract just the subject data from user subjects
+  const userSubjects = userSubjectsData.map(us => us.subject)
+  
   return (
     <div className="flex-1 bg-cream-50">
       <div className="px-8 py-8">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-4xl">
           <h1 className="text-3xl font-serif font-semibold text-warm-text-primary mb-8">
             Account
           </h1>
@@ -40,6 +50,8 @@ export default async function SettingsPage() {
             <SettingsClient 
               userEmail={user.email || ''}
               userName={profile?.name || ''}
+              allSubjects={allSubjects}
+              userSubjects={userSubjects}
             />
           </div>
         </div>
