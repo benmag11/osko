@@ -36,7 +36,10 @@ export async function updateUserName(name: string) {
   }
 
   revalidatePath('/dashboard/settings')
-  return { success: true }
+  return { 
+    success: true,
+    data: { name: name.trim() }
+  }
 }
 
 export async function verifyPasswordForEmailChange(password: string) {

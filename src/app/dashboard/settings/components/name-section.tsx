@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { updateUserName } from '../actions'
 import { Check, X } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/queries/query-keys'
+import { useUserProfile } from '@/lib/hooks/use-user-profile'
 
 interface NameSectionProps {
   initialName: string
@@ -17,6 +20,9 @@ export function NameSection({ initialName }: NameSectionProps) {
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const originalName = useRef(initialName)
+  
+  const queryClient = useQueryClient()
+  const { user } = useUserProfile()
 
   // Check if the current value is different from the original
   const isDirty = name !== originalName.current
@@ -37,13 +43,27 @@ export function NameSection({ initialName }: NameSectionProps) {
       setError(result.error)
       setIsSaving(false)
     } else {
+      // Update local state
       originalName.current = name
+      
+      // Invalidate user profile cache to update sidebar and other components
+      if (user?.id) {
+        try {
+          await queryClient.invalidateQueries({ 
+            queryKey: queryKeys.user.profile(user.id) 
+          })
+        } catch (invalidateError) {
+          // Log error but don't fail the save operation
+          console.error('Failed to invalidate cache:', invalidateError)
+        }
+      }
+      
       setIsFocused(false)
       setIsSaving(false)
       // Remove focus from input after successful save
       inputRef.current?.blur()
     }
-  }, [name, isDirty])
+  }, [name, isDirty, queryClient, user?.id])
 
   const handleCancel = useCallback(() => {
     setName(originalName.current)
