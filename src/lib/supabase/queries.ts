@@ -326,47 +326,32 @@ export async function saveUserSubjects(
   return withRetry(async () => {
     const supabase = await createServerSupabaseClient()
     
-    // Start a transaction by clearing existing subjects first
-    const { error: deleteError } = await supabase
-      .from('user_subjects')
-      .delete()
-      .eq('user_id', userId)
+    // Use atomic RPC function for transactional update
+    const { data, error } = await supabase
+      .rpc('update_user_subjects', {
+        p_user_id: userId,
+        p_subject_ids: subjectIds
+      })
     
-    if (deleteError) {
-      console.error('Error clearing user subjects:', deleteError)
+    if (error) {
+      console.error('Error updating user subjects:', error)
       throw new QueryError(
-        'Failed to clear existing subjects',
-        'SUBJECTS_CLEAR_ERROR',
-        deleteError
+        'Failed to update subjects',
+        'SUBJECTS_UPDATE_ERROR',
+        error
       )
     }
     
-    // If no subjects to add, we're done
-    if (subjectIds.length === 0) {
-      return { success: true }
-    }
-    
-    // Prepare the insert data
-    const userSubjects = subjectIds.map(subjectId => ({
-      user_id: userId,
-      subject_id: subjectId
-    }))
-    
-    // Insert new subjects
-    const { error: insertError } = await supabase
-      .from('user_subjects')
-      .insert(userSubjects)
-    
-    if (insertError) {
-      console.error('Error saving user subjects:', insertError)
+    // Verify the response matches expected format
+    if (!data || typeof data.success !== 'boolean') {
       throw new QueryError(
-        'Failed to save subjects',
-        'SUBJECTS_SAVE_ERROR',
-        insertError
+        'Invalid response from update_user_subjects',
+        'SUBJECTS_UPDATE_INVALID_RESPONSE',
+        new Error('Unexpected response format')
       )
     }
     
-    return { success: true }
+    return { success: data.success }
   }, 1).catch(error => {
     // For save operations, only retry once
     console.error('Failed to save user subjects after retry:', error)

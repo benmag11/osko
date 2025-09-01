@@ -70,6 +70,16 @@ export interface Database {
         }
         Returns: number[]
       }
+      update_user_subjects: {
+        Args: {
+          p_user_id: string
+          p_subject_ids: string[]
+        }
+        Returns: {
+          success: boolean
+          count: number
+        }
+      }
     }
   }
 }
