@@ -138,8 +138,8 @@ const navItems = [
 
 Structure:
 - **Header**: Logo with responsive collapse animation
-- **Content**: Navigation menu with active state detection
-- **Footer**: User profile dropdown
+- **Content**: Navigation menu without group labels
+- **Footer**: User profile dropdown with caching
 - **Rail**: Clickable edge for toggling (desktop only)
 
 Logo animation implementation:
@@ -156,16 +156,24 @@ User profile management component in the sidebar footer.
 
 Features:
 - Displays user avatar with initials fallback
-- Shows formatted name and email
+- Shows formatted name and email with real-time updates
 - Dropdown menu with sign-out functionality
 - Responsive positioning (bottom on mobile, right on desktop)
-- Integration with React Query for cache clearing on sign-out
+- Integration with React Query for cache management
+- Automatic refresh on window focus and network reconnect
 
 ```typescript
 const handleSignOut = async () => {
   await clientSignOut(queryClient)  // Clears cache and redirects
 }
 ```
+
+Cache Update Features:
+- Uses user-scoped query keys for profile data
+- Refetches on component mount
+- Refetches when window regains focus
+- Refetches on network reconnection
+- Updates immediately when user changes name in settings
 
 ## Data Flow
 
@@ -232,16 +240,39 @@ export function useIsMobile() {
 ```
 
 ### useUserProfile Hook
-Fetches and caches user profile data with session validation.
+Fetches and caches user profile data with session validation and automatic refresh.
 
 ```typescript
 export function useUserProfile(): UseUserProfileReturn {
-  // Validates session before fetching
-  // Returns user and profile data
-  // Handles session expiration
-  // Uses user-scoped cache keys
+  const [userId, setUserId] = useState<string | null>(null)
+  
+  // Listen for auth changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUserId(session?.user?.id ?? null)
+      }
+    )
+    return () => subscription.unsubscribe()
+  }, [supabase])
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: userId ? queryKeys.user.profile(userId) : ['user-profile-anonymous'],
+    ...CACHE_TIMES.USER_DATA,
+    refetchOnMount: true,      // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true,   // Refetch on network reconnect
+  })
 }
 ```
+
+Key features:
+- Validates session before fetching
+- Returns user and profile data
+- Handles session expiration gracefully
+- Uses user-scoped cache keys to prevent data leakage
+- Automatic refresh on mount, focus, and reconnect
+- Listens to auth state changes for immediate updates
 
 ## Integration Points
 
@@ -253,13 +284,16 @@ export default function DashboardLayout({ children }) {
   return (
     <SidebarProvider 
       defaultOpen
-      style={{ "--sidebar-width": "12.5rem" }}
+      style={{ "--sidebar-width": "12.5rem" }} // Custom width override
     >
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center">
-          <SidebarTrigger />
-          <DashboardBreadcrumb />
+        <header className="flex h-16 shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <DashboardBreadcrumb />
+          </div>
         </header>
         {children}
       </SidebarInset>
@@ -267,6 +301,8 @@ export default function DashboardLayout({ children }) {
   )
 }
 ```
+
+Note: The sidebar width is overridden to `12.5rem` (200px) from the default `25rem` for a more compact layout.
 
 ### Route Protection
 Middleware ensures authentication before accessing dashboard:
@@ -299,14 +335,23 @@ Defined in globals.css for theming:
 ```css
 /* Light mode */
 --sidebar: 0 0% 100%;                    /* Pure white background */
---sidebar-foreground: 19 20% 21%;        /* Dark text */
---sidebar-accent: 0 0% 97%;              /* Light grey hover */
---sidebar-border: 20 6% 90%;             /* Border color */
---sidebar-ring: 13 63% 60%;              /* Focus ring (salmon) */
+--sidebar-foreground: 19 20% 21%;        /* Dark text (same as foreground) */
+--sidebar-primary: 0 0% 25%;             /* Dark grey for icon backgrounds */
+--sidebar-primary-foreground: 0 0% 95%;  /* Light text on dark grey */
+--sidebar-accent: 0 0% 97%;              /* Very light grey for hover states */
+--sidebar-accent-foreground: 19 20% 21%; /* Dark text for better contrast */
+--sidebar-border: 20 6% 90%;             /* Same as border */
+--sidebar-ring: 13 63% 60%;              /* Same as ring (salmon) */
 
 /* Dark mode */
---sidebar: 20 10% 12%;                   /* Dark background */
---sidebar-foreground: 40 23% 95%;        /* Light text */
+--sidebar: 20 10% 12%;                   /* Same as dark card */
+--sidebar-foreground: 40 23% 95%;        /* Same as dark foreground */
+--sidebar-primary: 0 0% 30%;             /* Slightly lighter grey for dark mode */
+--sidebar-primary-foreground: 0 0% 95%;  /* Light text on dark grey */
+--sidebar-accent: 19 15% 20%;            /* Same as dark muted/secondary */
+--sidebar-accent-foreground: 40 23% 95%; /* Same as dark secondary-foreground */
+--sidebar-border: 19 15% 20%;            /* Same as dark border */
+--sidebar-ring: 13 63% 60%;              /* Same as ring (salmon) */
 ```
 
 ### Constants
@@ -493,6 +538,96 @@ Tooltips appear only when sidebar is collapsed:
 | variant | "default" \| "outline" | "default" | Visual variant |
 | size | "default" \| "sm" \| "lg" | "default" | Button size |
 | tooltip | string \| TooltipContentProps | - | Tooltip configuration |
+
+## Subject Management Integration
+
+### Subject Selection System
+The sidebar integrates with the subject management system through the Settings page, which provides a consolidated interface for managing user subjects.
+
+#### SubjectSection Component (subject-section.tsx)
+Provides an expandable interface for subject management within settings:
+
+```typescript
+export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(
+    userSubjects.map(s => s.id)
+  )
+  // ...
+}
+```
+
+Features:
+- **Collapsed View**: Shows currently selected subjects as chips
+- **Expanded View**: Full subject selector with save/cancel actions
+- **Optimistic UI**: Shows changes immediately with rollback on error
+- **Change Detection**: Tracks unsaved changes and enables/disables save button
+- **Alphabetical Sorting**: Subjects are pre-sorted at database level
+
+#### Subject Display Format
+```typescript
+// Subjects displayed as chips in collapsed view, sorted alphabetically
+const currentSubjectsDisplay = useMemo(() => {
+  return allSubjects
+    .filter(s => selectedSubjectIds.includes(s.id))
+    .map(s => ({
+      name: s.name,
+      level: s.level as 'Higher' | 'Ordinary'
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}, [allSubjects, selectedSubjectIds])
+
+// Chip rendering
+<div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-300">
+  <span className="font-medium">{subject.name}</span>
+  <div className={cn(
+    "w-2 h-2 rounded-full",
+    subject.level === 'Higher' ? 'bg-salmon-500' : 'bg-sky-500'
+  )} />
+  <span className="text-xs text-warm-text-muted">{subject.level}</span>
+</div>
+```
+
+#### Subject Data Fetching
+Subjects are fetched with consistent ordering at the database level:
+
+```typescript
+// From queries.ts
+const { data, error } = await supabase
+  .from('subjects')
+  .select('*')
+  .order('name', { ascending: true })  // Primary sort by name
+  .order('level', { ascending: true })  // Secondary sort by level
+```
+
+This ensures:
+- Consistent alphabetical ordering across all views
+- Higher level subjects appear before Ordinary for same subject name
+- No need for client-side sorting in most cases
+
+#### Transaction-Based Updates
+Subject updates use an atomic RPC function `update_user_subjects_transaction`:
+- Ensures data consistency with transactional updates
+- Prevents partial updates that could leave data in inconsistent state
+- Handles clearing existing subjects and adding new ones atomically
+- Includes retry logic for network failures
+
+#### Settings Layout
+Settings sections are positioned outside containers for better visual hierarchy:
+
+```typescript
+<SettingsSection title="Subjects">
+  <SubjectSection 
+    allSubjects={allSubjects}
+    userSubjects={userSubjects}
+  />
+</SettingsSection>
+```
+
+The `SettingsSection` component provides:
+- Headers positioned outside the content container
+- Consistent styling with `bg-cream-100` containers
+- Border styling with `border-stone-300`
 
 ## Other Notes
 

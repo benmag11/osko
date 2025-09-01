@@ -1,7 +1,7 @@
 # Authentication System Documentation
 
 ## Overview
-The authentication system provides secure user authentication and session management using Supabase Auth with SSR support. It implements email/password and OAuth (Google) authentication flows with email verification, automatic session refresh, onboarding flow integration, and complete cache isolation between user sessions.
+The authentication system provides secure user authentication and session management using Supabase Auth with SSR support. It implements email/password and OAuth (Google) authentication flows with OTP-based email verification, password and email change capabilities, automatic session refresh, onboarding flow integration, and complete cache isolation between user sessions.
 
 ## Architecture
 The authentication architecture follows a multi-layered approach with clear separation between server and client responsibilities:
@@ -11,6 +11,7 @@ The authentication architecture follows a multi-layered approach with clear sepa
 - **Cache Isolation**: Per-user QueryClient instances preventing data leakage
 - **Session Management**: Automatic token refresh and expiry handling
 - **Onboarding Integration**: Seamless flow from authentication to profile completion
+- **Account Management**: Secure email and password change flows with OTP verification
 
 ### Design Patterns
 - **SSR-First Approach**: Initial session fetched server-side for optimal hydration
@@ -18,6 +19,7 @@ The authentication architecture follows a multi-layered approach with clear sepa
 - **Provider Pattern**: React context for client-side auth state management
 - **Cache Isolation Pattern**: User-scoped query clients for security
 - **Server Actions**: Type-safe form handling with Next.js server actions
+- **Multi-Step Verification**: Secure account changes through password verification and OTP confirmation
 
 ## File Structure
 ```
@@ -31,6 +33,13 @@ src/
       signin/page.tsx                # Sign-in page
       signup/page.tsx                # Sign-up page
       verify/page.tsx                # Email verification page
+    dashboard/
+      settings/
+        actions.ts                   # Account management server actions
+        components/
+          email-section.tsx          # Email display and change trigger
+          password-section.tsx       # Password change dialog component
+          change-email-dialog.tsx    # Multi-step email change flow
     onboarding/
       actions.ts                     # Onboarding server actions
       page.tsx                       # Onboarding flow page
@@ -194,6 +203,64 @@ export function AuthProvider({ children, initialSession }: AuthProviderProps) {
 }
 ```
 
+### ChangeEmailDialog Component (`dashboard/settings/components/change-email-dialog.tsx`)
+Multi-step email change flow with password verification and OTP confirmation:
+
+```typescript
+export function ChangeEmailDialog({ open, onOpenChange, currentEmail }) {
+  const [step, setStep] = useState<'password' | 'email' | 'verification'>('password')
+  
+  // Step 1: Password verification
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    const result = await verifyPasswordForEmailChange(password)
+    if (!result.error) {
+      setStep('email')
+    }
+  }
+  
+  // Step 2: Request email change (sends OTP)
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    const result = await requestEmailChange(newEmail, password)
+    if (!result.error) {
+      setStep('verification')
+      setResendCooldown(60)
+    }
+  }
+  
+  // Step 3: Verify OTP for email change
+  const handleOtpVerification = async (otpValue: string) => {
+    const result = await verifyEmailChangeOtp(newEmail, otpValue)
+    if (!result.error) {
+      // Refresh session and invalidate cache
+      await supabase.auth.refreshSession()
+      await invalidateUserCache(queryClient)
+      handleClose()
+    }
+  }
+}
+```
+
+### PasswordSection Component (`dashboard/settings/components/password-section.tsx`)
+Password change dialog with current password verification:
+
+```typescript
+export function PasswordSection() {
+  const handleSubmit = async (e: React.FormEvent) => {
+    const result = await updatePassword(
+      currentPassword,
+      newPassword,
+      confirmPassword
+    )
+    
+    if (!result.error) {
+      setSuccess(true)
+      // Auto-close after showing success
+      setTimeout(() => handleOpenChange(false), 2000)
+    }
+  }
+}
+```
+
 ## Data Flow
 
 ### Authentication Flow
@@ -209,7 +276,7 @@ User Input → Server Action (signUp) → Supabase Auth → Email Verification
     ↓                                      ↓
 Form Validation                    Redirect to /auth/verify
     ↓                                      ↓
-Email/Password Extraction           OTP Input → verifyOtp
+Email/Password Extraction           6-digit OTP Input → verifyOtp
                                            ↓
                                     Profile Check → Onboarding/Dashboard
 ```
@@ -223,6 +290,32 @@ OAuth Button Click → signInWithGoogle → Supabase OAuth
    /auth/callback                     Code Exchange
          ↓                                    ↓
    Profile Creation/Check              Onboarding/Dashboard
+```
+
+### Email Change Flow
+```
+Change Email Button → Password Verification Dialog
+         ↓
+Password Input → verifyPasswordForEmailChange
+         ↓
+New Email Input → requestEmailChange → OTP sent
+         ↓
+6-digit OTP Verification → verifyEmailChangeOtp
+         ↓
+Session Refresh → Cache Invalidation → UI Update
+```
+
+### Password Change Flow
+```
+Change Password Button → Password Dialog
+         ↓
+Current Password Verification → signInWithPassword
+         ↓
+New Password Input & Confirmation
+         ↓
+updatePassword → Supabase Auth Update
+         ↓
+Success Message → Auto-close Dialog
 ```
 
 ## Key Functions and Hooks
@@ -247,7 +340,7 @@ export async function signUp(formData: FormData) {
 ```
 
 #### `verifyOtp(email: string, token: string)`
-Verifies email with OTP and checks onboarding status:
+Verifies email with 6-digit OTP and checks onboarding status:
 ```typescript
 export async function verifyOtp(email: string, token: string) {
   const { data, error } = await supabase.auth.verifyOtp({
@@ -266,6 +359,121 @@ export async function verifyOtp(email: string, token: string) {
     }
   }
   redirect('/dashboard/study')
+}
+```
+
+### Account Management Actions (`app/dashboard/settings/actions.ts`)
+
+#### `verifyPasswordForEmailChange(password: string)`
+Verifies user password before allowing email change:
+```typescript
+export async function verifyPasswordForEmailChange(password: string) {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  // Verify password by attempting sign in
+  const { error } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password,
+  })
+  
+  return error ? { error: 'Incorrect password' } : { success: true }
+}
+```
+
+#### `requestEmailChange(newEmail: string, password: string)`
+Initiates email change and sends OTP to new address:
+```typescript
+export async function requestEmailChange(newEmail: string, password: string) {
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(newEmail)) {
+    return { error: 'Please enter a valid email address' }
+  }
+  
+  // Verify password first
+  const { error: passwordError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password,
+  })
+  
+  if (passwordError) {
+    return { error: 'Incorrect password' }
+  }
+  
+  // Request email change - sends 6-digit OTP
+  const { error } = await supabase.auth.updateUser({
+    email: newEmail,
+  })
+  
+  return error ? 
+    { error: 'Failed to send verification code' } : 
+    { success: true, message: 'Verification code sent' }
+}
+```
+
+#### `verifyEmailChangeOtp(newEmail: string, token: string)`
+Completes email change with OTP verification:
+```typescript
+export async function verifyEmailChangeOtp(newEmail: string, token: string) {
+  const { error } = await supabase.auth.verifyOtp({
+    email: newEmail,
+    token,
+    type: 'email_change',
+  })
+  
+  if (error) {
+    if (error.message.includes('expired')) {
+      return { error: 'Verification code has expired' }
+    }
+    if (error.message.includes('invalid')) {
+      return { error: 'Invalid verification code' }
+    }
+    return { error: 'Failed to verify code' }
+  }
+  
+  return { 
+    success: true,
+    message: 'Email successfully changed',
+    requiresCacheInvalidation: true
+  }
+}
+```
+
+#### `updatePassword(currentPassword: string, newPassword: string, confirmPassword: string)`
+Updates user password with validation:
+```typescript
+export async function updatePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) {
+  // Validation
+  if (newPassword !== confirmPassword) {
+    return { error: 'New passwords do not match' }
+  }
+  
+  if (newPassword.length < 6) {
+    return { error: 'Password must be at least 6 characters long' }
+  }
+  
+  // Verify current password
+  const { error: passwordError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password: currentPassword,
+  })
+  
+  if (passwordError) {
+    return { error: 'Current password is incorrect' }
+  }
+  
+  // Update password
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  })
+  
+  return error ? 
+    { error: 'Failed to update password' } : 
+    { success: true, message: 'Password updated successfully' }
 }
 ```
 
@@ -454,27 +662,53 @@ export async function GET(request: Request) {
 ```
 
 ### OTP Verification Component (`components/auth/otp-verification-form.tsx`)
-Auto-submitting OTP form with resend functionality:
+6-digit OTP verification with auto-submit and resend functionality:
 ```typescript
-const handleOtpComplete = useCallback(async (value: string) => {
-  if (value.length === 6) {
-    const result = await verifyOtp(email, value)
-    if (result?.error) {
-      setError(result.error)
-      setOtp('')  // Clear on error
-    } else {
-      setIsSuccess(true)
+export function OTPVerificationForm() {
+  const [otp, setOtp] = useState('')
+  const [resendCooldown, setResendCooldown] = useState(0)
+  
+  // Auto-submit when 6 digits are entered
+  const handleOtpComplete = useCallback(async (value: string) => {
+    if (value.length === 6) {
+      const result = await verifyOtp(email, value)
+      if (result?.error) {
+        setError(result.error)
+        setOtp('')  // Clear on error
+      } else {
+        setIsSuccess(true)
+      }
+    }
+  }, [email])
+  
+  // Resend with 60-second cooldown
+  const handleResend = async () => {
+    const result = await resendOtp(email)
+    if (!result?.error) {
+      setResendCooldown(60)
+      setOtp('')
     }
   }
-}, [email])
-
-// Resend with cooldown
-const handleResend = async () => {
-  const result = await resendOtp(email)
-  if (!result?.error) {
-    setResendCooldown(60)  // 60 second cooldown
-    setOtp('')
-  }
+  
+  // InputOTP component for digit entry
+  return (
+    <InputOTP
+      maxLength={6}
+      value={otp}
+      onChange={handleOtpChange}
+      disabled={isVerifying}
+    >
+      <InputOTPGroup>
+        {[0, 1, 2, 3, 4, 5].map(index => (
+          <InputOTPSlot 
+            key={index} 
+            index={index} 
+            className={cn(error && "border-destructive")} 
+          />
+        ))}
+      </InputOTPGroup>
+    </InputOTP>
+  )
 }
 ```
 
@@ -529,13 +763,21 @@ export function extractAuthFormData(formData: FormData): AuthFormData {
 
 ## API Reference
 
-### Server Actions
-- `signUp(formData: FormData)`: Register new user
+### Authentication Server Actions
+- `signUp(formData: FormData)`: Register new user with email/password
 - `signIn(formData: FormData)`: Sign in existing user
 - `signOut()`: Sign out current user
-- `verifyOtp(email: string, token: string)`: Verify email OTP
-- `resendOtp(email: string)`: Resend verification email
+- `verifyOtp(email: string, token: string)`: Verify 6-digit email OTP
+- `resendOtp(email: string)`: Resend verification email with new OTP
 - `signInWithGoogle()`: Initiate Google OAuth flow
+
+### Account Management Server Actions
+- `verifyPasswordForEmailChange(password: string)`: Verify password before email change
+- `requestEmailChange(newEmail: string, password: string)`: Initiate email change with OTP
+- `verifyEmailChangeOtp(newEmail: string, token: string)`: Complete email change with OTP
+- `resendEmailChangeOtp(newEmail: string)`: Resend OTP for email change
+- `updatePassword(currentPassword: string, newPassword: string, confirmPassword: string)`: Change user password
+- `updateUserName(name: string)`: Update user profile name
 
 ### Client Utilities
 - `clientSignOut(queryClient: QueryClient)`: Client-side sign out with cache clear
@@ -597,9 +839,35 @@ The authentication system seamlessly integrates with the onboarding flow:
 3. Incomplete onboarding prevents access to protected routes
 4. OAuth users get profiles created automatically with `onboarding_completed: false`
 
+### OTP Verification System
+The authentication system uses 6-digit OTP codes for email verification:
+1. **Sign-up verification**: New users receive a 6-digit code to verify their email
+2. **Email change verification**: Two-step OTP verification (password + OTP to new email)
+3. **Auto-submit**: OTP forms automatically submit when 6 digits are entered
+4. **Resend cooldown**: 60-second cooldown between OTP resend attempts
+5. **Error handling**: OTP fields clear on error for security
+
+### Account Security Features
+- **Password verification**: Required before email changes to prevent unauthorized modifications
+- **Multi-step email change**: Password verification → New email input → OTP verification
+- **Session refresh**: Automatic session refresh after email changes
+- **Cache invalidation**: User cache cleared after account changes to ensure UI consistency
+- **Password strength**: Minimum 6 characters required for passwords
+- **Email validation**: Regex validation for email format before submission
+
+### UI/UX Enhancements
+- **Dialog-based flows**: Account changes handled in modal dialogs for better UX
+- **Progress indicators**: Clear visual feedback for multi-step processes
+- **Success messages**: Confirmation messages with auto-close functionality
+- **Error recovery**: Forms retain state on error for easy correction
+- **Visual password toggle**: Show/hide password buttons for all password fields
+
 ### Known Quirks
 - The middleware runs on every request, including static assets (filtered by matcher)
 - OAuth callback must handle both new and existing users differently
 - Profile creation can fail for OAuth users if database is down (handled gracefully)
 - Cache clearing on sign-out is aggressive to ensure complete data isolation
 - Session expiry check runs every minute which may impact performance on low-end devices
+- OTP verification uses `type: 'email'` for sign-up and `type: 'email_change'` for email changes
+- Email change requires password even if user is already authenticated (security measure)
+- Resend OTP creates a new code, invalidating the previous one

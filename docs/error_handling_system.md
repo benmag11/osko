@@ -18,7 +18,7 @@ src/
 ├── lib/
 │   ├── errors.ts                    # QueryError class definition
 │   ├── supabase/
-│   │   ├── queries.ts               # Server-side retry wrapper
+│   │   ├── queries.ts               # Server-side retry wrapper & RPC calls
 │   │   ├── client-queries.ts        # Client-side retry wrapper
 │   │   └── queries-client.ts        # Client query error handling
 │   ├── config/
@@ -28,13 +28,21 @@ src/
 ├── app/
 │   ├── error.tsx                    # Page-level error boundary
 │   ├── global-error.tsx             # Application-level error boundary
-│   └── auth/
-│       └── actions.ts               # Server action error handling
+│   ├── auth/
+│   │   └── actions.ts               # Auth server action error handling
+│   └── dashboard/
+│       └── settings/
+│           ├── actions.ts           # Settings server actions with validation
+│           └── components/          # Form components with error states
 ├── components/
 │   ├── providers/
 │   │   └── providers.tsx            # Query client error configuration
-│   └── questions/
-│       └── question-list.tsx        # UI error display patterns
+│   ├── questions/
+│   │   └── question-list.tsx        # UI error display patterns
+│   ├── admin/
+│   │   └── question-edit-modal.tsx  # Toast notifications for mutations
+│   └── ui/
+│       └── sonner.tsx               # Toast notification component
 └── middleware.ts                     # Route protection and error redirects
 ```
 
@@ -118,6 +126,8 @@ async function withRetry<T>(
 7. **UI Handling**: Error caught by React Query and displayed
 
 ### Server Action Error Flow
+
+#### Authentication Actions
 ```typescript
 // app/auth/actions.ts
 export async function signUp(formData: FormData) {
@@ -157,11 +167,55 @@ export async function signUp(formData: FormData) {
 }
 ```
 
+#### Settings Update Actions
+```typescript
+// app/dashboard/settings/actions.ts
+export async function updateUserName(name: string) {
+  // Input validation
+  if (!name || name.trim().length === 0) {
+    return { error: 'Name cannot be empty' }
+  }
+
+  if (name.length > 100) {
+    return { error: 'Name must be less than 100 characters' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  
+  // Authentication check
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return { error: 'You must be logged in to update your name' }
+  }
+
+  // Database update with error handling
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ 
+      name: name.trim(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Failed to update name:', error)
+    return { error: 'Failed to update name. Please try again.' }
+  }
+
+  revalidatePath('/dashboard/settings')
+  return { 
+    success: true,
+    data: { name: name.trim() }
+  }
+}
+```
+
 ## Key Functions and Hooks
 
 ### Database Query Functions
-All database queries implement consistent error handling:
 
+#### Standard Query Pattern
 ```typescript
 // lib/supabase/queries.ts
 export async function getSubjects(): Promise<Subject[]> {
@@ -187,6 +241,58 @@ export async function getSubjects(): Promise<Subject[]> {
     // Return empty array as fallback for non-critical errors
     console.error('Failed to fetch subjects after retries:', error)
     return []
+  })
+}
+```
+
+#### Transactional RPC Pattern
+```typescript
+// lib/supabase/queries.ts
+export async function saveUserSubjects(
+  userId: string, 
+  subjectIds: string[]
+): Promise<{ success: boolean; error?: string }> {
+  // Input validation
+  if (!userId || !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    return { success: false, error: 'Invalid user ID' }
+  }
+  
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+    
+    // Use atomic RPC function for transactional update
+    const { data, error } = await supabase
+      .rpc('update_user_subjects', {
+        p_user_id: userId,
+        p_subject_ids: subjectIds
+      })
+    
+    if (error) {
+      console.error('Error updating user subjects:', error)
+      throw new QueryError(
+        'Failed to update subjects',
+        'SUBJECTS_UPDATE_ERROR',
+        error
+      )
+    }
+    
+    // Verify the response matches expected format
+    if (!data || typeof data.success !== 'boolean') {
+      throw new QueryError(
+        'Invalid response from update_user_subjects',
+        'SUBJECTS_UPDATE_INVALID_RESPONSE',
+        new Error('Unexpected response format')
+      )
+    }
+    
+    return { success: data.success }
+  }, 1).catch(error => {
+    // For save operations, only retry once
+    console.error('Failed to save user subjects after retry:', error)
+    return { 
+      success: false, 
+      error: error.message || 'Failed to save subjects. Please try again.' 
+    }
   })
 }
 ```
@@ -372,6 +478,9 @@ retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000)
 interface ActionResponse {
   error?: string
   success?: boolean
+  data?: any
+  message?: string
+  requiresCacheInvalidation?: boolean
 }
 
 // Query error with details
@@ -387,13 +496,20 @@ interface SupabaseError {
   status?: number
   code?: string
 }
+
+// RPC function response
+interface RPCResponse {
+  success: boolean
+  count?: number
+  error?: string
+}
 ```
 
 ## Implementation Details
 
-### Form Validation Error Handling
-Client-side validation with immediate feedback:
+### Form Validation and Error Handling
 
+#### Input Validation Utilities
 ```typescript
 // lib/utils/form-validation.ts
 export function extractAuthFormData(formData: FormData): AuthFormData {
@@ -423,9 +539,114 @@ export function extractAuthFormData(formData: FormData): AuthFormData {
 }
 ```
 
-### UI Error Display Pattern
-Consistent error display across components:
+#### Multi-Step Form Error Handling
+```typescript
+// components/change-email-dialog.tsx
+export function ChangeEmailDialog({ open, onOpenChange, currentEmail }: Props) {
+  const [step, setStep] = useState<Step>('password')
+  const [error, setError] = useState<string | null>(null)
+  
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
 
+    const result = await verifyPasswordForEmailChange(password)
+    
+    if (result.error) {
+      setError(result.error)
+      setIsLoading(false)
+    } else {
+      setStep('email')
+      setError(null)
+      setIsLoading(false)
+    }
+  }
+  
+  const handleOtpVerification = async (otpValue?: string) => {
+    const codeToVerify = otpValue || otp
+    if (codeToVerify.length !== 6) return
+    
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const result = await verifyEmailChangeOtp(newEmail, codeToVerify)
+      if (result.error) {
+        setError(result.error)
+        setOtp('') // Clear invalid OTP
+      } else {
+        // Success handling with session refresh
+        const supabase = createClient()
+        await supabase.auth.refreshSession()
+        await invalidateUserCache(queryClient)
+        setEmailChangeSuccess(true)
+      }
+    } catch {
+      setError('An error occurred. Please try again.')
+      setOtp('')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+}
+```
+
+#### Password Change Validation
+```typescript
+// app/dashboard/settings/actions.ts
+export async function updatePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) {
+  // Comprehensive validation
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { error: 'All password fields are required' }
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { error: 'New passwords do not match' }
+  }
+
+  if (newPassword.length < 6) {
+    return { error: 'Password must be at least 6 characters long' }
+  }
+
+  if (currentPassword === newPassword) {
+    return { error: 'New password must be different from current password' }
+  }
+
+  // Verify current password before update
+  const { error: passwordError } = await supabase.auth.signInWithPassword({
+    email: user.email!,
+    password: currentPassword,
+  })
+
+  if (passwordError) {
+    return { error: 'Current password is incorrect' }
+  }
+
+  // Update password
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  })
+
+  if (error) {
+    console.error('Failed to update password:', error)
+    return { error: 'Failed to update password. Please try again.' }
+  }
+
+  return { 
+    success: true,
+    message: 'Password updated successfully'
+  }
+}
+```
+
+### UI Error Display Patterns
+
+#### Component-Level Error Display
 ```typescript
 // components/questions/question-list.tsx
 export function QuestionList({ initialData, filters }: QuestionListProps) {
@@ -445,6 +666,68 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
   
   // Component rendering...
 }
+```
+
+#### Inline Form Error Display
+```typescript
+// components/settings/name-section.tsx
+export function NameSection({ initialName }: NameSectionProps) {
+  const [error, setError] = useState<string | null>(null)
+  
+  const handleSave = useCallback(async () => {
+    setIsSaving(true)
+    setError(null)
+
+    const result = await updateUserName(name)
+    
+    if (result.error) {
+      setError(result.error)
+      setIsSaving(false)
+    } else {
+      // Success handling with cache invalidation
+      if (user?.id) {
+        try {
+          await queryClient.invalidateQueries({ 
+            queryKey: queryKeys.user.profile(user.id) 
+          })
+        } catch (invalidateError) {
+          // Log error but don't fail the save operation
+          console.error('Failed to invalidate cache:', invalidateError)
+        }
+      }
+      setIsSaving(false)
+    }
+  }, [name, queryClient, user?.id])
+  
+  return (
+    <>
+      {/* Form fields */}
+      {error && (
+        <p id="name-error" role="alert" className="mt-2 text-sm text-salmon-600 font-sans animate-in fade-in duration-200">
+          {error}
+        </p>
+      )}
+    </>
+  )
+}
+```
+
+#### Toast Notifications for Mutations
+```typescript
+// components/admin/question-edit-modal.tsx
+const updateMutation = useMutation({
+  mutationFn: async (data: UpdateData) => {
+    // Mutation logic
+  },
+  onSuccess: () => {
+    toast.success('Question updated successfully')
+    queryClient.invalidateQueries({ queryKey: ['questions'] })
+    router.refresh()
+  },
+  onError: (error) => {
+    toast.error(error.message)
+  }
+})
 ```
 
 ### Middleware Error Handling
@@ -543,6 +826,31 @@ if (error) return <ErrorComponent />
 
 ## Other Notes
 
+### Database Transaction Error Handling
+RPC functions provide automatic transaction rollback on errors:
+```sql
+-- PL/pgSQL function with automatic transaction handling
+CREATE FUNCTION update_user_subjects(p_user_id uuid, p_subject_ids uuid[])
+RETURNS jsonb AS $$
+BEGIN
+  -- Transaction boundary is automatic in PL/pgSQL functions
+  DELETE FROM user_subjects WHERE user_id = p_user_id;
+  
+  IF p_subject_ids IS NOT NULL AND array_length(p_subject_ids, 1) > 0 THEN
+    INSERT INTO user_subjects (user_id, subject_id)
+    SELECT p_user_id, unnest(p_subject_ids);
+  END IF;
+  
+  RETURN jsonb_build_object('success', true, 'count', COALESCE(array_length(p_subject_ids, 1), 0));
+  
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Transaction automatically rolls back on any error
+    RAISE;  -- Re-raise the error for proper error handling
+END;
+$$
+```
+
 ### NEXT_REDIRECT Error Handling
 Next.js redirect() function throws a special error that must be re-thrown:
 ```typescript
@@ -563,19 +871,47 @@ if (session.expires_at && session.expires_at * 1000 < Date.now()) {
 }
 ```
 
+### Cache Invalidation Error Handling
+Cache invalidation errors are logged but don't fail the operation:
+```typescript
+try {
+  await queryClient.invalidateQueries({ 
+    queryKey: queryKeys.user.profile(user.id) 
+  })
+} catch (invalidateError) {
+  // Log error but don't fail the save operation
+  console.error('Failed to invalidate cache:', invalidateError)
+}
+```
+
+### OTP Verification Error Patterns
+Specific error handling for OTP operations:
+```typescript
+if (error.message.includes('expired')) {
+  return { error: 'Verification code has expired. Please request a new one.' }
+}
+if (error.message.includes('invalid')) {
+  return { error: 'Invalid verification code. Please try again.' }
+}
+```
+
 ### Error Logging Strategy
 - Console.error for debugging in development
 - Structured error codes for production monitoring
 - Error details preserved for debugging while sanitizing user-facing messages
+- Transaction errors automatically rolled back at database level
 
 ### Performance Considerations
 - Retry delays use exponential backoff to prevent server overload
 - Abort signals prevent unnecessary network requests
 - Query cache prevents redundant error states
 - Graceful degradation maintains UI responsiveness
+- Reduced retry count (1) for mutation operations
 
 ### Security Considerations
 - User input validation before processing
 - Error messages sanitized to prevent information leakage
 - 4xx errors not retried to prevent abuse
 - Session validation at multiple layers
+- Password verification before sensitive operations
+- UUID validation for user IDs

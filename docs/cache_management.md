@@ -1,7 +1,7 @@
 # Cache Management System Documentation
 
 ## Overview
-The cache management system in this application implements a sophisticated, multi-layered caching strategy using TanStack Query (React Query) v5. It provides user-isolated cache instances, automatic invalidation on auth state changes, configurable cache times based on data volatility, and development monitoring tools for debugging cache behavior.
+The cache management system in this application implements a sophisticated, multi-layered caching strategy using TanStack Query (React Query) v5. It provides user-isolated cache instances, automatic invalidation on auth state changes, configurable cache times based on data volatility, granular cache invalidation for user updates, and development monitoring tools for debugging cache behavior.
 
 ## Architecture
 The cache management system follows a user-isolation pattern where each authenticated user gets their own QueryClient instance to prevent data leakage between sessions. The architecture consists of:
@@ -11,6 +11,7 @@ The cache management system follows a user-isolation pattern where each authenti
 3. **Cache invalidation utilities** - Tools for selective and complete cache clearing
 4. **Development monitoring** - Real-time cache inspection and debugging tools
 5. **Query key factories** - Structured approach to cache key generation
+6. **Granular invalidation patterns** - Targeted cache updates for specific user data changes
 
 ## File Structure
 ```
@@ -90,18 +91,16 @@ Provides essential cache management functions:
 ```typescript
 // Invalidates all user-specific cached data
 export async function invalidateUserCache(queryClient: QueryClient) {
-  await Promise.all([
-    queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
-    queryClient.invalidateQueries({ queryKey: ['user-subjects'] }),
-    queryClient.invalidateQueries({ queryKey: ['user-preferences'] }),
-    queryClient.invalidateQueries({ queryKey: ['user-progress'] }),
-  ])
+  // Invalidate all queries that start with ['user']
+  // This will match ['user', userId, 'profile'], ['user', userId, 'subjects'], etc.
+  await queryClient.invalidateQueries({ queryKey: ['user'] })
   
-  // Remove the invalidated queries from cache
-  queryClient.removeQueries({ queryKey: ['user-profile'] })
-  queryClient.removeQueries({ queryKey: ['user-subjects'] })
-  queryClient.removeQueries({ queryKey: ['user-preferences'] })
-  queryClient.removeQueries({ queryKey: ['user-progress'] })
+  // Also invalidate the anonymous user profile query if it exists
+  await queryClient.invalidateQueries({ queryKey: ['user-profile-anonymous'] })
+  
+  // Remove the invalidated queries from cache to force fresh data
+  queryClient.removeQueries({ queryKey: ['user'] })
+  queryClient.removeQueries({ queryKey: ['user-profile-anonymous'] })
 }
 
 // Completely clears all cached data
@@ -220,8 +219,8 @@ export const queryKeys = {
 }
 ```
 
-### User Profile Hook (`/lib/hooks/use-user-profile.ts`)
-Example of cache-aware data fetching:
+### User Profile Hook with Sidebar Updates
+The user profile hook is used by the sidebar's NavUser component to display the current user's name and email. When a user updates their name in settings, the cache is invalidated to ensure the sidebar reflects the change immediately:
 
 ```typescript
 export function useUserProfile() {
@@ -252,6 +251,33 @@ export function useUserProfile() {
 }
 ```
 
+### Name Update with Cache Invalidation (`/app/dashboard/settings/components/name-section.tsx`)
+```typescript
+const handleSave = useCallback(async () => {
+  const result = await updateUserName(name)
+  
+  if (result.error) {
+    setError(result.error)
+  } else {
+    // Update local state
+    originalName.current = name
+    
+    // Invalidate user profile cache to update sidebar and other components
+    if (user?.id) {
+      await queryClient.invalidateQueries({ 
+        queryKey: queryKeys.user.profile(user.id) 
+      })
+    }
+  }
+}, [name, queryClient, user?.id])
+```
+
+This pattern ensures that when a user changes their name:
+1. The name is updated in the database via server action
+2. The user profile cache is invalidated with the specific user ID
+3. The sidebar's NavUser component automatically re-fetches and displays the new name
+4. All other components using the user profile hook get the updated data
+
 ### Topics Hook with Static Caching (`/lib/hooks/use-topics.ts`)
 ```typescript
 export function useTopics(subjectId: string) {
@@ -267,6 +293,34 @@ export function useTopics(subjectId: string) {
 ```
 
 ## Integration Points
+
+### Email Change with Complete Cache Invalidation
+When a user successfully changes their email, the entire user cache is invalidated to ensure consistency:
+
+```typescript
+// From change-email-dialog.tsx
+const handleOtpVerification = async (otpValue?: string) => {
+  const result = await verifyEmailChangeOtp(newEmail, codeToVerify)
+  
+  if (result.error) {
+    setError(result.error)
+  } else {
+    // Refresh the session to get the updated email
+    const supabase = createClient()
+    await supabase.auth.refreshSession()
+    
+    // Invalidate cache to update email display throughout the app
+    await invalidateUserCache(queryClient)
+    
+    setEmailChangeSuccess(true)
+  }
+}
+```
+
+This uses the `invalidateUserCache` utility which:
+1. Invalidates all queries starting with ['user'] key
+2. Removes the queries from cache to force fresh data
+3. Ensures email updates are reflected in sidebar and all other components
 
 ### Authentication Provider Integration
 The auth provider manages cache lifecycle during auth state changes:
@@ -319,6 +373,50 @@ function getQueryClient(userId?: string) {
   return queryClientMap.get(clientKey)!
 }
 ```
+
+### Subject Updates with Transactional Database Operations
+User subject updates utilize a PostgreSQL function for atomic operations:
+
+```sql
+-- Database function: update_user_subjects
+CREATE FUNCTION update_user_subjects(p_user_id uuid, p_subject_ids uuid[])
+BEGIN
+  -- Transaction boundary is automatic in PL/pgSQL functions
+  DELETE FROM user_subjects WHERE user_id = p_user_id;
+  
+  IF p_subject_ids IS NOT NULL AND array_length(p_subject_ids, 1) > 0 THEN
+    INSERT INTO user_subjects (user_id, subject_id)
+    SELECT p_user_id, unnest(p_subject_ids);
+  END IF;
+  
+  -- Transaction automatically rolls back on any error
+END;
+```
+
+The client-side implementation:
+```typescript
+// From settings/actions.ts
+export async function updateUserSubjects(subjectIds: string[]) {
+  const result = await saveUserSubjects(user.id, subjectIds)
+  
+  if (!result.success) {
+    return { error: result.error }
+  }
+  
+  // Revalidate multiple paths for consistency
+  revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/study')
+  
+  return { success: true }
+}
+```
+
+This ensures:
+1. Atomic database updates via transaction
+2. No partial state if operation fails
+3. Server-side cache revalidation for affected routes
+4. Consistent data across all dashboard pages
 
 ### Mutation with Cache Invalidation
 Example from question edit modal:
@@ -478,10 +576,11 @@ Installs browser console debugging tools (development only).
 ## Other notes
 
 ### Cache Invalidation Strategies
-The system uses three invalidation strategies:
+The system uses four invalidation strategies:
 1. **Complete Clear**: On sign-out or user change
-2. **Selective Invalidation**: On user data updates
+2. **Selective Invalidation**: On specific user data updates (e.g., name changes)
 3. **Pattern-based Invalidation**: For related query groups
+4. **Path Revalidation**: Server-side cache refresh for Next.js pages
 
 ### Memory Management
 - QueryClient instances are unmounted when users change
@@ -499,6 +598,8 @@ The system uses three invalidation strategies:
 - Infinite query with cursor-based pagination
 - Request cancellation via AbortSignal
 - Deduplication of duplicate queries
+- Granular cache invalidation to minimize refetches
+- Transaction-based database updates to prevent partial state
 
 ### Edge Cases Handled
 - Anonymous user sessions with separate cache
@@ -506,3 +607,6 @@ The system uses three invalidation strategies:
 - Rapid user switching
 - Background tab data staleness
 - Network reconnection scenarios
+- Failed cache invalidation with graceful error handling
+- Concurrent updates to user profile data
+- Transaction rollback on subject update failures

@@ -23,6 +23,11 @@ src/
 │   │   ├── page.tsx                      # Onboarding page
 │   │   └── onboarding-client.tsx         # Client-side onboarding logic
 │   ├── dashboard/                        # Protected dashboard routes
+│   │   ├── settings/                     # Settings page with authentication
+│   │   │   ├── page.tsx                  # Settings server component
+│   │   │   ├── actions.ts                # Settings server actions
+│   │   │   └── settings-client.tsx       # Settings client component
+│   │   └── study/                        # Study dashboard
 │   └── subject/[slug]/                   # Protected subject routes
 ├── components/
 │   └── providers/
@@ -103,12 +108,20 @@ export function AuthProvider({ children, initialSession }: AuthProviderProps) {
           clearAllCache(queryClient)
           setUser(null)
           setSession(null)
+          setPreviousUserId(null)
           router.push('/')
           break
         case 'SIGNED_IN':
+        case 'TOKEN_REFRESHED':
           if (userChanged) {
             clearAllCache(queryClient)
           }
+          setUser(newSession?.user ?? null)
+          setSession(newSession)
+          setPreviousUserId(newUserId)
+          break
+        case 'USER_UPDATED':
+          await invalidateUserCache(queryClient)
           setUser(newSession?.user ?? null)
           setSession(newSession)
           break
@@ -175,6 +188,8 @@ export async function GET(request: Request) {
 3. **Client Hydration**: AuthProvider initializes with server session
 4. **State Synchronization**: onAuthStateChange listener maintains sync
 5. **Cache Management**: User-specific QueryClient prevents data leakage
+6. **Session Expiry Check**: Periodic validation every 60 seconds
+7. **User Change Detection**: Automatic cache clearing when user switches
 
 ### Onboarding Flow
 1. **Profile Check**: Middleware checks user_profiles.onboarding_completed
@@ -282,6 +297,9 @@ VERCEL_URL=<vercel-deployment-url>
 
 ### Protected Routes
 - `/dashboard/*` - User dashboard and settings
+  - `/dashboard/study` - Main study dashboard
+  - `/dashboard/settings` - User settings page
+  - `/dashboard/statistics` - User statistics
 - `/subject/*` - Subject-specific exam content
 - `/onboarding` - Profile completion flow
 
@@ -323,6 +341,72 @@ interface MiddlewareContext {
   profile: { onboarding_completed: boolean } | null
 }
 ```
+
+## Settings Page Protection
+
+### Server-Side Authentication (settings/page.tsx)
+The settings page implements server-side authentication checks before rendering:
+
+```typescript
+export default async function SettingsPage() {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return (
+      <div className="flex-1 bg-cream-50">
+        <div className="px-8 py-8">
+          <div className="mx-auto max-w-4xl">
+            <p className="text-center text-warm-text-muted">
+              Please sign in to view your settings
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  // Fetch user data and render settings
+  const [allSubjects, userSubjectsData] = await Promise.all([
+    getAllSubjects(),
+    getUserSubjects(user.id)
+  ])
+```
+
+### Settings Actions Authentication (settings/actions.ts)
+Every settings action includes authentication verification:
+
+```typescript
+export async function updateUserName(name: string) {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return { error: 'You must be logged in to update your name' }
+  }
+  
+  // Proceed with authenticated operation
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ 
+      name: name.trim(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('user_id', user.id)
+}
+```
+
+### Protected Settings Operations
+All settings operations require authentication:
+- **Name Updates**: `updateUserName()` - Verifies user before updating profile
+- **Email Changes**: `requestEmailChange()` - Requires password verification
+- **Password Updates**: `updatePassword()` - Validates current password first
+- **Subject Management**: `updateUserSubjects()` - Ensures user owns the subjects
+- **OTP Verification**: `verifyEmailChangeOtp()` - Confirms user identity
 
 ## Implementation Details
 
@@ -392,24 +476,53 @@ useEffect(() => {
 ```
 
 ### User Context Isolation
-The providers system ensures each user has isolated cache:
+The providers system ensures each user has isolated cache with enhanced cleanup:
 ```typescript
 function getQueryClient(userId?: string) {
+  if (typeof window === 'undefined') {
+    // Server: always make a new query client
+    return makeQueryClient(userId)
+  }
+  
+  // Browser: create or get client for this user
   const clientKey = userId || 'anonymous'
   
   if (!queryClientMap.has(clientKey)) {
     // Clean up old clients when creating new one
-    for (const [key, client] of queryClientMap.entries()) {
-      if (key !== clientKey) {
-        client.clear()
-        client.unmount()
-        queryClientMap.delete(key)
+    if (queryClientMap.size > 0 && clientKey !== 'anonymous') {
+      for (const [key, client] of queryClientMap.entries()) {
+        if (key !== clientKey) {
+          client.clear()
+          client.unmount()
+          queryClientMap.delete(key)
+        }
       }
     }
     queryClientMap.set(clientKey, makeQueryClient(userId))
   }
   
   return queryClientMap.get(clientKey)!
+}
+```
+
+### Cache Management Utilities
+The system provides comprehensive cache management functions:
+```typescript
+// Complete cache clearing on sign-out
+export function clearAllCache(queryClient: QueryClient) {
+  queryClient.cancelQueries()
+  queryClient.clear()
+  queryClient.setDefaultOptions({
+    queries: { staleTime: 0, gcTime: 0 }
+  })
+}
+
+// Selective cache invalidation for user data
+export async function invalidateUserCache(queryClient: QueryClient) {
+  await queryClient.invalidateQueries({ queryKey: ['user'] })
+  await queryClient.invalidateQueries({ queryKey: ['user-profile-anonymous'] })
+  queryClient.removeQueries({ queryKey: ['user'] })
+  queryClient.removeQueries({ queryKey: ['user-profile-anonymous'] })
 }
 ```
 
@@ -438,6 +551,7 @@ function getQueryClient(userId?: string) {
 - `signIn(formData: FormData)`: Authenticate existing user
 - `signOut()`: Server-side sign-out
 - `verifyOtp(email: string, token: string)`: Verify email OTP
+- `resendOtp(email: string)`: Resend OTP for email verification
 - `signInWithGoogle()`: Initiate Google OAuth flow
 
 ### Onboarding Actions
@@ -445,8 +559,17 @@ function getQueryClient(userId?: string) {
 - `checkOnboardingStatus()`: Check if onboarding is complete
 - `getUserProfile()`: Fetch user profile with subjects
 
+### Settings Actions
+- `updateUserName(name: string)`: Update user's display name
+- `updateUserSubjects(subjectIds: string[])`: Update user's selected subjects
+- `requestEmailChange(newEmail: string, password: string)`: Initiate email change
+- `verifyEmailChangeOtp(newEmail: string, token: string)`: Verify email change OTP
+- `resendEmailChangeOtp(newEmail: string)`: Resend email change OTP
+- `updatePassword(currentPassword: string, newPassword: string, confirmPassword: string)`: Update password
+- `verifyPasswordForEmailChange(password: string)`: Verify password for email changes
+
 ### Client Utilities
-- `clientSignOut(queryClient: QueryClient)`: Client-side sign-out
+- `clientSignOut(queryClient: QueryClient)`: Client-side sign-out with cache clearing
 - `isSessionValid()`: Validate current session
 - `getCurrentUserId()`: Get authenticated user ID
 
@@ -458,12 +581,19 @@ function getQueryClient(userId?: string) {
 - OAuth flows use PKCE for additional security
 - Session tokens are never exposed to client-side JavaScript
 - Cache is completely cleared on authentication changes to prevent data leakage
+- Settings actions include double authentication verification
+- Password changes require current password verification
+- Email changes require both password and OTP verification
+- User-specific QueryClient instances prevent cross-user data access
 
 ### Performance Optimizations
 - Profile data is cached per-request in middleware to reduce database queries
 - Parallel data fetching in OAuth callback for faster onboarding checks
 - User-specific QueryClient instances prevent cross-user cache pollution
 - Middleware runs at the edge for minimal latency
+- Server-side authentication checks prevent unnecessary client renders
+- Optimized cache invalidation patterns for selective updates
+- Automatic cleanup of old QueryClient instances to prevent memory leaks
 
 ### Error Handling
 - OAuth errors redirect to sign-in with error messages
