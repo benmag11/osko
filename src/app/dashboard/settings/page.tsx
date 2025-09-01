@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getAllSubjects, getUserSubjects } from '@/lib/supabase/queries'
 import { SettingsClient } from './settings-client'
+import { DashboardPage } from '@/components/layout/dashboard-page'
 
 export default async function SettingsPage() {
   const supabase = await createServerSupabaseClient()
@@ -10,15 +11,11 @@ export default async function SettingsPage() {
   
   if (!user) {
     return (
-      <div className="flex-1 bg-cream-50">
-        <div className="px-8 py-8">
-          <div className="mx-auto max-w-4xl">
-            <p className="text-center text-warm-text-muted">
-              Please sign in to view your settings
-            </p>
-          </div>
-        </div>
-      </div>
+      <DashboardPage>
+        <p className="text-center text-warm-text-muted">
+          Please sign in to view your settings
+        </p>
+      </DashboardPage>
     )
   }
   
@@ -39,17 +36,13 @@ export default async function SettingsPage() {
   const userSubjects = userSubjectsData.map(us => us.subject)
   
   return (
-    <div className="flex-1 bg-cream-50">
-      <div className="px-8 py-8">
-        <div className="mx-auto max-w-4xl">
-          <SettingsClient 
-            userEmail={user.email || ''}
-            userName={profile?.name || ''}
-            allSubjects={allSubjects}
-            userSubjects={userSubjects}
-          />
-        </div>
-      </div>
-    </div>
+    <DashboardPage>
+      <SettingsClient 
+        userEmail={user.email || ''}
+        userName={profile?.name || ''}
+        allSubjects={allSubjects}
+        userSubjects={userSubjects}
+      />
+    </DashboardPage>
   )
 }

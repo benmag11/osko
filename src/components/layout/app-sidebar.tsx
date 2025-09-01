@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   BookOpen,
+  Info,
   BarChart3,
   Settings,
 } from 'lucide-react'
@@ -28,6 +29,11 @@ const navItems = [
     title: 'Study',
     url: '/dashboard/study',
     icon: BookOpen,
+  },
+  {
+    title: 'About',
+    url: '/dashboard/about',
+    icon: Info,
   },
   {
     title: 'Statistics',

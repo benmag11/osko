@@ -12,6 +12,8 @@ export function DashboardBreadcrumb() {
     switch(lastSegment) {
       case 'study':
         return 'Study'
+      case 'about':
+        return 'About'
       case 'statistics':
         return 'Statistics'
       case 'settings':
