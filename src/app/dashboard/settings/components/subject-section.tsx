@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { SubjectSelector } from '@/components/subjects/subject-selector'
 import { updateUserSubjects } from '../actions'
-import { ChevronDown, ChevronUp, Check, X, Loader2 } from 'lucide-react'
+import { ChevronDown, Check, X, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Subject } from '@/lib/types/database'
 
@@ -89,11 +89,8 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
         {/* Header with expand/collapse button */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-serif font-medium text-warm-text-primary">
-              Subjects
-            </h3>
             {!isExpanded && (
-              <p className="text-sm text-warm-text-muted mt-1">
+              <p className="text-sm text-warm-text-muted">
                 {currentSubjectsDisplay.length === 0 
                   ? 'No subjects selected'
                   : `${currentSubjectsDisplay.length} subject${currentSubjectsDisplay.length === 1 ? '' : 's'} selected`
@@ -118,7 +115,7 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
         {/* Collapsed view - show current subjects */}
         {!isExpanded && currentSubjectsDisplay.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {currentSubjectsDisplay.map((subject, index) => (
+            {currentSubjectsDisplay.map((subject) => (
               <div
                 key={`${subject.name}-${subject.level}`}
                 className={cn(
@@ -142,15 +139,13 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
         {/* Expanded view - show full selector */}
         {isExpanded && (
           <div className="space-y-4">
-            <div className="border border-stone-300 rounded-lg p-4 bg-white">
-              <SubjectSelector
-                subjects={allSubjects}
-                initialSelectedIds={selectedSubjectIds}
-                onSelectionChange={handleSelectionChange}
-                isDisabled={isPending}
-                showSelectedPanel={true}
-              />
-            </div>
+            <SubjectSelector
+              subjects={allSubjects}
+              initialSelectedIds={selectedSubjectIds}
+              onSelectionChange={handleSelectionChange}
+              isDisabled={isPending}
+              showSelectedPanel={true}
+            />
 
             {/* Action buttons */}
             <div className="flex items-center justify-between">

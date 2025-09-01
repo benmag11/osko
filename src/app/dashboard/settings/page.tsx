@@ -42,18 +42,12 @@ export default async function SettingsPage() {
     <div className="flex-1 bg-cream-50">
       <div className="px-8 py-8">
         <div className="mx-auto max-w-4xl">
-          <h1 className="text-3xl font-serif font-semibold text-warm-text-primary mb-8">
-            Account
-          </h1>
-          
-          <div className="bg-cream-100 rounded-lg border border-stone-300">
-            <SettingsClient 
-              userEmail={user.email || ''}
-              userName={profile?.name || ''}
-              allSubjects={allSubjects}
-              userSubjects={userSubjects}
-            />
-          </div>
+          <SettingsClient 
+            userEmail={user.email || ''}
+            userName={profile?.name || ''}
+            allSubjects={allSubjects}
+            userSubjects={userSubjects}
+          />
         </div>
       </div>
     </div>
