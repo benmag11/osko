@@ -16,6 +16,7 @@ interface SubjectSelectorProps {
   isDisabled?: boolean
   showSelectedPanel?: boolean
   className?: string
+  actions?: React.ReactNode
 }
 
 interface GroupedSubject {
@@ -30,7 +31,8 @@ export function SubjectSelector({
   onSelectionChange,
   isDisabled = false,
   showSelectedPanel = true,
-  className
+  className,
+  actions
 }: SubjectSelectorProps) {
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(
     new Set(initialSelectedIds)
@@ -127,7 +129,10 @@ export function SubjectSelector({
         {/* Selected Subjects Panel - First on mobile, second on desktop */}
         {showSelectedPanel && (
           <div className="order-1 lg:order-2 lg:col-span-1">
-            <Card className="lg:sticky lg:top-4 border-stone-400">
+            <Card className={cn(
+              "lg:sticky lg:top-4 border-stone-400",
+              actions && "lg:h-[616px]" // Match onboarding card height when actions present
+            )}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">
                   Selected Subjects ({selectedSubjectsWithDetails.length})
@@ -136,9 +141,9 @@ export function SubjectSelector({
                   Your chosen subjects and levels
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 {/* ScrollArea only on desktop, natural flow on mobile */}
-                <div className="lg:h-[450px] lg:overflow-y-auto lg:pr-4">
+                <div className="lg:h-[378px] lg:overflow-y-auto lg:pr-4">
                   {selectedSubjectsWithDetails.length === 0 ? (
                     <p className="text-sm text-[#9e9e9e] text-center py-8">
                       No subjects selected yet
@@ -158,6 +163,12 @@ export function SubjectSelector({
                     </div>
                   )}
                 </div>
+                
+                {actions && (
+                  <div className="space-y-2 pt-3 border-t">
+                    {actions}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -197,7 +208,7 @@ export function SubjectSelector({
           </div>
 
           {/* Subject Cards Grid - 2 columns as requested */}
-          <div className="lg:h-[500px] lg:overflow-y-auto lg:pr-4">
+          <div className="lg:h-[560px] lg:overflow-y-auto lg:pr-4">
             <div className="grid grid-cols-2 gap-3">
               {filteredSubjects.map((group) => (
                 <SubjectCard

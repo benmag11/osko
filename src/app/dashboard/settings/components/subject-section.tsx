@@ -139,55 +139,49 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
         {/* Expanded view - show full selector */}
         {isExpanded && (
           <div className="space-y-4">
+            {error && (
+              <p role="alert" className="text-sm text-salmon-600 font-sans animate-in fade-in duration-200">
+                {error}
+              </p>
+            )}
+            
             <SubjectSelector
               subjects={allSubjects}
               initialSelectedIds={selectedSubjectIds}
               onSelectionChange={handleSelectionChange}
               isDisabled={isPending}
               showSelectedPanel={true}
+              actions={
+                <>
+                  <Button
+                    onClick={handleSave}
+                    disabled={isPending || !hasChanges}
+                    className="w-full"
+                  >
+                    {isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving
+                      </>
+                    ) : (
+                      <>
+                        <Check className="mr-2 h-4 w-4" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleCancel}
+                    disabled={isPending}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                </>
+              }
             />
-
-            {/* Action buttons */}
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                {error && (
-                  <p role="alert" className="text-sm text-salmon-600 font-sans animate-in fade-in duration-200">
-                    {error}
-                  </p>
-                )}
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSave}
-                  disabled={isPending || !hasChanges}
-                  size="sm"
-                  className="h-8 min-w-[80px]"
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving
-                    </>
-                  ) : (
-                    <>
-                      <Check className="mr-2 h-4 w-4" />
-                      Save
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleCancel}
-                  disabled={isPending}
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
-              </div>
-            </div>
           </div>
         )}
       </div>
