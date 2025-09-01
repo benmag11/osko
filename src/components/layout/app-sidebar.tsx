@@ -31,11 +31,6 @@ const navItems = [
     icon: BookOpen,
   },
   {
-    title: 'About',
-    url: '/dashboard/about',
-    icon: Info,
-  },
-  {
     title: 'Statistics',
     url: '/dashboard/statistics',
     icon: BarChart3,
@@ -44,6 +39,11 @@ const navItems = [
     title: 'Settings',
     url: '/dashboard/settings',
     icon: Settings,
+  },
+  {
+    title: 'About',
+    url: '/dashboard/about',
+    icon: Info,
   },
 ]
 

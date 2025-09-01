@@ -17,20 +17,25 @@ The onboarding system follows a client-server architecture with server-side vali
 ```
 src/
 ├── app/onboarding/
-│   ├── page.tsx                    # Server component entry point, fetches subjects
-│   ├── onboarding-client.tsx       # Main client orchestrator for multi-step flow
-│   └── actions.ts                   # Server actions for data persistence
+│   ├── page.tsx                        # Server component entry point, fetches subjects
+│   ├── onboarding-client.tsx           # Main client orchestrator for multi-step flow
+│   └── actions.ts                       # Server actions for data persistence
 ├── components/onboarding/
-│   ├── name-step.tsx               # Step 1: Name collection form
-│   ├── subject-selection-step.tsx  # Step 2: Subject and level selection
-│   ├── subject-card.tsx            # Individual subject selection card
-│   ├── selected-subject-card.tsx   # Display card for selected subjects
-│   └── progress-indicator.tsx      # Visual progress tracker
-├── middleware.ts                    # Route protection and onboarding checks
-├── app/auth/callback/route.ts      # OAuth callback with profile creation
-├── lib/supabase/queries.ts         # Database operations (saveUserSubjects)
-├── lib/types/database.ts           # TypeScript types for user_profiles, user_subjects
-└── lib/utils/subject-icons.ts      # Icon mapping for subjects
+│   ├── name-step.tsx                   # Step 1: Name collection form
+│   ├── subject-selection-step.tsx      # Step 2: Delegates to SubjectSelector
+│   └── progress-indicator.tsx          # Visual progress tracker
+├── components/subjects/                 # Shared subject selection components
+│   ├── subject-selector.tsx            # Main subject selection component
+│   ├── subject-card.tsx                # Individual subject selection card
+│   └── selected-subject-card.tsx       # Display card for selected subjects
+├── app/dashboard/settings/
+│   ├── components/subject-section.tsx  # Subject management in settings
+│   └── actions.ts                       # Settings-specific server actions
+├── middleware.ts                        # Route protection and onboarding checks
+├── app/auth/callback/route.ts          # OAuth callback with profile creation
+├── lib/supabase/queries.ts             # Database operations with RPC functions
+├── lib/types/database.ts               # TypeScript types and RPC definitions
+└── lib/utils/subject-icons.ts          # Icon mapping for subjects
 ```
 
 ## Core Components
@@ -105,32 +110,80 @@ Collects user's display name with client-side validation requiring minimum 2 cha
 ### SubjectSelectionStep Component
 ```tsx
 // src/components/onboarding/subject-selection-step.tsx
-export function SubjectSelectionStep({ subjects, onNext, onBack }: Props) {
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(new Set())
-  
-  // Group subjects by name for display
-  const groupedSubjects = useMemo(() => {
-    const grouped = new Map<string, GroupedSubject>()
-    subjects.forEach(subject => {
-      const existing = grouped.get(subject.name) || { name: subject.name }
-      if (subject.level === 'Higher') existing.higher = subject
-      else if (subject.level === 'Ordinary') existing.ordinary = subject
-      grouped.set(subject.name, existing)
-    })
-    return Array.from(grouped.values())
-  }, [subjects])
-  
-  const handleSubjectToggle = (subject: Subject) => {
-    // Remove any other level of the same subject
-    const otherLevelSubject = subjects.find(
-      s => s.name === subject.name && s.id !== subject.id
-    )
-    if (otherLevelSubject) newSelected.delete(otherLevelSubject.id)
-    newSelected.add(subject.id)
-  }
+export function SubjectSelectionStep({ 
+  subjects,
+  onNext, 
+  onBack, 
+  initialSubjectIds = [],
+  isSubmitting = false
+}: SubjectSelectionStepProps) {
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(initialSubjectIds)
+
+  return (
+    <div className="w-full">
+      <SubjectSelector
+        subjects={subjects}
+        initialSelectedIds={selectedSubjectIds}
+        onSelectionChange={setSelectedSubjectIds}
+        isDisabled={isSubmitting}
+        showSelectedPanel={true}
+        actions={
+          <>
+            <Button onClick={() => onNext(selectedSubjectIds)}>Continue</Button>
+            <Button variant="outline" onClick={onBack}>Back</Button>
+          </>
+        }
+      />
+    </div>
+  )
 }
 ```
-Complex subject selection interface that groups subjects by name, allows level selection (Higher/Ordinary), includes search functionality, and prevents selecting multiple levels of the same subject.
+Delegates to the shared `SubjectSelector` component, providing onboarding-specific actions (Continue/Back buttons). This promotes code reuse between onboarding and settings.
+
+### SubjectSelector Component (Shared)
+```tsx
+// src/components/subjects/subject-selector.tsx
+export function SubjectSelector({ 
+  subjects,
+  initialSelectedIds = [],
+  onSelectionChange,
+  isDisabled = false,
+  showSelectedPanel = true,
+  actions
+}: SubjectSelectorProps) {
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(new Set(initialSelectedIds))
+  const [searchTerm, setSearchTerm] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  
+  // Clear search with X button
+  const clearSearch = useCallback(() => {
+    setSearchTerm('')
+    inputRef.current?.focus()
+  }, [])
+  
+  const handleSubjectToggle = useCallback((subject: Subject) => {
+    const newSelected = new Set(selectedSubjectIds)
+    if (newSelected.has(subject.id)) {
+      newSelected.delete(subject.id)
+    } else {
+      // Remove any other level of the same subject
+      const otherLevelSubject = subjects.find(
+        s => s.name === subject.name && s.id !== subject.id
+      )
+      if (otherLevelSubject) newSelected.delete(otherLevelSubject.id)
+      newSelected.add(subject.id)
+    }
+    setSelectedSubjectIds(newSelected)
+    onSelectionChange?.(Array.from(newSelected))
+  }, [selectedSubjectIds, subjects, isDisabled, onSelectionChange])
+}
+```
+Consolidated subject selection component used across onboarding and settings. Features include:
+- Search functionality with clear button (X)
+- Grouped subject display by name
+- Level selection (Higher/Ordinary) with mutual exclusion
+- Selected subjects panel with remove capability
+- Customizable actions area for context-specific buttons
 
 ## Data Flow
 
@@ -161,7 +214,7 @@ export async function saveOnboardingData(data: OnboardingFormData) {
     updated_at: new Date().toISOString()
   })
   
-  // 3. Save user subjects (with transaction-like behavior)
+  // 3. Save user subjects using atomic RPC function
   const result = await saveUserSubjects(user.id, data.subjectIds)
   
   // 4. Rollback on failure
@@ -202,9 +255,31 @@ Checks if a user has completed onboarding by querying the user_profiles table. U
 export async function saveUserSubjects(
   userId: string, 
   subjectIds: string[]
-): Promise<{ success: boolean; error?: string }>
+): Promise<{ success: boolean; error?: string }> {
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+    
+    // Use atomic RPC function for transactional update
+    const { data, error } = await supabase
+      .rpc('update_user_subjects', {
+        p_user_id: userId,
+        p_subject_ids: subjectIds
+      })
+    
+    if (error) throw new QueryError('Failed to update subjects', 'SUBJECTS_UPDATE_ERROR', error)
+    if (!data || typeof data.success !== 'boolean') {
+      throw new QueryError('Invalid response from update_user_subjects', 'SUBJECTS_UPDATE_INVALID_RESPONSE')
+    }
+    
+    return { success: data.success }
+  }, 1) // Single retry for save operations
+}
 ```
-Transactional operation that clears existing user subjects and inserts new selections. Includes retry logic with exponential backoff for reliability.
+Uses the `update_user_subjects` RPC function to atomically update user subjects in a single transaction. This prevents data inconsistencies that could occur with separate delete/insert operations. The RPC function:
+- Deletes all existing user subjects for the user
+- Inserts the new subject selections
+- Returns success status and count of inserted records
+- Executes as a single database transaction
 
 ### useUserProfile Hook
 ```tsx
@@ -222,6 +297,38 @@ export function useUserProfile(): UseUserProfileReturn {
 ```
 
 ## Integration Points
+
+### Subject Management Integration
+The onboarding flow shares subject selection components with the settings page:
+
+1. **Shared SubjectSelector Component**:
+   - Used in both `/onboarding` and `/dashboard/settings`
+   - Provides consistent UX across the application
+   - Located in `src/components/subjects/` for reusability
+
+2. **Settings Subject Management** (`/dashboard/settings/components/subject-section.tsx`):
+```tsx
+export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>(userSubjects.map(s => s.id))
+  
+  // Collapsed view shows current subjects as pills
+  // Expanded view shows full SubjectSelector with Save/Cancel actions
+  
+  const handleSave = useCallback(() => {
+    startTransition(async () => {
+      const result = await updateUserSubjects(selectedSubjectIds)
+      if (result.error) setError(result.error)
+      else setIsExpanded(false)
+    })
+  }, [selectedSubjectIds, hasChanges])
+}
+```
+
+3. **Unified Subject Update Flow**:
+   - Both onboarding and settings use `saveUserSubjects` from queries.ts
+   - Same RPC function (`update_user_subjects`) for atomic updates
+   - Consistent error handling and retry logic
 
 ### Authentication System Integration
 The onboarding flow is tightly integrated with Supabase Auth:
@@ -287,6 +394,28 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 - `user_profiles` table with columns: id, user_id, name, onboarding_completed, is_admin, created_at, updated_at
 - `user_subjects` table with columns: id, user_id, subject_id, created_at
 - `subjects` table with available subjects and levels
+- `update_user_subjects` RPC function for atomic subject updates:
+  ```sql
+  CREATE OR REPLACE FUNCTION update_user_subjects(
+    p_user_id UUID,
+    p_subject_ids UUID[]
+  ) RETURNS JSON AS $$
+  DECLARE
+    v_count INTEGER;
+  BEGIN
+    -- Delete existing subjects
+    DELETE FROM user_subjects WHERE user_id = p_user_id;
+    
+    -- Insert new subjects
+    INSERT INTO user_subjects (user_id, subject_id)
+    SELECT p_user_id, unnest(p_subject_ids);
+    
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    
+    RETURN json_build_object('success', true, 'count', v_count);
+  END;
+  $$ LANGUAGE plpgsql SECURITY DEFINER;
+  ```
 
 ### Row Level Security (RLS) Policies
 ```sql
@@ -367,6 +496,34 @@ const handleSubjectToggle = (subject: Subject) => {
 }
 ```
 
+### Search Input with Clear Button
+The SubjectSelector includes an optimized search with clear functionality:
+```tsx
+// Search input with clear X button
+<div className="relative">
+  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" />
+  <Input
+    ref={inputRef}
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className={cn("pl-10", searchTerm && "pr-10")}
+  />
+  {searchTerm && (
+    <button
+      onClick={clearSearch}
+      aria-label="Clear search"
+      className="absolute right-3 top-1/2 transform -translate-y-1/2"
+    >
+      <X className="h-4 w-4" />
+    </button>
+  )}
+</div>
+```
+The clear button:
+- Only appears when search term is present
+- Clears the search and refocuses the input
+- Provides accessible keyboard and screen reader support
+
 ### Error Handling Strategy
 The system implements comprehensive error handling with specific error codes:
 - `AUTH_ERROR`: User not authenticated, redirects to signin
@@ -384,6 +541,13 @@ if (!result.success) {
     .eq('user_id', user.id)
 }
 ```
+
+### Transaction Support for Subject Updates
+The `update_user_subjects` RPC function ensures atomic updates:
+- All subject changes occur in a single database transaction
+- Prevents partial updates if any operation fails
+- Eliminates race conditions between delete and insert operations
+- Returns success status and count of affected records for verification
 
 ### Progress Tracking
 Visual progress indication using a custom Progress component:
@@ -462,6 +626,14 @@ The subject selection step uses different layouts for mobile and desktop:
 The system uses optimized indexes for performance:
 - `user_profiles_user_id_key`: Unique index on user_id for fast profile lookups
 - `unique_user_subject`: Composite unique index on (user_id, subject_id) preventing duplicate selections
+
+### Component Consolidation Benefits
+The consolidated SubjectSelector component provides:
+- **Code Reuse**: Single implementation for onboarding and settings
+- **Consistent UX**: Same interaction patterns across the application
+- **Maintainability**: Bug fixes and improvements apply everywhere
+- **Flexible Actions**: Context-specific buttons via the `actions` prop
+- **Shared State Logic**: Unified subject selection and validation rules
 
 ### Subject Icon Mapping
 The system uses a centralized icon mapping for consistent visual representation:

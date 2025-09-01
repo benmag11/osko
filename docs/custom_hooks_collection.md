@@ -348,6 +348,9 @@ export function useUserProfile(): UseUserProfileReturn {
     ...CACHE_TIMES.USER_DATA,
     retry: 1,
     enabled: !!userId,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   })
   
   return {
@@ -365,6 +368,24 @@ export function useUserProfile(): UseUserProfileReturn {
 - User-scoped cache keys for security
 - Graceful error handling with fallbacks
 - 5-minute cache with 10-minute garbage collection
+- Automatic refetch on mount, window focus, and network reconnect
+
+### useUser Hook
+Location: `/src/lib/hooks/use-user-profile.ts`
+
+Simplified hook to get just the current user without profile data.
+
+```typescript
+export function useUser() {
+  const { user, isLoading, error } = useUserProfile()
+  return { user, isLoading, error }
+}
+```
+
+**Key Features:**
+- Leverages the same cache as `useUserProfile`
+- Lightweight alternative when profile data isn't needed
+- Maintains consistency with main user profile hook
 
 ### useUserSubjects Hook
 Location: `/src/lib/hooks/use-user-subjects.ts`
@@ -514,9 +535,37 @@ USER_DATA: {
   staleTime: 5 * 60 * 1000,   // 5 minutes
   gcTime: 10 * 60 * 1000,      // 10 minutes
 }
+DYNAMIC_DATA: {
+  staleTime: 60 * 1000,        // 1 minute
+  gcTime: 5 * 60 * 1000,       // 5 minutes
+}
 TOPICS: {
   staleTime: 10 * 60 * 1000,   // 10 minutes
   gcTime: 30 * 60 * 1000,      // 30 minutes
+}
+QUESTIONS: {
+  staleTime: 1 * 60 * 1000,    // 1 minute
+  gcTime: 10 * 60 * 1000,      // 10 minutes
+}
+```
+
+### Global Query Configuration
+```typescript
+QUERY_CONFIG: {
+  defaultOptions: {
+    queries: {
+      staleTime: CACHE_TIMES.DYNAMIC_DATA.staleTime,
+      gcTime: CACHE_TIMES.DYNAMIC_DATA.gcTime,
+      retry: 1,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      refetchOnReconnect: 'always',
+    },
+    mutations: {
+      retry: 0, // Mutations should not retry automatically
+    },
+  },
 }
 ```
 
@@ -610,6 +659,93 @@ if (isMobile === true) {
 }
 ```
 
+## Cache Management Utilities
+
+### Cache Utility Functions
+Location: `/src/lib/cache/cache-utils.ts`
+
+Provides centralized cache management functions for React Query, ensuring proper cache isolation and cleanup.
+
+```typescript
+// Invalidate all user-specific cached data
+export async function invalidateUserCache(queryClient: QueryClient) {
+  await queryClient.invalidateQueries({ queryKey: ['user'] })
+  await queryClient.invalidateQueries({ queryKey: ['user-profile-anonymous'] })
+  queryClient.removeQueries({ queryKey: ['user'] })
+  queryClient.removeQueries({ queryKey: ['user-profile-anonymous'] })
+}
+
+// Complete cache clear on sign-out
+export function clearAllCache(queryClient: QueryClient) {
+  queryClient.cancelQueries()
+  queryClient.clear()
+  queryClient.setDefaultOptions({
+    queries: {
+      staleTime: 0,
+      gcTime: 0,
+    },
+  })
+}
+
+// Selective cache invalidation by pattern
+export async function invalidateCacheByPattern(
+  queryClient: QueryClient,
+  pattern: string | string[]
+) {
+  const patterns = Array.isArray(pattern) ? pattern : [pattern]
+  for (const p of patterns) {
+    await queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey as string[]
+        return key.some(k => typeof k === 'string' && k.includes(p))
+      },
+    })
+  }
+}
+
+// Get cache statistics for monitoring
+export function getCacheStats(queryClient: QueryClient) {
+  const cache = queryClient.getQueryCache()
+  const queries = cache.getAll()
+  
+  return {
+    totalQueries: queries.length,
+    staleQueries: queries.filter(q => q.isStale()).length,
+    activeQueries: queries.filter(q => q.isActive()).length,
+    inactiveQueries: queries.filter(q => !q.isActive()).length,
+    fetchingQueries: queries.filter(q => q.state.fetchStatus === 'fetching').length,
+  }
+}
+```
+
+**Key Features:**
+- User-scoped cache invalidation for security
+- Complete cache clearing on sign-out
+- Pattern-based selective invalidation
+- Cache statistics for monitoring and debugging
+- Query cancellation to prevent race conditions
+
+### Cache Usage in Settings
+
+The settings functionality demonstrates sophisticated cache management:
+
+1. **Name Updates** (`/src/app/dashboard/settings/components/name-section.tsx`):
+   - Invalidates user profile cache after successful name update
+   - Updates sidebar and other components automatically
+   - Uses `queryKeys.user.profile(userId)` for targeted invalidation
+
+2. **Subject Updates** (`/src/app/dashboard/settings/actions.ts`):
+   - Server-side revalidation using `revalidatePath`
+   - Invalidates multiple paths: `/dashboard/settings`, `/dashboard`, `/dashboard/study`
+   - Ensures consistency across all views showing user subjects
+
+3. **Auth State Changes** (`/src/components/providers/auth-provider.tsx`):
+   - Different cache strategies based on auth event type:
+     - `SIGNED_OUT`: Complete cache clear via `clearAllCache`
+     - `SIGNED_IN`/`TOKEN_REFRESHED`: Clear all if user changed
+     - `USER_UPDATED`: Selective invalidation via `invalidateUserCache`
+   - Prevents data leakage between user sessions
+
 ## Dependencies
 
 ### External Dependencies
@@ -628,6 +764,7 @@ if (isMobile === true) {
 - `/lib/config/cache`: Cache configuration constants
 - `/lib/queries/query-keys`: Query key factory functions
 - `/lib/errors`: Custom error classes
+- `/lib/cache/cache-utils`: Cache management utilities
 
 ## API Reference
 
@@ -704,6 +841,15 @@ function useUserProfile(): {
 }
 ```
 
+### useUser
+```typescript
+function useUser(): {
+  user: User | null
+  isLoading: boolean
+  error: Error | null
+}
+```
+
 ### useUserSubjects
 ```typescript
 function useUserSubjects(userId: string | undefined): {
@@ -722,6 +868,53 @@ function useAuth(): {
   signOut: () => Promise<void>
 }
 ```
+
+### Cache Utility Functions
+
+#### invalidateUserCache
+```typescript
+function invalidateUserCache(queryClient: QueryClient): Promise<void>
+```
+Invalidates all user-specific cached data and removes queries from cache.
+
+#### clearAllCache
+```typescript
+function clearAllCache(queryClient: QueryClient): void
+```
+Completely clears all cached data, cancels queries, and resets default options.
+
+#### invalidateCacheByPattern
+```typescript
+function invalidateCacheByPattern(
+  queryClient: QueryClient,
+  pattern: string | string[]
+): Promise<void>
+```
+Invalidates cache entries matching specific patterns.
+
+#### getCacheStats
+```typescript
+function getCacheStats(queryClient: QueryClient): {
+  totalQueries: number
+  staleQueries: number
+  activeQueries: number
+  inactiveQueries: number
+  fetchingQueries: number
+}
+```
+Returns statistics about the current cache state for monitoring.
+
+#### resetQueryClient
+```typescript
+function resetQueryClient(queryClient: QueryClient): void
+```
+Resets the query client to initial state by canceling queries, clearing cache, and unmounting.
+
+#### getUserScopedKey
+```typescript
+function getUserScopedKey(userId: string, baseKey: string[]): string[]
+```
+Creates user-scoped cache keys to ensure cache isolation between different users.
 
 ## Other Notes
 

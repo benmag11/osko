@@ -1,5 +1,6 @@
 import { DashboardPage } from '@/components/layout/dashboard-page'
 import { SubjectStatusTable } from './components/subject-status-table'
+import { FutureFeaturesTimeline } from './components/future-features-timeline'
 
 export default function AboutPage() {
   return (
@@ -16,18 +17,26 @@ export default function AboutPage() {
       
       {/* Available Subjects Section */}
       <section className="mb-12">
-        <h2 className="text-5xl font-sans font-semibold text-stone-800 mb-6">
-          Available Subjects
-        </h2>
-        <div className="prose prose-stone max-w-none">
-          <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-            Adding subjects takes a lot of time. I aim to have all (popular) subjects 
-            fully uploaded by October 1st.
-          </p>
+        <div className="text-center mb-6">
+          <h2 className="text-5xl font-sans font-semibold text-stone-800 mb-6">
+            Available Subjects
+          </h2>
+          <div className="prose prose-stone max-w-3xl mx-auto">
+            <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
+              Adding subjects takes a lot of time. I aim to have all (popular) subjects 
+              fully uploaded by October 1st.
+            </p>
+          </div>
         </div>
         <SubjectStatusTable />
       </section>
 
+      {/* Divider */}
+      <hr className="border-stone-200 mb-12" />
+      
+      {/* Future Features Timeline */}
+      <FutureFeaturesTimeline />
+      
       {/* Divider */}
       <hr className="border-stone-200 mb-12" />
       
@@ -45,7 +54,7 @@ export default function AboutPage() {
             users connect with the mission behind OSCO.]
           </p>
           <p className="text-warm-text-secondary leading-relaxed font-serif text-xl mt-4">
-            [You could also discuss the technical challenges you overcame, the features you're most proud of, 
+            [You could also discuss the technical challenges you overcame, the features you&apos;re most proud of, 
             or your future plans for the platform. This is your space to share your journey and passion for 
             education technology.]
           </p>
