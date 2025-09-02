@@ -71,7 +71,7 @@ const config: Config = {
           300: "#dda896",
           400: "#E59C84",
           500: "#D97757",
-          600: "#cd5c2fff",
+          600: "#e16f42ff",
         },
         "coral": {
           400: "#FB923C",

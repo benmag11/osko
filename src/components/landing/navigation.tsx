@@ -17,14 +17,11 @@ export function LandingNavigation() {
         </Link>
         
         <nav className="flex items-center gap-4">
-          <Link
-            href="/auth/signin"
-            className="text-sm font-medium text-warm-text-secondary hover:text-salmon-500 transition-colors"
-          >
-            Log in
-          </Link>
-          <Button asChild size="sm">
-            <Link href="/auth/signup">Sign up</Link>
+          <Button asChild variant="ghost" size="default">
+            <Link href="/auth/signin">Log In</Link>
+          </Button>
+          <Button asChild variant="default" size="default">
+            <Link href="/auth/signup">Sign Up</Link>
           </Button>
         </nav>
       </div>
