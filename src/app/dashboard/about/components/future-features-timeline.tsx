@@ -16,9 +16,9 @@ interface TimelineItem {
 const timelineData: TimelineItem[] = [
   {
     id: '1',
-    title: 'AI-Powered Study Assistant',
-    description: 'Personalized AI tutor that adapts to your learning style and helps you understand complex topics.',
-    date: 'Q1 2025',
+    title: 'Filter past exam',
+    description: 'Fil',
+    date: 'September 1st',
     side: 'left',
     status: 'complete'
   },
@@ -251,8 +251,7 @@ export function FutureFeaturesTimeline() {
         </h2>
         <div className="prose prose-stone max-w-3xl mx-auto">
           <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-            Our roadmap for making Osko the ultimate study companion. 
-            These features are carefully planned to enhance your learning experience.
+            List of what has been done and what will be done (hopefully!).
           </p>
         </div>
       </div>

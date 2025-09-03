@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           "bg-stone-800 text-cream-50 hover:bg-stone-700 focus-visible:ring-stone-600/50",
         primary:
-          "bg-salmon-500 text-white hover:bg-salmon-500 focus-visible:ring-salmon-600/50",
+          "bg-salmon-500 text-white hover:bg-salmon-600 focus-visible:ring-salmon-600/50",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
@@ -20,7 +20,7 @@ const buttonVariants = cva(
         secondary:
           "bg-stone-100 text-warm-text-secondary hover:bg-stone-200",
         ghost:
-          "text-warm-text-secondary hover:bg-stone-100 hover:text-warm-text-primary dark:hover:bg-accent/50",
+          "text-warm-text-primary font-semibold hover:bg-stone-100 hover:text-warm-text-primary dark:hover:bg-accent/50",
         link: "text-salmon-500 underline-offset-4 hover:underline hover:text-salmon-600",
       },
       size: {

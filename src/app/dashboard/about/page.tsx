@@ -23,8 +23,8 @@ export default function AboutPage() {
           </h2>
           <div className="prose prose-stone max-w-3xl mx-auto">
             <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-              Adding subjects takes a lot of time. I aim to have all (popular) subjects 
-              fully uploaded by October 1st.
+              Adding subjects takes a lot of time. All (popular) subjects 
+              fully uploaded by <b><i>October 1st</i></b>.
             </p>
           </div>
         </div>

@@ -17,9 +17,9 @@ export function HeroSection() {
           <div>
             {/* Text and divider wrapper - inline-block ensures divider matches text width */}
             <div className="inline-block">
-              <h2 className="font-sans font-semibold text-warm-text-secondary text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl">
+              <h2 className="font-sans font-semibold text-warm-text-secondary text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-[7rem]">
                 But It&apos;s{' '}
-                <span className="text-salmon-500 font-semibold">free</span>
+                <span className="text-salmon-500 font-semibold italic">free</span>
               </h2>
               
               {/* Divider - asymmetric spacing, closer to buttons */}
