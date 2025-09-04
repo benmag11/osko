@@ -7,7 +7,7 @@ export function HeroSection() {
     <section className="min-h-[calc(100vh-73px)] flex items-center justify-center px-4 py-12 md:py-16 lg:py-20">
       <div className="container mx-auto max-w-7xl w-full">
         {/* Full-width headline - spans entire container */}
-        <h1 className="w-full font-serif font-semibold text-warm-text-primary text-7xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[10rem] 2xl:text-[12rem] leading-tight mb-8 md:mb-12 lg:mb-16">
+        <h1 className="w-full font-serif font-semibold text-warm-text-primary text-[3.4rem] sm:text-6xl md:text-8xl lg:text-9xl xl:text-[10rem] leading-tight mb-8 md:mb-12 lg:mb-16">
           It&apos;s Studyclix...
         </h1>
         
@@ -17,7 +17,7 @@ export function HeroSection() {
           <div>
             {/* Text and divider wrapper - inline-block ensures divider matches text width */}
             <div className="inline-block">
-              <h2 className="font-sans font-semibold text-warm-text-secondary text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-[7rem]">
+              <h2 className="font-sans font-semibold text-warm-text-secondary text-5xl md:text-5xl lg:text-6xl">
                 But It&apos;s{' '}
                 <span className="text-salmon-500 font-semibold italic">free</span>
               </h2>
