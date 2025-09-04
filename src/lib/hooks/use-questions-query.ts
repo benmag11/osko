@@ -49,6 +49,14 @@ export function useQuestionsQuery({
     placeholderData: (previousData) => previousData,
   })
 
+  // Extract total count from first page
+  const totalCount = useMemo(() => {
+    // Return initial data's total count if no data yet
+    if (!data?.pages?.[0]) return initialData?.total_count ?? undefined
+    // Return the total count from the first page
+    return data.pages[0].total_count ?? 0
+  }, [data?.pages, initialData?.total_count])
+
   // Flatten all pages into a single array of questions
   const questions = useMemo(() => {
     if (!data?.pages) return []
@@ -75,6 +83,7 @@ export function useQuestionsQuery({
 
   return {
     questions,
+    totalCount,
     error,
     isLoading,
     isFetchingNextPage,

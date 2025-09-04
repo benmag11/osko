@@ -154,6 +154,7 @@ export interface QuestionCursor {
 export interface PaginatedResponse {
   questions: Question[]
   next_cursor: QuestionCursor | null
+  total_count: number
 }
 
 export interface UserProfile {

@@ -14,8 +14,7 @@ import {
 } from '@/components/ui/sidebar'
 import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
-import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-display'
-import { QuestionList } from '@/components/questions/question-list'
+import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -48,7 +47,7 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   const questionNumbers = questionNumbersResult.status === 'fulfilled' ? questionNumbersResult.value : []
   const initialData = questionsResult.status === 'fulfilled' 
     ? questionsResult.value 
-    : { questions: [], hasMore: false, next_cursor: null }
+    : { questions: [], hasMore: false, next_cursor: null, total_count: 0 }
 
   // Log errors for monitoring but don't break the page
   if (topicsResult.status === 'rejected') {
@@ -73,11 +72,10 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
         <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
           <div className="px-8 py-8">
             <div className="mx-auto max-w-4xl space-y-8">
-              <AppliedFiltersDisplay topics={topics} filters={filters} />
-
-              <QuestionList 
-                initialData={initialData}
+              <FilteredQuestionsView 
+                topics={topics}
                 filters={filters}
+                initialData={initialData}
               />
             </div>
           </div>
