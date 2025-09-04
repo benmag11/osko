@@ -216,3 +216,24 @@
   --sidebar-border: 19 15% 20%; /* Same as dark border */
   --sidebar-ring: 13 63% 60%; /* Same as ring (salmon) */
 }
+
+/* Override browser autofill styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #FAFAFA inset !important;
+  box-shadow: 0 0 0 30px #FAFAFA inset !important;
+  -webkit-text-fill-color: var(--color-warm-text-secondary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Dark mode autofill styles */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1F1F1F inset !important;
+  box-shadow: 0 0 0 30px #1F1F1F inset !important;
+  -webkit-text-fill-color: #E5E5E5 !important;
+}

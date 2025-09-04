@@ -17,7 +17,7 @@ function OAuthButton({
     <Button 
       type="submit" 
       variant="outline" 
-      className="w-full" 
+      className="w-full bg-white hover:bg-stone-50/80 border-stone-300 hover:border-stone-400 transition-colors" 
       disabled={disabled || pending}
     >
       {pending ? 'Redirecting...' : children}
