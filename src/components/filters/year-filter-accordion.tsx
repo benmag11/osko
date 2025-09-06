@@ -9,8 +9,6 @@ import {
 } from '@/components/ui/accordion'
 import {
   SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar'
 import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
@@ -58,10 +56,13 @@ export function YearFilterAccordion({ years, filters }: YearFilterAccordionProps
         </SidebarMenuButton>
       </AccordionTrigger>
       <AccordionContent className="pt-2 pb-0">
-        <SidebarMenuSub>
-          {years.map((year) => (
-            <SidebarMenuSubItem key={year}>
-              <label className="flex cursor-pointer items-center gap-3 px-2 py-1.5">
+        <div className="mx-3.5 px-2.5 py-0.5 group-data-[collapsible=icon]:hidden">
+          <div className="grid grid-cols-1 min-[350px]:grid-cols-2 gap-x-3 gap-y-1.5">
+            {years.map((year) => (
+              <label 
+                key={year}
+                className="flex cursor-pointer items-center gap-2 px-1 py-1.5 rounded-md hover:bg-sidebar-accent/50 transition-colors"
+              >
                 <Checkbox
                   checked={filters.years?.includes(year) ?? false}
                   onCheckedChange={() => toggleYear(year)}
@@ -71,9 +72,9 @@ export function YearFilterAccordion({ years, filters }: YearFilterAccordionProps
                   {year}
                 </span>
               </label>
-            </SidebarMenuSubItem>
-          ))}
-        </SidebarMenuSub>
+            ))}
+          </div>
+        </div>
       </AccordionContent>
     </AccordionItem>
   )

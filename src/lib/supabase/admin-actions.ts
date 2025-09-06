@@ -100,32 +100,6 @@ export async function updateQuestionMetadata(
   }
 }
 
-export async function getQuestionAuditLog(
-  questionId: string
-): Promise<QuestionAuditLog[]> {
-  try {
-    await ensureAdmin()
-  } catch {
-    return []
-  }
-  
-  const supabase = await createServerSupabaseClient()
-  
-  const { data, error } = await supabase
-    .from('question_audit_log')
-    .select('*')
-    .eq('question_id', questionId)
-    .order('created_at', { ascending: false })
-    .limit(10)
-  
-  if (error) {
-    console.error('Failed to fetch audit log:', error)
-    return []
-  }
-  
-  return data
-}
-
 export async function getQuestionAuditHistory(
   questionId: string
 ): Promise<QuestionAuditLog[]> {

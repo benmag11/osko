@@ -553,7 +553,7 @@ getUserProfile(): Promise<{ profile?: UserProfile; subjects?: UserSubject[]; err
 ### Admin Actions
 ```typescript
 updateQuestionMetadata(questionId: string, updates: QuestionUpdatePayload): Promise<{ success: boolean; error?: string }>
-getQuestionAuditLog(questionId: string): Promise<QuestionAuditLog[]>
+getQuestionAuditHistory(questionId: string): Promise<QuestionAuditLog[]>
 verifyAdmin(): Promise<boolean>
 ```
 

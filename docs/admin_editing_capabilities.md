@@ -496,7 +496,7 @@ Updates question metadata with admin verification.
 - Requires `is_admin: true` in user_profiles table
 - Verified server-side before processing
 
-#### getQuestionAuditLog
+#### getQuestionAuditHistory
 Retrieves audit log entries for a specific question.
 
 **Parameters:**

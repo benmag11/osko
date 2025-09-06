@@ -443,7 +443,7 @@ function getQueryClient(userId?: string) {
 
 ### Admin Functions
 - `updateQuestionMetadata(questionId, updates)`: Update question with audit
-- `getQuestionAuditLog(questionId)`: Retrieve audit history
+- `getQuestionAuditHistory(questionId)`: Retrieve audit history
 
 ### Cache Utilities
 - `invalidateUserCache(queryClient)`: Clear user-specific cache

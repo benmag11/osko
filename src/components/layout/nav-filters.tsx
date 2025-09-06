@@ -20,7 +20,7 @@ export function NavFilters({ topics, years, questionNumbers, filters }: NavFilte
     <SidebarGroup className="space-y-0">
       <div className="space-y-3">
         <SearchFilter filters={filters} />
-        <Accordion type="single" collapsible defaultValue="topics" className="w-full space-y-3">
+        <Accordion type="single" collapsible className="w-full space-y-3">
           <TopicFilterAccordion topics={topics} filters={filters} />
           <YearFilterAccordion years={years} filters={filters} />
           <QuestionFilterAccordion questionNumbers={questionNumbers} filters={filters} />
