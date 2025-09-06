@@ -27,8 +27,13 @@ interface ReportsTableProps {
 }
 
 export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTableProps) {
-  const [selectedReport, setSelectedReport] = useState<QuestionReport | null>(null)
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
+  
+  // Derive the selected report from the fresh reports array
+  const selectedReport = selectedReportId 
+    ? reports.find(r => r.id === selectedReportId) || null
+    : null
   
   const updateStatusMutation = useMutation({
     mutationFn: async ({ 
@@ -152,9 +157,7 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        // Find fresh report data to avoid stale references
-                        const freshReport = reports.find(r => r.id === report.id)
-                        setSelectedReport(freshReport || report)
+                        setSelectedReportId(report.id)
                         setShowDetailsDialog(true)
                       }}
                     >
@@ -199,7 +202,7 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
           onOpenChange={(open) => {
             setShowDetailsDialog(open)
             if (!open) {
-              setSelectedReport(null) // Clear stale reference when closing
+              setSelectedReportId(null) // Clear ID when closing
             }
           }}
           onStatusChange={onStatusChange}
