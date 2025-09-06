@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getQuestionAuditHistory } from '@/lib/supabase/admin-actions'
+import { useAuditHistory } from '@/lib/hooks/use-audit-history'
 import { formatDateTime } from '@/lib/utils/format-date'
-import type { QuestionAuditLog, QuestionUpdatePayload, AuditLogChanges, Question, Topic } from '@/lib/types/database'
+import type { QuestionUpdatePayload, AuditLogChanges, Question, Topic } from '@/lib/types/database'
 
 interface AuditHistoryProps {
   questionId: string
@@ -11,24 +10,20 @@ interface AuditHistoryProps {
 }
 
 export function AuditHistory({ questionId, topics = [] }: AuditHistoryProps) {
-  const [history, setHistory] = useState<QuestionAuditLog[]>([])
-  const [loading, setLoading] = useState(true)
+  const { history, isLoading, error } = useAuditHistory(questionId)
   
-  useEffect(() => {
-    async function fetchHistory() {
-      setLoading(true)
-      const data = await getQuestionAuditHistory(questionId)
-      setHistory(data)
-      setLoading(false)
-    }
-    
-    fetchHistory()
-  }, [questionId])
-  
-  if (loading) {
+  if (isLoading) {
     return (
       <div>
         <p className="text-sm text-warm-text-muted">Loading change history...</p>
+      </div>
+    )
+  }
+  
+  if (error) {
+    return (
+      <div>
+        <p className="text-sm text-red-600">Failed to load change history</p>
       </div>
     )
   }

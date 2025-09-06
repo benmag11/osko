@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -53,6 +53,18 @@ export function QuestionEditModal({
     question.topics?.map(t => t.id) || []
   )
   
+  // Sync state when dialog opens or question changes
+  useEffect(() => {
+    if (open) {
+      setYear(question.year.toString())
+      setPaperNumber(question.paper_number?.toString() || '')
+      setQuestionNumber(question.question_number.toString())
+      setQuestionParts(question.question_parts.join(', '))
+      setExamType(question.exam_type)
+      setSelectedTopics(question.topics?.map(t => t.id) || [])
+    }
+  }, [open, question])
+  
   const updateMutation = useMutation({
     mutationFn: async () => {
       const updates = {
@@ -73,6 +85,8 @@ export function QuestionEditModal({
     onSuccess: (data) => {
       toast.success('Question updated successfully')
       queryClient.invalidateQueries({ queryKey: ['questions'] })
+      queryClient.invalidateQueries({ queryKey: ['reports'] })
+      queryClient.invalidateQueries({ queryKey: ['audit-history', question.id] })
       router.refresh()
       onUpdateComplete?.(data.auditLogId)
       onOpenChange(false)

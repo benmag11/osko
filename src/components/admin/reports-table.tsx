@@ -152,7 +152,9 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        setSelectedReport(report)
+                        // Find fresh report data to avoid stale references
+                        const freshReport = reports.find(r => r.id === report.id)
+                        setSelectedReport(freshReport || report)
                         setShowDetailsDialog(true)
                       }}
                     >
@@ -194,7 +196,12 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
         <ReportDetailsDialog
           report={selectedReport}
           open={showDetailsDialog}
-          onOpenChange={setShowDetailsDialog}
+          onOpenChange={(open) => {
+            setShowDetailsDialog(open)
+            if (!open) {
+              setSelectedReport(null) // Clear stale reference when closing
+            }
+          }}
           onStatusChange={onStatusChange}
         />
       )}
