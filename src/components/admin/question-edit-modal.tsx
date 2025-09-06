@@ -30,13 +30,17 @@ interface QuestionEditModalProps {
   topics: Topic[]
   open: boolean
   onOpenChange: (open: boolean) => void
+  reportId?: string
+  onUpdateComplete?: (auditLogId?: string) => void
 }
 
 export function QuestionEditModal({
   question,
   topics,
   open,
-  onOpenChange
+  onOpenChange,
+  reportId,
+  onUpdateComplete
 }: QuestionEditModalProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -62,16 +66,17 @@ export function QuestionEditModal({
         topic_ids: selectedTopics
       }
       
-      const result = await updateQuestionMetadata(question.id, updates)
+      const result = await updateQuestionMetadata(question.id, updates, reportId)
       if (!result.success) {
         throw new Error(result.error || 'Update failed')
       }
       return result
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success('Question updated successfully')
       queryClient.invalidateQueries({ queryKey: ['questions'] })
       router.refresh()
+      onUpdateComplete?.(data.auditLogId)
       onOpenChange(false)
     },
     onError: (error) => {

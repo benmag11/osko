@@ -210,3 +210,39 @@ export async function getReportStatistics(): Promise<ReportStatistics | null> {
   
   return data as ReportStatistics
 }
+
+export async function getReportAuditLog(
+  reportId: string
+): Promise<{ changes: {
+  before: Record<string, unknown>
+  after: Record<string, unknown>
+} } | null> {
+  const supabase = await createServerSupabaseClient()
+  
+  // Verify admin status
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', user.id)
+    .single()
+  
+  if (!profile?.is_admin) return null
+  
+  const { data, error } = await supabase
+    .from('question_audit_log')
+    .select('changes')
+    .eq('report_id', reportId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single()
+  
+  if (error) {
+    console.error('Failed to fetch audit log for report:', error)
+    return null
+  }
+  
+  return data
+}

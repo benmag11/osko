@@ -20,8 +20,9 @@ async function verifyAdmin(): Promise<boolean> {
 
 export async function updateQuestionMetadata(
   questionId: string,
-  updates: QuestionUpdatePayload
-): Promise<{ success: boolean; error?: string }> {
+  updates: QuestionUpdatePayload,
+  reportId?: string
+): Promise<{ success: boolean; error?: string; auditLogId?: string }> {
   const isAdmin = await verifyAdmin()
   if (!isAdmin) {
     return { success: false, error: 'Unauthorized' }
@@ -89,19 +90,22 @@ export async function updateQuestionMetadata(
     
     // Create audit log entry
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase
+    const { data: auditLog } = await supabase
       .from('question_audit_log')
       .insert({
         question_id: questionId,
         user_id: user?.id,
         action: 'update',
+        report_id: reportId || null,
         changes: {
           before: currentQuestion,
           after: updates
         }
       })
+      .select('id')
+      .single()
     
-    return { success: true }
+    return { success: true, auditLogId: auditLog?.id }
   } catch (error) {
     console.error('Failed to update question:', error)
     return { 

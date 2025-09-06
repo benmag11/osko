@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { ReportDetailsDialog } from '@/components/admin/report-details-dialog'
 import { updateReportStatus } from '@/lib/supabase/report-actions'
+import { formatDate } from '@/lib/utils/format-date'
 import type { QuestionReport } from '@/lib/types/database'
 
 interface ReportsTableProps {
@@ -143,7 +144,7 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
                   {getStatusBadge(report.status)}
                 </TableCell>
                 <TableCell>
-                  {new Date(report.created_at).toLocaleDateString()}
+                  {formatDate(report.created_at)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
