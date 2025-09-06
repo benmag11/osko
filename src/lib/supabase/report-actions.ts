@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from './server'
+import { ensureAdmin } from './admin-context'
 import type { 
   CreateReportPayload, 
   UpdateReportPayload,
@@ -66,24 +67,11 @@ export async function updateReportStatus(
   reportId: string,
   updates: UpdateReportPayload
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createServerSupabaseClient()
-  
   try {
-    // Verify admin status
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return { success: false, error: 'Unauthorized' }
-    }
+    // Verify admin status using centralized helper
+    const userId = await ensureAdmin()
     
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('is_admin')
-      .eq('user_id', user.id)
-      .single()
-    
-    if (!profile?.is_admin) {
-      return { success: false, error: 'Unauthorized' }
-    }
+    const supabase = await createServerSupabaseClient()
     
     // Update the report
     const updateData: Record<string, unknown> = {}
@@ -100,7 +88,7 @@ export async function updateReportStatus(
     
     // If resolving, add resolver info
     if (updates.status === 'resolved' || updates.status === 'dismissed') {
-      updateData.resolved_by = user.id
+      updateData.resolved_by = userId
       updateData.resolved_at = new Date().toISOString()
     }
     
@@ -127,19 +115,14 @@ export async function updateReportStatus(
 export async function getReports(
   status?: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
 ): Promise<QuestionReport[]> {
+  // Verify admin status using centralized helper
+  try {
+    await ensureAdmin()
+  } catch {
+    return []
+  }
+  
   const supabase = await createServerSupabaseClient()
-  
-  // Verify admin status
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
-  
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', user.id)
-    .single()
-  
-  if (!profile?.is_admin) return []
   
   // Build query
   let query = supabase
@@ -185,19 +168,14 @@ export async function getReports(
 }
 
 export async function getReportStatistics(): Promise<ReportStatistics | null> {
+  // Verify admin status using centralized helper
+  try {
+    await ensureAdmin()
+  } catch {
+    return null
+  }
+  
   const supabase = await createServerSupabaseClient()
-  
-  // Verify admin status
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-  
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', user.id)
-    .single()
-  
-  if (!profile?.is_admin) return null
   
   const { data, error } = await supabase
     .rpc('get_report_statistics')

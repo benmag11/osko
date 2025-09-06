@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
   const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding')
   const isProtectedPage = request.nextUrl.pathname.startsWith('/subject/') ||
                          request.nextUrl.pathname.startsWith('/dashboard')
-  const isAdminOnlyPage = request.nextUrl.pathname.startsWith('/dashboard/reports')
+  // Admin routes now handled by admin layout wrapper, no need for duplicate check here
   
   // Redirect unauthenticated users trying to access protected pages
   if (!user && (isProtectedPage || isOnboardingPage)) {
@@ -88,19 +88,6 @@ export async function middleware(request: NextRequest) {
       const userProfile = await getProfile()
       
       if (userProfile && userProfile.onboarding_completed) {
-        return NextResponse.redirect(new URL('/dashboard/study', request.url))
-      }
-    }
-    
-    // Check for admin-only pages
-    if (isAdminOnlyPage) {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('is_admin')
-        .eq('user_id', user.id)
-        .single()
-      
-      if (!profile?.is_admin) {
         return NextResponse.redirect(new URL('/dashboard/study', request.url))
       }
     }

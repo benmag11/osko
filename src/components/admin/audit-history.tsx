@@ -121,10 +121,14 @@ function UpdateChanges({ before, after, topics }: UpdateChangesProps) {
     const beforeTopicIds: string[] = []
     
     // Handle different formats of topic data in 'before' state
-    const questionTopics = before.question_topics as Array<{ topic_id: string }> | undefined
-    if (questionTopics && Array.isArray(questionTopics)) {
+    // The 'before' object might have raw database data with question_topics field
+    type BeforeDataWithTopics = Partial<Question> & {
+      question_topics?: Array<{ topic_id: string }>
+    }
+    const beforeData = before as BeforeDataWithTopics
+    if (beforeData.question_topics && Array.isArray(beforeData.question_topics)) {
       // Format from database: [{topic_id: "uuid"}, ...]
-      beforeTopicIds.push(...questionTopics.map(qt => qt.topic_id))
+      beforeTopicIds.push(...beforeData.question_topics.map(qt => qt.topic_id))
     } else if (before.topics && Array.isArray(before.topics)) {
       // Format from joined data: [{id: "uuid", name: "..."}, ...]
       beforeTopicIds.push(...before.topics.map(t => t.id))

@@ -1,29 +1,16 @@
 'use server'
 
 import { createServerSupabaseClient } from './server'
+import { ensureAdmin } from './admin-context'
 import type { QuestionUpdatePayload, QuestionAuditLog } from '@/lib/types/database'
-
-async function verifyAdmin(): Promise<boolean> {
-  const supabase = await createServerSupabaseClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return false
-  
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('is_admin')
-    .eq('user_id', user.id)
-    .single()
-  
-  return profile?.is_admin ?? false
-}
 
 export async function updateQuestionMetadata(
   questionId: string,
   updates: QuestionUpdatePayload
 ): Promise<{ success: boolean; error?: string; auditLogId?: string }> {
-  const isAdmin = await verifyAdmin()
-  if (!isAdmin) {
+  try {
+    await ensureAdmin()
+  } catch {
     return { success: false, error: 'Unauthorized' }
   }
   
@@ -116,8 +103,11 @@ export async function updateQuestionMetadata(
 export async function getQuestionAuditLog(
   questionId: string
 ): Promise<QuestionAuditLog[]> {
-  const isAdmin = await verifyAdmin()
-  if (!isAdmin) return []
+  try {
+    await ensureAdmin()
+  } catch {
+    return []
+  }
   
   const supabase = await createServerSupabaseClient()
   
@@ -139,8 +129,11 @@ export async function getQuestionAuditLog(
 export async function getQuestionAuditHistory(
   questionId: string
 ): Promise<QuestionAuditLog[]> {
-  const isAdmin = await verifyAdmin()
-  if (!isAdmin) return []
+  try {
+    await ensureAdmin()
+  } catch {
+    return []
+  }
   
   const supabase = await createServerSupabaseClient()
   
