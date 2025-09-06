@@ -3,10 +3,12 @@
 import { useState, useCallback, memo } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp, Edit2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
 import { useIsAdmin } from '@/lib/hooks/use-is-admin'
 import { useTopics } from '@/lib/hooks/use-topics'
+import { useAuth } from '@/components/providers/auth-provider'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
+import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
 import type { Question } from '@/lib/types/database'
 
 interface QuestionCardProps {
@@ -16,7 +18,9 @@ interface QuestionCardProps {
 export const QuestionCard = memo(function QuestionCard({ question }: QuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showReportDialog, setShowReportDialog] = useState(false)
   const { isAdmin } = useIsAdmin()
+  const { user } = useAuth()
   const { topics } = useTopics(question.subject_id)
   
   // Check if URLs are valid
@@ -66,17 +70,30 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
         <h3 className="text-lg font-serif font-semibold text-warm-text-primary">
           {title}
         </h3>
-        {isAdmin && (
-          <Button
-            onClick={() => setShowEditModal(true)}
-            size="sm"
-            variant="outline"
-            className="gap-2"
-          >
-            <Edit2 className="h-4 w-4" />
-            Edit Metadata
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button
+              onClick={() => setShowEditModal(true)}
+              size="sm"
+              variant="outline"
+              className="gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit Metadata
+            </Button>
+          )}
+          {user && (
+            <Button
+              onClick={() => setShowReportDialog(true)}
+              size="sm"
+              variant="outline"
+              className="p-2"
+              title="Report an issue with this question"
+            >
+              <Flag className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
       
       <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.15)]">
@@ -142,6 +159,14 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
           topics={topics || []}
           open={showEditModal}
           onOpenChange={setShowEditModal}
+        />
+      )}
+      
+      {user && (
+        <QuestionReportDialog
+          question={question}
+          open={showReportDialog}
+          onOpenChange={setShowReportDialog}
         />
       )}
     </div>

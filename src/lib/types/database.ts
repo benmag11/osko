@@ -125,6 +125,7 @@ export interface Question {
     id: string
     name: string
   }>
+  subject?: Subject
 }
 
 export interface QuestionTopic {
@@ -200,4 +201,41 @@ export interface QuestionUpdatePayload {
   question_parts?: string[]
   exam_type?: 'normal' | 'deferred' | 'supplemental'
   topic_ids?: string[]
+}
+
+export interface QuestionReport {
+  id: string
+  question_id: string
+  user_id: string
+  report_type: 'metadata' | 'incorrect_topic' | 'other'
+  description: string
+  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+  resolved_by: string | null
+  resolved_at: string | null
+  admin_notes: string | null
+  created_at: string
+  // Joined data
+  question?: Question
+}
+
+export interface ReportStatistics {
+  total_reports: number
+  pending_reports: number
+  resolved_reports: number
+  reports_by_type: {
+    metadata: number
+    incorrect_topic: number
+    other: number
+  }
+}
+
+export interface CreateReportPayload {
+  question_id: string
+  report_type: 'metadata' | 'incorrect_topic' | 'other'
+  description: string
+}
+
+export interface UpdateReportPayload {
+  status?: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+  admin_notes?: string
 }

@@ -9,9 +9,12 @@ import {
   Info,
   BarChart3,
   Settings,
+  Flag,
+  type LucideIcon,
 } from 'lucide-react'
 
 import { NavUser } from '@/components/layout/nav-user'
+import { useIsAdmin } from '@/lib/hooks/use-is-admin'
 import {
   Sidebar,
   SidebarContent,
@@ -24,7 +27,14 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar'
 
-const navItems = [
+interface NavItem {
+  title: string
+  url: string
+  icon: LucideIcon
+  adminOnly?: boolean
+}
+
+const navItems: NavItem[] = [
   {
     title: 'Study',
     url: '/dashboard/study',
@@ -34,6 +44,12 @@ const navItems = [
     title: 'Statistics',
     url: '/dashboard/statistics',
     icon: BarChart3,
+  },
+  {
+    title: 'Reports',
+    url: '/dashboard/reports',
+    icon: Flag,
+    adminOnly: true,
   },
   {
     title: 'Settings',
@@ -49,6 +65,10 @@ const navItems = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const { isAdmin } = useIsAdmin()
+  
+  // Filter nav items based on admin status
+  const filteredNavItems = navItems.filter(item => !item.adminOnly || isAdmin)
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -93,7 +113,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton 
                   asChild 
