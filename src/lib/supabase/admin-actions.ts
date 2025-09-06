@@ -20,8 +20,7 @@ async function verifyAdmin(): Promise<boolean> {
 
 export async function updateQuestionMetadata(
   questionId: string,
-  updates: QuestionUpdatePayload,
-  reportId?: string
+  updates: QuestionUpdatePayload
 ): Promise<{ success: boolean; error?: string; auditLogId?: string }> {
   const isAdmin = await verifyAdmin()
   if (!isAdmin) {
@@ -96,7 +95,6 @@ export async function updateQuestionMetadata(
         question_id: questionId,
         user_id: user?.id,
         action: 'update',
-        report_id: reportId || null,
         changes: {
           before: currentQuestion,
           after: updates
@@ -136,4 +134,26 @@ export async function getQuestionAuditLog(
   }
   
   return data
+}
+
+export async function getQuestionAuditHistory(
+  questionId: string
+): Promise<QuestionAuditLog[]> {
+  const isAdmin = await verifyAdmin()
+  if (!isAdmin) return []
+  
+  const supabase = await createServerSupabaseClient()
+  
+  const { data, error } = await supabase
+    .from('question_audit_log')
+    .select('*')
+    .eq('question_id', questionId)
+    .order('created_at', { ascending: false })
+  
+  if (error) {
+    console.error('Failed to fetch audit history:', error)
+    return []
+  }
+  
+  return data || []
 }

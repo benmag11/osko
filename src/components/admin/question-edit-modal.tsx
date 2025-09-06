@@ -30,7 +30,6 @@ interface QuestionEditModalProps {
   topics: Topic[]
   open: boolean
   onOpenChange: (open: boolean) => void
-  reportId?: string
   onUpdateComplete?: (auditLogId?: string) => void
 }
 
@@ -39,7 +38,6 @@ export function QuestionEditModal({
   topics,
   open,
   onOpenChange,
-  reportId,
   onUpdateComplete
 }: QuestionEditModalProps) {
   const router = useRouter()
@@ -66,7 +64,7 @@ export function QuestionEditModal({
         topic_ids: selectedTopics
       }
       
-      const result = await updateQuestionMetadata(question.id, updates, reportId)
+      const result = await updateQuestionMetadata(question.id, updates)
       if (!result.success) {
         throw new Error(result.error || 'Update failed')
       }

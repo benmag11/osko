@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import {
   Dialog,
@@ -15,9 +15,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { updateReportStatus, getReportAuditLog } from '@/lib/supabase/report-actions'
+import { updateReportStatus } from '@/lib/supabase/report-actions'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
-import { ChangesDisplay } from '@/components/admin/changes-display'
+import { AuditHistory } from '@/components/admin/audit-history'
 import { formatDateTime } from '@/lib/utils/format-date'
 import { useTopics } from '@/lib/hooks/use-topics'
 import type { QuestionReport } from '@/lib/types/database'
@@ -37,25 +37,7 @@ export function ReportDetailsDialog({
 }: ReportDetailsDialogProps) {
   const [adminNotes, setAdminNotes] = useState(report.admin_notes || '')
   const [showEditModal, setShowEditModal] = useState(false)
-  const [auditChanges, setAuditChanges] = useState<{
-    before: Record<string, unknown>
-    after: Record<string, unknown>
-  } | null>(null)
   const { topics } = useTopics(report.question?.subject_id || '')
-  
-  // Fetch audit log changes if report is resolved
-  useEffect(() => {
-    async function fetchAuditChanges() {
-      if (report.status === 'resolved' && report.resolved_at) {
-        const auditLog = await getReportAuditLog(report.id)
-        if (auditLog?.changes) {
-          setAuditChanges(auditLog.changes)
-        }
-      }
-    }
-    
-    fetchAuditChanges()
-  }, [report.id, report.status, report.resolved_at])
   
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -155,6 +137,16 @@ export function ReportDetailsDialog({
               </div>
             </div>
             
+            {/* Metadata Change History */}
+            {question && (
+              <div>
+                <Label className="text-sm font-medium">Metadata Change History</Label>
+                <div className="mt-1 p-3 rounded-lg bg-cream-50 border border-stone-200">
+                  <AuditHistory questionId={question.id} topics={topics || []} />
+                </div>
+              </div>
+            )}
+            
             <Separator />
             
             {/* Admin Section */}
@@ -180,9 +172,6 @@ export function ReportDetailsDialog({
                   <p className="text-sm">
                     Resolved on {formatDateTime(report.resolved_at)}
                   </p>
-                  {auditChanges && (
-                    <ChangesDisplay changes={auditChanges} />
-                  )}
                   {report.admin_notes && (
                     <p className="text-sm mt-2">
                       <strong>Notes:</strong> {report.admin_notes}
@@ -231,9 +220,8 @@ export function ReportDetailsDialog({
           topics={topics || []}
           open={showEditModal}
           onOpenChange={setShowEditModal}
-          reportId={report.id}
           onUpdateComplete={() => {
-            // Audit log is now linked via report_id
+            // Refresh if needed
           }}
         />
       )}

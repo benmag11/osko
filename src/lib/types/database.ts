@@ -192,7 +192,6 @@ export interface QuestionAuditLog {
   action: 'update' | 'delete' | 'topic_add' | 'topic_remove'
   changes: AuditLogChanges
   created_at: string
-  report_id: string | null
 }
 
 export interface QuestionUpdatePayload {
