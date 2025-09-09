@@ -7,12 +7,21 @@ interface SubjectStatus {
 }
 
 const subjects: SubjectStatus[] = [
-  { name: 'Mathematics', isCompleted: true },
   { name: 'Applied Maths', isCompleted: true },
-  { name: 'English', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Biology', isCompleted: true },
+  { name: 'Chemistry', isCompleted: true },
+  { name: 'Computer Science', isCompleted: true },
+  { name: 'Construction', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'English', isCompleted: true },
+  { name: 'French', isCompleted: true },
+  { name: 'Geography', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'German', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'History', isCompleted: true },
   { name: 'Irish', isCompleted: false, expectedDate: 'October 1st' },
-  { name: 'Biology', isCompleted: false, expectedDate: 'October 1st' },
-  { name: 'Physics', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Mathematics', isCompleted: true },
+  { name: 'Physical Education', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Physics', isCompleted: true },
+  { name: 'Spanish', isCompleted: false, expectedDate: 'October 1st' },
 ]
 
 export function SubjectStatusTable() {

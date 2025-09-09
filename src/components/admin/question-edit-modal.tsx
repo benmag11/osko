@@ -46,7 +46,7 @@ export function QuestionEditModal({
   // Form state
   const [year, setYear] = useState(question.year.toString())
   const [paperNumber, setPaperNumber] = useState(question.paper_number?.toString() || '')
-  const [questionNumber, setQuestionNumber] = useState(question.question_number.toString())
+  const [questionNumber, setQuestionNumber] = useState(question.question_number?.toString() ?? '')
   const [questionParts, setQuestionParts] = useState(question.question_parts.join(', '))
   const [examType, setExamType] = useState(question.exam_type)
   const [selectedTopics, setSelectedTopics] = useState<string[]>(
@@ -58,7 +58,7 @@ export function QuestionEditModal({
     if (open) {
       setYear(question.year.toString())
       setPaperNumber(question.paper_number?.toString() || '')
-      setQuestionNumber(question.question_number.toString())
+      setQuestionNumber(question.question_number?.toString() ?? '')
       setQuestionParts(question.question_parts.join(', '))
       setExamType(question.exam_type)
       setSelectedTopics(question.topics?.map(t => t.id) || [])
@@ -70,7 +70,7 @@ export function QuestionEditModal({
       const updates = {
         year: parseInt(year),
         paper_number: paperNumber ? parseInt(paperNumber) : null,
-        question_number: parseInt(questionNumber),
+        question_number: questionNumber === '' ? null : parseInt(questionNumber),
         question_parts: questionParts.split(',').map(p => p.trim()).filter(Boolean),
         exam_type: examType as 'normal' | 'deferred' | 'supplemental',
         topic_ids: selectedTopics
@@ -137,6 +137,7 @@ export function QuestionEditModal({
               type="number"
               value={questionNumber}
               onChange={(e) => setQuestionNumber(e.target.value)}
+              placeholder="Leave empty for no question number, or 0 for placeholder"
               className="col-span-3"
             />
           </div>

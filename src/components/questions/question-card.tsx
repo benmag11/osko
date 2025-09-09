@@ -56,8 +56,10 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
     title += ' - Deferred'
   }
   
-  // Add question number
-  title += ` - Question ${question.question_number}`
+  // Add question number if it exists (null means no question number)
+  if (question.question_number !== null) {
+    title += ` - Question ${question.question_number}`
+  }
   
   // Add formatted parts if they exist
   if (formattedParts) {
@@ -101,7 +103,7 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
           {hasValidQuestionImage ? (
             <Image
               src={question.question_image_url!}
-              alt={`Question ${question.question_number}`}
+              alt={`Question ${question.question_number ?? 'image'}`}
               width={1073}
               height={800}
               className="w-full h-auto"
@@ -143,7 +145,7 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
             <div className="px-4 pb-4">
               <Image
                 src={question.marking_scheme_image_url!}
-                alt={`Marking scheme for question ${question.question_number}`}
+                alt={`Marking scheme for question ${question.question_number ?? ''}`}
                 width={1073}
                 height={800}
                 className="w-full h-auto rounded-lg"

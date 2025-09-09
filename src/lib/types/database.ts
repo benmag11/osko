@@ -112,7 +112,7 @@ export interface Question {
   subject_id: string
   year: number
   paper_number: number | null
-  question_number: number
+  question_number: number | null
   question_parts: string[]
   exam_type: 'normal' | 'deferred' | 'supplemental'
   question_image_url: string | null
@@ -148,7 +148,7 @@ export interface QuestionCursor {
   year: number
   paper_number: number | null
   exam_type: 'normal' | 'deferred' | 'supplemental'
-  question_number: number
+  question_number: number | null
   question_parts: string[]
 }
 
@@ -197,7 +197,7 @@ export interface QuestionAuditLog {
 export interface QuestionUpdatePayload {
   year?: number
   paper_number?: number | null
-  question_number?: number
+  question_number?: number | null
   question_parts?: string[]
   exam_type?: 'normal' | 'deferred' | 'supplemental'
   topic_ids?: string[]
