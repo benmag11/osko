@@ -28,7 +28,7 @@ export async function updateQuestionMetadata(
     interface QuestionUpdate {
       year?: number
       paper_number?: number | null
-      question_number?: number
+      question_number?: number | null
       question_parts?: string[]
       exam_type?: 'normal' | 'deferred' | 'supplemental'
       updated_at: string
