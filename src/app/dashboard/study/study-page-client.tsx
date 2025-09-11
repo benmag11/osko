@@ -29,7 +29,7 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
     <DashboardPage maxWidth="max-w-6xl">
       <div className="mb-12">
         <h1 className="text-6xl font-serif font-normal text-warm-text-secondary mb-2">
-          {getGreeting()}, {userName}.
+          {getGreeting()}, master {userName}.
         </h1>
       </div>
 
