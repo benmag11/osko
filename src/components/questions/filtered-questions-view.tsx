@@ -4,6 +4,8 @@ import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-disp
 import { QuestionCard } from './question-card'
 import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
+import { useZoom } from '@/components/providers/zoom-provider'
+import { ZoomControls } from './zoom-controls'
 import type { Topic, Filters, PaginatedResponse } from '@/lib/types/database'
 
 interface FilteredQuestionsViewProps {
@@ -13,10 +15,10 @@ interface FilteredQuestionsViewProps {
 }
 
 export function FilteredQuestionsView({ topics, filters, initialData }: FilteredQuestionsViewProps) {
-  const { 
-    questions, 
+  const {
+    questions,
     totalCount,
-    isFetchingNextPage, 
+    isFetchingNextPage,
     loadMoreRef,
     isLoading,
     error
@@ -25,16 +27,29 @@ export function FilteredQuestionsView({ topics, filters, initialData }: Filtered
     initialData,
   })
 
+  const { zoomLevel, isEnabled, isLoading: isZoomLoading } = useZoom()
+
   return (
     <>
-      <AppliedFiltersDisplay 
-        topics={topics} 
-        filters={filters} 
+      <AppliedFiltersDisplay
+        topics={topics}
+        filters={filters}
         totalCount={totalCount}
         isLoading={isLoading}
       />
-      
-      <div>
+
+      <ZoomControls />
+
+      <div className="relative">
+        <div
+          className="origin-top transition-transform duration-200 ease-out"
+          style={{
+            // Only apply transform on desktop and when not loading
+            transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
+            transformOrigin: 'top center',
+          }}
+        >
+          <div>
         {error ? (
           <div className="flex flex-col items-center justify-center py-20">
             <p className="text-xl text-salmon-600 font-serif">Error loading questions</p>
@@ -67,6 +82,8 @@ export function FilteredQuestionsView({ topics, filters, initialData }: Filtered
             </div>
           </>
         )}
+          </div>
+        </div>
       </div>
     </>
   )

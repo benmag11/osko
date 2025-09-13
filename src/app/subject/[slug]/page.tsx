@@ -1,20 +1,21 @@
 import { notFound } from 'next/navigation'
-import { 
-  getSubjectBySlug, 
-  getTopics, 
+import {
+  getSubjectBySlug,
+  getTopics,
   getAvailableYears,
   getAvailableQuestionNumbers,
-  searchQuestions 
+  searchQuestions
 } from '@/lib/supabase/queries'
 import { parseSearchParams } from '@/lib/utils/url-filters'
 import { ExamSidebar } from '@/components/layout/exam-sidebar'
-import { 
-  SidebarProvider, 
-  SidebarInset 
+import {
+  SidebarProvider,
+  SidebarInset
 } from '@/components/ui/sidebar'
 import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
+import { ZoomProvider } from '@/components/providers/zoom-provider'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -64,23 +65,25 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <SidebarProvider defaultOpen>
-      <MobileNavbar />
-      <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
-      <FloatingSidebarTrigger />
-      <SidebarInset>
-        <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
-          <div className="px-8 py-8">
-            <div className="mx-auto max-w-4xl space-y-8">
-              <FilteredQuestionsView 
-                topics={topics}
-                filters={filters}
-                initialData={initialData}
-              />
+    <ZoomProvider>
+      <SidebarProvider defaultOpen>
+        <MobileNavbar />
+        <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
+        <FloatingSidebarTrigger />
+        <SidebarInset>
+          <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
+            <div className="px-8 py-8">
+              <div className="mx-auto max-w-4xl space-y-8">
+                <FilteredQuestionsView
+                  topics={topics}
+                  filters={filters}
+                  initialData={initialData}
+                />
+              </div>
             </div>
-          </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </ZoomProvider>
   )
 }
