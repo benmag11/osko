@@ -41,7 +41,7 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
       status 
     }: { 
       reportId: string
-      status: 'pending' | 'reviewed' | 'resolved' | 'dismissed' 
+      status: 'pending' | 'resolved' | 'dismissed' 
     }) => {
       const result = await updateReportStatus(reportId, { status })
       if (!result.success) {
@@ -61,7 +61,6 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
   const getStatusBadge = (status: string) => {
     const colorClasses: Record<string, string> = {
       pending: '', // Uses default salmon color
-      reviewed: 'bg-blue-600 hover:bg-blue-700',
       resolved: 'bg-green-600 hover:bg-green-700',
       dismissed: 'bg-red-600 hover:bg-red-700'
     }

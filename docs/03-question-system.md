@@ -530,7 +530,7 @@ Reports include:
 - Duplicate detection to prevent spam
 - Character limits (10-500 characters)
 - Admin review interface for resolution
-- Status tracking (pending → reviewed → resolved/dismissed)
+- Status tracking (pending → resolved/dismissed)
 
 ### Search Implementation Details
 The full-text search uses PostgreSQL's text search capabilities:

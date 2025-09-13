@@ -113,7 +113,7 @@ export async function updateReportStatus(
 }
 
 export async function getReports(
-  status?: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+  status?: 'pending' | 'resolved' | 'dismissed'
 ): Promise<QuestionReport[]> {
   // Verify admin status using centralized helper
   try {

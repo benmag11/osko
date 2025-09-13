@@ -16,7 +16,7 @@ interface ReportsClientProps {
 }
 
 export function ReportsClient({ initialReports, initialStatistics }: ReportsClientProps) {
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'reviewed' | 'resolved' | 'dismissed'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'resolved' | 'dismissed'>('all')
   const queryClient = useQueryClient()
   
   // Fetch reports with filter
@@ -110,7 +110,7 @@ export function ReportsClient({ initialReports, initialStatistics }: ReportsClie
       {/* Reports Table with Tabs */}
       <Card>
         <CardHeader>
-          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | 'pending' | 'reviewed' | 'resolved' | 'dismissed')}>
+          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | 'pending' | 'resolved' | 'dismissed')}>
             <TabsList>
               <TabsTrigger value="all">All Reports</TabsTrigger>
               <TabsTrigger value="pending">
@@ -121,7 +121,6 @@ export function ReportsClient({ initialReports, initialStatistics }: ReportsClie
                   </Badge>
                 ) : null}
               </TabsTrigger>
-              <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
               <TabsTrigger value="resolved">Resolved</TabsTrigger>
               <TabsTrigger value="dismissed">Dismissed</TabsTrigger>
             </TabsList>

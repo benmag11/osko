@@ -90,7 +90,7 @@ The Reports Client (`reports-client.tsx`) provides a comprehensive interface for
 
 ```typescript
 export function ReportsClient({ initialReports, initialStatistics }: ReportsClientProps) {
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'reviewed' | 'resolved' | 'dismissed'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'resolved' | 'dismissed'>('all')
   
   // Fetch reports with filter
   const { data: reports, isLoading } = useQuery({
@@ -324,7 +324,7 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
 - `user_id`: Reporter's user ID
 - `report_type`: 'metadata' | 'incorrect_topic' | 'other'
 - `description`: Report details (10-500 characters)
-- `status`: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+- `status`: 'pending' | 'resolved' | 'dismissed'
 - `resolved_by`: Admin who resolved the report
 - `resolved_at`: Resolution timestamp
 - `admin_notes`: Optional admin comments
@@ -372,7 +372,7 @@ export interface QuestionReport {
   user_id: string
   report_type: 'metadata' | 'incorrect_topic' | 'other'
   description: string
-  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+  status: 'pending' | 'resolved' | 'dismissed'
   resolved_by: string | null
   resolved_at: string | null
   admin_notes: string | null

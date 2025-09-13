@@ -209,7 +209,7 @@ export interface QuestionReport {
   user_id: string
   report_type: 'metadata' | 'incorrect_topic' | 'other'
   description: string
-  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+  status: 'pending' | 'resolved' | 'dismissed'
   resolved_by: string | null
   resolved_at: string | null
   admin_notes: string | null
@@ -236,6 +236,6 @@ export interface CreateReportPayload {
 }
 
 export interface UpdateReportPayload {
-  status?: 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+  status?: 'pending' | 'resolved' | 'dismissed'
   admin_notes?: string
 }
