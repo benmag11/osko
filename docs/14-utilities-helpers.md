@@ -15,6 +15,7 @@ src/lib/
 │   ├── format-date.ts              # Date formatting utilities with SSR compatibility
 │   ├── format-name.ts              # Name formatting with proper capitalization
 │   ├── slug.ts                     # URL slug generation and parsing for subjects
+│   ├── storage.ts                  # Storage availability checking and safe JSON parsing
 │   ├── subject-icons.ts            # Subject-to-icon mapping for UI consistency
 │   └── url-filters.ts              # URL parameter serialization for filters
 ├── cache/
@@ -44,6 +45,51 @@ export function cn(...inputs: ClassValue[]) {
 ```
 
 This utility combines `clsx` for conditional class construction with `tailwind-merge` to intelligently merge Tailwind classes, resolving conflicts (e.g., `p-2 p-4` becomes `p-4`). It's used throughout all UI components for dynamic styling.
+
+### Storage Utilities
+Robust storage handling for restricted environments like private browsing or corporate policies:
+
+```typescript
+// src/lib/utils/storage.ts
+export function isStorageAvailable(type: 'localStorage' | 'sessionStorage'): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    const storage = window[type]
+    const testKey = '__storage_test__'
+    storage.setItem(testKey, 'test')
+    storage.removeItem(testKey)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function safeJsonParse<T>(
+  value: string,
+  fallback: T,
+  validator?: (value: unknown) => value is T
+): T {
+  try {
+    const parsed = JSON.parse(value)
+    return validator && !validator(parsed) ? fallback : parsed
+  } catch {
+    return fallback
+  }
+}
+```
+
+The `isStorageAvailable` function performs a comprehensive test to verify storage is actually functional, not just present. This handles edge cases like:
+- Private browsing mode where storage exists but throws on write
+- Corporate policies that disable storage
+- Storage quota exceeded scenarios
+- SSR environments where window is undefined
+
+The `safeJsonParse` function provides type-safe JSON parsing with:
+- Automatic fallback on parse errors
+- Optional runtime type validation
+- Generic type support for compile-time safety
+- No thrown exceptions - always returns a valid value
 
 ### Form Validation Utilities
 Type-safe form data extraction with built-in validation rules:
@@ -279,6 +325,41 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     )
   }
 )
+```
+
+### Storage Integration
+Storage utilities enable safe storage operations in hooks and components:
+
+```typescript
+// Example usage in custom hooks
+import { isStorageAvailable, safeJsonParse } from '@/lib/utils/storage'
+
+function usePersistedState<T>(key: string, defaultValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    if (!isStorageAvailable('localStorage')) {
+      return defaultValue
+    }
+
+    const stored = localStorage.getItem(key)
+    if (!stored) return defaultValue
+
+    return safeJsonParse(stored, defaultValue, validateType)
+  })
+
+  // Storage-aware setter
+  const setPersisted = (newValue: T) => {
+    setValue(newValue)
+    if (isStorageAvailable('localStorage')) {
+      try {
+        localStorage.setItem(key, JSON.stringify(newValue))
+      } catch {
+        // Silently fail - value still updated in memory
+      }
+    }
+  }
+
+  return [value, setPersisted]
+}
 ```
 
 ### Server Action Integration
@@ -524,6 +605,10 @@ export function clearAllCache(queryClient: QueryClient) {
 - `formatDate(date: string | Date): string` - Format date as DD/MM/YYYY
 - `formatDateTime(date: string | Date): string` - Format date and time as DD/MM/YYYY, HH:MM:SS
 
+### Storage Utilities
+- `isStorageAvailable(type: 'localStorage' | 'sessionStorage'): boolean` - Check if storage is available and functional
+- `safeJsonParse<T>(value: string, fallback: T, validator?: (value: unknown) => value is T): T` - Safely parse JSON with type validation
+
 ### Form Validation
 - `extractAuthFormData(formData: FormData): AuthFormData` - Extract and validate auth form data
 - `getFormField(formData: FormData, fieldName: string): string | null` - Safely extract form field
@@ -560,15 +645,26 @@ export function clearAllCache(queryClient: QueryClient) {
 - Date formatting uses deterministic `Intl.DateTimeFormat` for consistent server/client output
 - Cache configuration considers hydration boundaries
 - URL utilities work with both URLSearchParams and plain objects
+- Storage utilities include SSR safety checks with `typeof window` guards
 
 ### Error Handling Patterns
 - Form validation throws descriptive errors for user feedback
 - Type guards prevent runtime type errors
 - Cache operations handle failures gracefully with fallbacks
 - Custom QueryError class provides structured error information
+- Storage utilities never throw - always return safe defaults on failure
 
 ### Security Considerations
 - Form data is validated and sanitized before processing
 - URL parameters are type-checked to prevent injection
 - Cache isolation prevents cross-user data leakage
 - Auth utilities ensure complete session cleanup
+- Storage utilities handle restricted environments gracefully (private browsing, corporate policies)
+
+### Browser Compatibility
+- Storage utilities handle all modern browsers and edge cases:
+  - Private/Incognito browsing modes where storage may be disabled
+  - Corporate environments with storage restrictions
+  - Quota exceeded scenarios
+  - Safari's Intelligent Tracking Prevention (ITP) limitations
+  - Third-party cookie blocking affecting storage in iframes

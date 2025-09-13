@@ -11,14 +11,15 @@ The application uses a three-tier layout architecture leveraging Next.js's neste
 1. **Root Layout** (`/src/app/layout.tsx`) - Global application wrapper
 2. **Dashboard Layout** (`/src/app/dashboard/layout.tsx`) - Protected dashboard areas
 3. **Admin Layout** (`/src/app/dashboard/(admin)/layout.tsx`) - Admin-only sections
-4. **Subject Layout** (inline in `/src/app/subject/[slug]/page.tsx`) - Subject exam viewer
+4. **Subject Layout** (inline in `/src/app/subject/[slug]/page.tsx`) - Subject exam viewer with zoom support
 
 ### Design Patterns
 - **Composite Layout Pattern**: Nested layouts inherit from parent layouts
-- **Provider Pattern**: Context providers manage sidebar state and authentication
+- **Provider Pattern**: Context providers manage sidebar state, authentication, and zoom controls
 - **Responsive First**: Mobile and desktop layouts handled by the same components
 - **Server-Side Authentication**: Session validation happens at the layout level
 - **Role-Based Access Control**: Admin routes protected by dedicated layout wrapper
+- **Desktop-Only Features**: Zoom controls only available on desktop viewports
 
 ## File Structure
 
@@ -44,6 +45,11 @@ src/
 │   │   ├── subject-switcher.tsx             # Subject selector in sidebar
 │   │   ├── subject-dropdown.tsx             # Subject dropdown menu
 │   │   └── dashboard-page.tsx               # Page wrapper component
+│   ├── questions/
+│   │   ├── filtered-questions-view.tsx      # Question list with zoom scaling
+│   │   └── zoom-controls.tsx                # Zoom UI controls overlay
+│   ├── providers/
+│   │   └── zoom-provider.tsx                # Zoom state management
 │   ├── ui/
 │   │   ├── sidebar.tsx                      # Core sidebar components
 │   │   └── collapsible-sidebar-menu-button.tsx # Collapsible menu button
@@ -185,18 +191,51 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 }
 ```
 
+### Subject Page with Zoom Support
+The subject exam viewer integrates zoom functionality through a provider hierarchy:
+
+```tsx
+// src/app/subject/[slug]/page.tsx
+export default async function SubjectPage({ params, searchParams }: PageProps) {
+  // ... data fetching logic ...
+
+  return (
+    <ZoomProvider>  {/* Outermost: Manages zoom state */}
+      <SidebarProvider defaultOpen>  {/* Middle: Manages sidebar state */}
+        <MobileNavbar />
+        <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
+        <FloatingSidebarTrigger />
+        <SidebarInset>
+          <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
+            <div className="px-8 py-8">
+              <div className="mx-auto max-w-4xl space-y-8">
+                <FilteredQuestionsView  {/* Content with zoom scaling */}
+                  topics={topics}
+                  filters={filters}
+                  initialData={initialData}
+                />
+              </div>
+            </div>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </ZoomProvider>
+  )
+}
+```
+
 ### ExamSidebar Component
 Specialized sidebar for subject exam pages with filters:
 
 ```tsx
 // src/components/layout/exam-sidebar.tsx
-export function ExamSidebar({ 
+export function ExamSidebar({
   subject,
-  topics, 
-  years, 
+  topics,
+  years,
   questionNumbers,
   filters,
-  ...props 
+  ...props
 }: ExamSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -204,11 +243,11 @@ export function ExamSidebar({
         <SubjectSwitcher subject={subject} />
       </SidebarHeader>
       <SidebarContent>
-        <NavFilters 
-          topics={topics} 
-          years={years} 
-          questionNumbers={questionNumbers} 
-          filters={filters} 
+        <NavFilters
+          topics={topics}
+          years={years}
+          questionNumbers={questionNumbers}
+          filters={filters}
         />
       </SidebarContent>
       <SidebarFooter>
@@ -222,6 +261,26 @@ export function ExamSidebar({
 
 ## Data Flow
 
+### Provider Hierarchy
+The exam viewer uses a specific provider hierarchy to manage different aspects of the UI:
+
+```tsx
+// Provider hierarchy for subject pages
+ZoomProvider (Outermost)
+  → SidebarProvider
+    → Content (SidebarInset)
+      → FilteredQuestionsView (applies zoom transform)
+        → ZoomControls (fixed overlay)
+        → Question Cards (scaled by zoom)
+```
+
+**Key Points:**
+- **ZoomProvider** wraps the entire subject page layout
+- **SidebarProvider** manages sidebar collapse state independently
+- **ZoomControls** renders as a fixed-position overlay (not affected by zoom)
+- Only the **FilteredQuestionsView content** is scaled by zoom
+- Sidebar, filters, and navigation remain at 100% scale
+
 ### Session Management
 Session data flows from server to client through the layout hierarchy:
 
@@ -232,7 +291,7 @@ Session data flows from server to client through the layout hierarchy:
 
 ```tsx
 // Session flow
-RootLayout (SSR fetch) 
+RootLayout (SSR fetch)
   → Providers (initialSession prop)
     → AuthProvider (context distribution)
       → Child components (useUserProfile hook)
@@ -264,6 +323,38 @@ document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBA
 
 ## Key Functions and Hooks
 
+### useZoom Hook
+Manages zoom state for desktop exam viewing:
+
+```tsx
+// src/components/providers/zoom-provider.tsx
+export function useZoom() {
+  const context = useContext(ZoomContext)
+  if (!context) {
+    throw new Error('useZoom must be used within ZoomProvider')
+  }
+  return context
+}
+
+// Returns:
+interface ZoomContextValue {
+  zoomLevel: number           // Current zoom level (0.5 to 1.0)
+  setZoomLevel: (level: number) => void
+  increaseZoom: () => void    // Step up to next zoom level
+  decreaseZoom: () => void    // Step down to previous level
+  resetZoom: () => void       // Reset to 1.0 (100%)
+  isEnabled: boolean          // Only enabled on desktop
+  isLoading: boolean          // Loading state for sessionStorage
+}
+```
+
+**Zoom Features:**
+- Desktop-only functionality (disabled on mobile)
+- Zoom levels: 50%, 60%, 70%, 80%, 90%, 100%
+- Keyboard shortcuts: Cmd/Ctrl + (+/-/0)
+- State persisted in sessionStorage
+- Smooth CSS transform transitions
+
 ### useIsMobile Hook
 Detects mobile viewport with proper hydration handling:
 
@@ -275,10 +366,10 @@ export function useIsMobile() {
   React.useEffect(() => {
     const checkMobile = () => window.innerWidth < MOBILE_BREAKPOINT
     setIsMobile(checkMobile())
-    
+
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
     const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    
+
     mql.addEventListener("change", handleChange)
     return () => mql.removeEventListener("change", handleChange)
   }, [])
@@ -460,6 +551,44 @@ Subject switcher enables quick navigation between enrolled subjects:
 4. Includes "Back to dashboard" option
 5. Routes to `/subject/[slug]` on selection
 
+### Zoom Implementation
+The zoom feature provides content scaling for better readability on desktop:
+
+**Component Architecture:**
+```tsx
+// FilteredQuestionsView applies the zoom transform
+<div
+  className="origin-top transition-transform duration-200 ease-out"
+  style={{
+    transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
+    transformOrigin: 'top center',
+  }}
+>
+  {/* Question content scaled by zoom */}
+</div>
+```
+
+**ZoomControls Overlay:**
+```tsx
+// Fixed position overlay, not affected by zoom
+<div className="fixed top-16 right-4 z-40">
+  {/* Hover to reveal controls */}
+  <Button onClick={increaseZoom} disabled={!canZoomIn}>
+    <Plus />
+  </Button>
+  <Button onClick={decreaseZoom} disabled={!canZoomOut}>
+    <Minus />
+  </Button>
+</div>
+```
+
+**Key Design Decisions:**
+1. **Desktop-only**: Zoom disabled on mobile to prevent layout issues
+2. **Selective scaling**: Only question content zooms, not UI chrome
+3. **SessionStorage**: Zoom preference persists during session
+4. **Keyboard shortcuts**: Power users can zoom without mouse
+5. **Hover UI**: Controls auto-hide to minimize visual clutter
+
 ## Dependencies
 
 ### External Dependencies
@@ -547,3 +676,14 @@ function useSidebar(): {
 - Tooltip hints when sidebar is collapsed
 - Keyboard shortcut (Cmd/Ctrl+B) for power users
 - Smooth width transitions (200ms ease-linear)
+- Zoom controls with keyboard shortcuts (Cmd/Ctrl + +/-/0)
+- Hover-to-reveal zoom UI minimizes visual distraction
+
+### Zoom Feature Considerations
+- **Transform Origin**: Set to 'top center' for predictable scaling
+- **No Mobile Zoom**: Explicitly disabled to prevent viewport issues
+- **Independent Scaling**: Sidebar and filters remain at 100% for usability
+- **SessionStorage vs LocalStorage**: Session-only persistence prevents confusion across sessions
+- **Validation**: Zoom levels restricted to predefined steps (0.5-1.0)
+- **Loading State**: Prevents flash of unzoomed content on page load
+- **Keyboard Accessibility**: Standard browser zoom shortcuts supported

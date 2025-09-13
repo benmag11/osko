@@ -49,9 +49,18 @@ The admin system follows a layered architecture with clear separation of concern
 
 ## Core Components
 
+### Authentication Flow
+
+The authentication system has been streamlined with centralized admin checks:
+
+1. **Middleware Layer**: Handles general authentication and onboarding checks, but delegates admin-specific checks to the layout
+2. **Layout Protection**: Admin routes use a dedicated layout wrapper that verifies admin status once
+3. **Server Actions**: All admin server actions use the centralized `ensureAdmin()` function
+4. **Database RLS**: Final layer of protection at the database level
+
 ### Admin Layout Protection
 
-The admin layout (`/src/app/dashboard/(admin)/layout.tsx`) provides the first line of defense:
+The admin layout (`/src/app/dashboard/(admin)/layout.tsx`) provides centralized route protection:
 
 ```typescript
 export default async function AdminLayout({
@@ -155,6 +164,34 @@ export function QuestionEditModal({
 }
 ```
 
+### Reports Table Component
+
+The enhanced `ReportsTable` component provides improved user experience with fresh data management:
+
+```typescript
+export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTableProps) {
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
+
+  // Derive selected report from fresh reports array
+  const selectedReport = selectedReportId
+    ? reports.find(r => r.id === selectedReportId) || null
+    : null
+
+  // Features:
+  // - Inline quick actions for resolve/dismiss
+  // - Color-coded status badges (pending: default, resolved: green, dismissed: red)
+  // - Report type badges for categorization
+  // - Eye icon for viewing details
+  // - Fresh data pattern ensures latest report state
+}
+```
+
+Key improvements:
+- **Fresh Data Pattern**: Selected report always derived from the latest reports array
+- **Inline Actions**: Quick resolve/dismiss buttons directly in the table
+- **Visual Feedback**: Color-coded badges and clear action icons
+- **State Management**: Proper cleanup of selected report ID when dialog closes
+
 ## Data Flow
 
 ### Report Submission Flow
@@ -230,35 +267,56 @@ export async function ensureAdmin(): Promise<string> {
 }
 ```
 
-### updateQuestionMetadata Server Action
+### updateReportStatus Server Action
 
-Secure server action for updating question metadata:
+Enhanced server action for updating report status with better error handling:
 
 ```typescript
-export async function updateQuestionMetadata(
-  questionId: string,
-  updates: QuestionUpdatePayload
-): Promise<{ success: boolean; error?: string; auditLogId?: string }> {
+export async function updateReportStatus(
+  reportId: string,
+  updates: UpdateReportPayload
+): Promise<{ success: boolean; error?: string }> {
   try {
-    await ensureAdmin() // Verify admin status
-  } catch {
-    return { success: false, error: 'Unauthorized' }
+    // Centralized admin verification
+    const userId = await ensureAdmin()
+
+    const supabase = await createServerSupabaseClient()
+
+    // Build update data dynamically
+    const updateData: Record<string, unknown> = {}
+
+    if (updates.status !== undefined) {
+      updateData.status = updates.status
+    }
+
+    if (updates.admin_notes !== undefined) {
+      updateData.admin_notes = updates.admin_notes
+    }
+
+    // Auto-populate resolution metadata
+    if (updates.status === 'resolved' || updates.status === 'dismissed') {
+      updateData.resolved_by = userId
+      updateData.resolved_at = new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from('question_reports')
+      .update(updateData)
+      .eq('id', reportId)
+
+    if (error) {
+      console.error('Failed to update report:', error)
+      return { success: false, error: 'Failed to update report' }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating report:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update report'
+    }
   }
-  
-  const supabase = await createServerSupabaseClient()
-  
-  // Get current question data for audit log
-  const { data: currentQuestion } = await supabase
-    .from('questions')
-    .select('*, question_topics(topic_id)')
-    .eq('id', questionId)
-    .single()
-  
-  // Update question metadata
-  // Handle topic updates if provided
-  // Create audit log entry
-  
-  return { success: true, auditLogId: auditLog?.id }
 }
 ```
 
@@ -528,16 +586,20 @@ Creates a new question report.
 - **Returns**: `{ success: boolean; error?: string }`
 
 #### `updateReportStatus(reportId: string, updates: UpdateReportPayload)`
-Updates report status and adds admin notes.
-- **Authorization**: Admin only
-- **Auto-populates**: `resolved_by` and `resolved_at` when resolving
+Updates report status with enhanced error handling and automatic metadata.
+- **Authorization**: Admin only via centralized `ensureAdmin()`
+- **Auto-populates**: `resolved_by` and `resolved_at` when status changes to resolved/dismissed
+- **Supports**: Partial updates (status only, notes only, or both)
+- **Error Handling**: Comprehensive error messages with proper logging
 - **Returns**: `{ success: boolean; error?: string }`
 
-#### `getReports(status?: ReportStatus)`
-Fetches reports with optional status filter.
-- **Authorization**: Admin only
-- **Includes**: Joined question and topic data
-- **Returns**: `QuestionReport[]`
+#### `getReports(status?: 'pending' | 'resolved' | 'dismissed')`
+Fetches reports with optional status filter and comprehensive joins.
+- **Authorization**: Admin only via centralized `ensureAdmin()`
+- **Includes**: Joined question, subject, and topic data with proper transformation
+- **Ordering**: Descending by creation date (newest first)
+- **Error Handling**: Returns empty array on auth failure or error
+- **Returns**: `QuestionReport[]` with nested relationships
 
 #### `getReportStatistics()`
 Fetches aggregated report statistics.
@@ -564,31 +626,69 @@ Fetches and caches audit history for a question.
 
 ### Security Considerations
 
-1. **Multi-layer Authorization**: Admin status is verified at the layout level, in server actions, and through database RLS policies
-2. **CSRF Protection**: All mutations go through server actions with built-in CSRF protection
-3. **Input Validation**: Both client-side and server-side validation for all user inputs
-4. **Audit Trail**: All admin actions are logged with user identification
-5. **Cache Isolation**: User-specific query clients prevent data leakage between sessions
+1. **Centralized Authorization**: Admin verification centralized in `admin-context.ts` with React cache optimization
+2. **Layout Protection**: Admin routes protected at the layout level, eliminating need for middleware checks
+3. **CSRF Protection**: All mutations go through server actions with built-in CSRF protection
+4. **Input Validation**: Both client-side and server-side validation with proper error boundaries
+5. **Audit Trail**: Automatic logging of all admin actions with user identification and timestamps
+6. **Cache Isolation**: User-specific query clients prevent data leakage between sessions
+7. **Error Handling**: Consistent error handling with proper logging and user feedback
 
 ### Performance Optimizations
 
-1. **Cached Admin Status**: Uses React's cache to prevent redundant database queries
-2. **Optimistic Updates**: UI updates immediately while server operations complete
-3. **Stale-While-Revalidate**: React Query's SWR pattern for responsive UIs
-4. **Selective Invalidation**: Only affected queries are invalidated after mutations
-5. **Initial Data**: Server-rendered data passed as initial query data
+1. **Cached Admin Status**: React cache prevents redundant database queries within same request
+2. **Smart Data Freshness**: Balance between fresh data and performance with 30-second stale times
+3. **Optimistic Updates**: Immediate UI feedback with proper rollback on errors
+4. **Selective Invalidation**: Targeted query invalidation for reports and statistics
+5. **Initial Data**: Server-rendered data reduces initial load time
+6. **Derived State**: Report selection derived from fresh data array, preventing stale selections
+7. **Efficient Joins**: Single query fetches all related data (questions, subjects, topics)
 
 ### Error Handling
 
-1. **Graceful Degradation**: Non-admin users see regular interface without admin features
-2. **User-Friendly Messages**: Toast notifications for all success and error states
-3. **Fallback States**: Loading skeletons and empty states for better UX
-4. **Automatic Retries**: React Query's retry logic for transient failures
+1. **Graceful Degradation**: Non-admin users redirected to regular dashboard without errors
+2. **Comprehensive Error Messages**: Detailed error messages with proper context
+3. **Toast Notifications**: Success and error toasts for all user actions
+4. **Loading States**: Skeleton loaders for reports table and statistics cards
+5. **Empty States**: Clear messaging when no reports are found
+6. **Error Boundaries**: Proper error catching in server actions with logging
+7. **Automatic Retries**: React Query's retry logic for transient failures
 
 ### Maintenance Notes
 
 1. **Audit Log Retention**: Currently no automatic cleanup - consider implementing retention policy
 2. **Report Archival**: Resolved reports remain in database - may need archival strategy
 3. **Performance Monitoring**: Monitor query performance as report volume grows
-4. **Admin Activity Logs**: Consider additional logging for sensitive admin actions
-5. **Role Expansion**: System designed to support additional roles beyond binary admin/user
+4. **Cache Strategy**: Review stale times based on admin usage patterns
+5. **Error Logging**: Enhanced error logging in place for debugging admin actions
+6. **Role Expansion**: System designed to support additional roles beyond binary admin/user
+7. **Data Freshness**: Current 30-second stale time balances freshness with performance
+
+## Recent Improvements Summary
+
+The admin features have been significantly enhanced with the following improvements:
+
+### Authentication & Authorization
+- **Centralized Admin Context**: Created `admin-context.ts` to consolidate all admin verification logic
+- **Reduced Redundancy**: Eliminated duplicate admin checks across middleware and server actions
+- **Cached Verification**: Uses React's cache to prevent multiple database queries in the same request
+- **Layout-Based Protection**: Admin routes now protected at the layout level for better performance
+
+### Reports Management
+- **Enhanced Reports Table**: Improved UI with inline actions, color-coded badges, and better state management
+- **Fresh Data Pattern**: Reports always show the latest data by deriving selected report from fresh array
+- **Improved Filtering**: Tabbed interface with badge indicators showing pending count
+- **Better UX**: Quick actions directly in table, clear visual feedback, and smart cache invalidation
+
+### Error Handling & Logging
+- **Comprehensive Error Messages**: All server actions now return detailed error messages
+- **Enhanced Logging**: Better console logging for debugging admin actions
+- **Graceful Failures**: Proper error boundaries and fallback states throughout
+
+### Performance Optimizations
+- **Smart Caching**: 30-second stale time balances data freshness with performance
+- **Selective Invalidation**: Only relevant queries are invalidated on mutations
+- **Efficient Data Fetching**: Single query fetches all related data with proper joins
+- **Derived State Management**: Prevents stale data issues in report selection
+
+These improvements ensure the admin system is more maintainable, performant, and user-friendly while maintaining robust security and audit capabilities.

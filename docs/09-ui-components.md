@@ -48,6 +48,9 @@ src/components/ui/              # shadcn/ui components
 src/components/                 # Application-specific components
 ├── filters/                    # Filter UI components
 ├── questions/                  # Question display components
+│   ├── question-card.tsx       # Individual question cards
+│   ├── zoom-controls.tsx       # Zoom UI controls
+│   └── filtered-questions-view.tsx  # Question list with zoom
 ├── layout/                     # Layout components
 ├── auth/                       # Authentication components
 ├── admin/                      # Admin-specific components
@@ -55,6 +58,9 @@ src/components/                 # Application-specific components
 ├── landing/                    # Landing page sections
 ├── settings/                   # Settings UI
 └── providers/                  # React context providers
+    ├── providers.tsx           # Root providers wrapper
+    ├── auth-provider.tsx       # Authentication context
+    └── zoom-provider.tsx       # Zoom state management
 ```
 
 ## Core Components
@@ -197,14 +203,106 @@ function SidebarProvider({
 }
 ```
 
+### ZoomControls Component
+
+The ZoomControls component provides a desktop-only zoom interface for scaling content in the question viewer:
+
+```tsx
+export function ZoomControls() {
+  const isMobile = useIsMobile()
+  const { zoomLevel, increaseZoom, decreaseZoom, isLoading } = useZoom()
+  const [isVisible, setIsVisible] = useState(false)
+
+  // Desktop-only rendering
+  if (isMobile === true || isMobile === undefined || isLoading) {
+    return null
+  }
+
+  return (
+    <div className="fixed top-16 right-4 z-40"
+         onMouseEnter={() => setIsVisible(true)}
+         onMouseLeave={() => setIsVisible(false)}>
+      {/* Extended hover trigger area */}
+      <div className="absolute -left-24 top-0 w-28 h-24" />
+
+      {/* Controls with fade transition */}
+      <div className={cn(
+        "flex flex-col items-center gap-2 bg-cream-50 rounded-lg p-2 shadow-lg",
+        "transition-opacity duration-200",
+        isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+      )}>
+        {/* Zoom buttons with tooltips */}
+      </div>
+    </div>
+  )
+}
+```
+
+**Key Features:**
+- **Fixed Positioning**: Anchored to top-right corner (top-16, right-4)
+- **Hover-to-Show**: Controls appear on hover with smooth opacity transition
+- **Edge Activation**: Extended trigger area (-left-24) for easy edge activation
+- **Vertical Layout**: Buttons stacked vertically for minimal footprint
+- **Accessibility**: Full keyboard support via Cmd/Ctrl +/- shortcuts
+- **Desktop-Only**: Returns null on mobile devices or during loading
+- **Visual Feedback**: Buttons disabled at min/max zoom levels
+
+**Design Patterns:**
+1. **Progressive Disclosure**: Controls hidden until needed
+2. **Edge Triggering**: Extended invisible area for cursor catching from screen edge
+3. **Tooltip Integration**: Left-positioned tooltips to avoid edge overflow
+4. **State Synchronization**: Integrates with ZoomProvider context
+5. **Responsive Behavior**: Mobile detection prevents unnecessary rendering
+
 ## Data Flow
 
 ### Component State Management
 
 1. **Controlled Components**: Most components support both controlled and uncontrolled modes
-2. **Context Providers**: Complex components like Sidebar use React Context for state distribution
-3. **Cookie Persistence**: Sidebar state persists across sessions using cookies
+2. **Context Providers**: Complex components like Sidebar and Zoom use React Context for state distribution
+3. **Storage Persistence**: Sidebar uses cookies, Zoom uses sessionStorage for state persistence
 4. **URL State**: Filter components sync with URL parameters for shareable states
+
+### ZoomProvider Context
+
+The ZoomProvider manages zoom state for the question viewer with intelligent persistence:
+
+```tsx
+const ZOOM_LEVELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0] as const
+const DEFAULT_ZOOM = 1.0
+
+export function ZoomProvider({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile()
+  const isEnabled = isMobile === false // Desktop-only feature
+
+  // Session storage with validation
+  const [zoomLevel, setStoredZoom, isLoading] = useSessionStorage<ZoomLevel>({
+    key: 'exam-viewer-zoom',
+    defaultValue: DEFAULT_ZOOM,
+    validator: isValidZoomLevel,
+  })
+
+  // Keyboard shortcuts (Cmd/Ctrl + +/- / 0)
+  useEffect(() => {
+    if (!isEnabled || isLoading) return
+    // Handle keyboard events...
+  }, [isEnabled, isLoading])
+
+  return (
+    <ZoomContext.Provider value={contextValue}>
+      {children}
+    </ZoomContext.Provider>
+  )
+}
+```
+
+**State Management Features:**
+- **Discrete Zoom Levels**: Fixed array of zoom levels (0.5 to 1.0)
+- **Session Persistence**: Zoom level preserved during browser session
+- **Type Validation**: Runtime validation of stored zoom values
+- **Keyboard Shortcuts**: Cmd/Ctrl + for zoom in, - for zoom out, 0 for reset
+- **Mobile Detection**: Automatically disabled on mobile devices
+- **Loading States**: Proper handling of storage initialization
 
 ### Event Handling Pattern
 
@@ -254,6 +352,82 @@ function useSidebar() {
     throw new Error("useSidebar must be used within a SidebarProvider.")
   }
   return context
+}
+```
+
+### useZoom Hook
+
+Accesses zoom context for content scaling:
+
+```tsx
+export function useZoom() {
+  const context = useContext(ZoomContext)
+  if (!context) {
+    throw new Error('useZoom must be used within ZoomProvider')
+  }
+  return context
+}
+```
+
+Returns:
+- `zoomLevel`: Current zoom level (0.5 to 1.0)
+- `setZoomLevel`: Direct zoom setter with validation
+- `increaseZoom`: Step up to next zoom level
+- `decreaseZoom`: Step down to previous zoom level
+- `resetZoom`: Reset to default (1.0)
+- `isEnabled`: Whether zoom is available (desktop only)
+- `isLoading`: Storage initialization state
+
+### useIsMobile Hook
+
+Responsive breakpoint detection with hydration safety:
+
+```tsx
+const MOBILE_BREAKPOINT = 1024
+
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+
+    mql.addEventListener("change", handleChange)
+    return () => mql.removeEventListener("change", handleChange)
+  }, [])
+
+  return isMobile // undefined during SSR, boolean after hydration
+}
+```
+
+### useSessionStorage Hook
+
+Type-safe session storage with validation:
+
+```tsx
+export function useSessionStorage<T>({
+  key,
+  defaultValue,
+  validator,
+}: UseSessionStorageOptions<T>): [T, (value: T) => void, boolean] {
+  const [storedValue, setStoredValue] = useState<T>(defaultValue)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load and validate stored value
+  useEffect(() => {
+    const item = window.sessionStorage.getItem(key)
+    if (item !== null) {
+      const parsed = JSON.parse(item)
+      if (!validator || validator(parsed)) {
+        setStoredValue(parsed)
+      }
+    }
+    setIsLoading(false)
+  }, [key, validator])
+
+  return [storedValue, setValue, isLoading]
 }
 ```
 
@@ -407,6 +581,11 @@ className="w-full max-w-[calc(100%-2rem)] sm:max-w-lg"
 2. **Keyboard Navigation**: Full keyboard support with visible focus indicators
 3. **Screen Reader Support**: Semantic HTML and SR-only text for context
 4. **Focus Management**: Proper focus trapping in modals and dialogs
+5. **Zoom Accessibility**:
+   - Keyboard shortcuts (Cmd/Ctrl +/-/0) for zoom control
+   - Tooltip hints for button functionality
+   - Disabled state indicators at zoom limits
+   - Preserves text readability at all zoom levels
 
 ## Dependencies
 
@@ -475,6 +654,7 @@ interface SelectProps {
 2. **Lazy Loading**: Sheet and Dialog components use portal pattern
 3. **CSS-in-JS Avoidance**: All styling through Tailwind for optimal performance
 4. **Event Delegation**: Proper event handling to prevent bubbling issues
+5. **Transform-based Zoom**: Uses CSS transform for hardware-accelerated scaling
 
 ### Custom Component Patterns
 
@@ -484,6 +664,33 @@ The application extends shadcn/ui components with domain-specific components:
 2. **QuestionCard**: Complex card composition for exam questions
 3. **TopicFilterAccordion**: Accordion with checkbox integration
 4. **AppSidebar**: Application-specific sidebar implementation
+5. **ZoomControls**: Progressive disclosure zoom interface with hover activation
+6. **FilteredQuestionsView**: Integration of zoom transform with question list
+
+### Zoom Implementation Pattern
+
+The zoom feature demonstrates advanced UI patterns:
+
+```tsx
+// In FilteredQuestionsView component
+<div className="relative">
+  <div
+    className="origin-top transition-transform duration-200 ease-out"
+    style={{
+      transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
+      transformOrigin: 'top center',
+    }}
+  >
+    {/* Question cards rendered here */}
+  </div>
+</div>
+```
+
+This approach:
+- Uses CSS transforms for GPU-accelerated performance
+- Centers scaling from top-center for intuitive zoom behavior
+- Smooth transitions with 200ms duration
+- Conditional application based on device capability
 
 ### Styling Conventions
 

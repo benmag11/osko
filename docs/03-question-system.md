@@ -518,6 +518,375 @@ async function createReport(
 ): Promise<{ success: boolean; error?: string }>
 ```
 
+## Zoom Feature
+
+### Overview
+The zoom feature provides desktop users with the ability to scale the question viewer interface, improving readability and accessibility for exam content. The feature is desktop-only and provides zoom levels from 50% to 100% with keyboard shortcuts and visual controls.
+
+### Architecture
+The zoom system uses a context-based architecture with session storage persistence:
+- **ZoomProvider**: React context provider managing zoom state
+- **ZoomControls**: UI component for visual zoom controls
+- **useSessionStorage**: Custom hook for per-tab state persistence
+- **CSS Transform**: Scale-based zooming without reflow
+
+### Implementation Components
+
+#### ZoomProvider
+The core context provider that manages zoom state and keyboard interactions:
+
+```tsx
+// src/components/providers/zoom-provider.tsx
+const ZOOM_LEVELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0] as const
+type ZoomLevel = typeof ZOOM_LEVELS[number]
+
+export function ZoomProvider({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile()
+  const isEnabled = isMobile === false // Only enable on desktop
+
+  // Use sessionStorage hook with validation
+  const [zoomLevel, setStoredZoom, isLoading] = useSessionStorage<ZoomLevel>({
+    key: 'exam-viewer-zoom',
+    defaultValue: 1.0,
+    validator: isValidZoomLevel,
+  })
+
+  // Keyboard shortcuts (Cmd/Ctrl + +/- and 0)
+  useEffect(() => {
+    if (!isEnabled || isLoading) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return
+
+      switch (e.key) {
+        case '=':
+        case '+':
+          e.preventDefault()
+          increaseZoom()
+          break
+        case '-':
+          e.preventDefault()
+          decreaseZoom()
+          break
+        case '0':
+          e.preventDefault()
+          resetZoom()
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isEnabled, isLoading, increaseZoom, decreaseZoom, resetZoom])
+}
+```
+
+Key features:
+- **Desktop-Only**: Disabled on mobile devices (viewport < 1024px)
+- **Discrete Levels**: Fixed zoom levels (50%, 60%, 70%, 80%, 90%, 100%)
+- **Keyboard Shortcuts**: Cmd/Ctrl + Plus/Minus for zoom, Cmd/Ctrl + 0 for reset
+- **Type Safety**: Validates zoom levels with TypeScript type guards
+
+#### ZoomControls Component
+Visual controls for zoom with hover-to-show behavior:
+
+```tsx
+// src/components/questions/zoom-controls.tsx
+export function ZoomControls() {
+  const isMobile = useIsMobile()
+  const { zoomLevel, increaseZoom, decreaseZoom, isLoading } = useZoom()
+  const [isVisible, setIsVisible] = useState(false)
+
+  // Don't render on mobile at all
+  if (isMobile === true || isMobile === undefined || isLoading) {
+    return null
+  }
+
+  return (
+    <div
+      className="fixed top-16 right-4 z-40"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      {/* Hover trigger area */}
+      <div className="absolute -left-24 top-0 w-28 h-24" />
+
+      {/* Controls container with fade animation */}
+      <div className={cn(
+        "flex flex-col items-center gap-2 bg-cream-50 rounded-lg p-2 shadow-lg",
+        "transition-opacity duration-200",
+        isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+      )}>
+        {/* Plus and Minus buttons with tooltips */}
+      </div>
+    </div>
+  )
+}
+```
+
+Design features:
+- **Hover Activation**: Controls appear on hover for minimal UI clutter
+- **Vertical Layout**: Stacked buttons for compact footprint
+- **Tooltips**: Clear labels for accessibility
+- **Disabled States**: Visual feedback when at zoom limits
+
+#### Session Storage Hook
+Custom hook for managing per-tab zoom persistence:
+
+```tsx
+// src/lib/hooks/use-session-storage.ts
+export function useSessionStorage<T>({
+  key,
+  defaultValue,
+  validator,
+}: UseSessionStorageOptions<T>): [T, (value: T) => void, boolean] {
+  const [storedValue, setStoredValue] = useState<T>(defaultValue)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAvailable, setIsAvailable] = useState(false)
+
+  useEffect(() => {
+    // SSR safety check
+    if (typeof window === 'undefined') {
+      setIsLoading(false)
+      return
+    }
+
+    // Check storage availability and load value
+    try {
+      const item = window.sessionStorage.getItem(key)
+      if (item !== null) {
+        const parsed = JSON.parse(item)
+
+        // Validate with provided validator
+        if (!validator || validator(parsed)) {
+          setStoredValue(parsed)
+        } else {
+          // Invalid data, clear it
+          window.sessionStorage.removeItem(key)
+        }
+      }
+    } catch (error) {
+      console.warn(`SessionStorage not available for key "${key}":`, error)
+      setIsAvailable(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [key, defaultValue, validator])
+}
+```
+
+Features:
+- **SSR Safe**: Handles server-side rendering gracefully
+- **Type Validation**: Ensures stored values match expected types
+- **Error Recovery**: Falls back to defaults on corruption
+- **Loading State**: Provides loading indicator during hydration
+
+### Integration with Question System
+
+#### FilteredQuestionsView Integration
+The zoom feature applies transforms to the question container:
+
+```tsx
+// src/components/questions/filtered-questions-view.tsx
+export function FilteredQuestionsView({ topics, filters, initialData }: FilteredQuestionsViewProps) {
+  const { zoomLevel, isEnabled, isLoading: isZoomLoading } = useZoom()
+
+  return (
+    <>
+      <ZoomControls />
+      <div
+        className="w-full max-w-4xl mx-auto"
+        style={{
+          // Only apply transform on desktop and when not loading
+          transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
+          transformOrigin: 'top center',
+        }}
+      >
+        {/* Question list content */}
+      </div>
+    </>
+  )
+}
+```
+
+#### Subject Page Provider Wrapping
+The ZoomProvider wraps the entire subject page for context availability:
+
+```tsx
+// src/app/subject/[slug]/page.tsx
+export default async function SubjectPage({ params, searchParams }: PageProps) {
+  // ... data fetching
+
+  return (
+    <ZoomProvider>
+      <SidebarProvider defaultOpen>
+        {/* Page content with FilteredQuestionsView */}
+      </SidebarProvider>
+    </ZoomProvider>
+  )
+}
+```
+
+### Storage Utilities
+Helper functions for safe storage operations:
+
+```tsx
+// src/lib/utils/storage.ts
+export function isStorageAvailable(type: 'localStorage' | 'sessionStorage'): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    const storage = window[type]
+    const testKey = '__storage_test__'
+    storage.setItem(testKey, 'test')
+    storage.removeItem(testKey)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function safeJsonParse<T>(
+  value: string,
+  fallback: T,
+  validator?: (value: unknown) => value is T
+): T {
+  try {
+    const parsed = JSON.parse(value)
+    return validator && !validator(parsed) ? fallback : parsed
+  } catch {
+    return fallback
+  }
+}
+```
+
+### Technical Implementation Details
+
+#### Zoom Mechanism
+The zoom feature uses CSS `transform: scale()` for performance:
+- **No Reflow**: Transform doesn't trigger layout recalculation
+- **GPU Acceleration**: Scale transforms are hardware-accelerated
+- **Center Origin**: `transformOrigin: 'top center'` keeps content centered
+
+#### Mobile Detection
+Uses a custom hook with media queries for responsive behavior:
+
+```tsx
+// src/lib/hooks/use-mobile.ts
+const MOBILE_BREAKPOINT = 1024
+
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches)
+    }
+
+    mql.addEventListener("change", handleChange)
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+
+    return () => mql.removeEventListener("change", handleChange)
+  }, [])
+
+  return isMobile // undefined during SSR, boolean after hydration
+}
+```
+
+#### Persistence Strategy
+SessionStorage provides per-tab persistence:
+- **Tab Isolation**: Each tab maintains its own zoom level
+- **Session Duration**: Settings persist until tab closure
+- **No Cross-Tab Sync**: Intentional design for independent viewing
+
+### User Experience Features
+
+#### Keyboard Shortcuts
+Standard zoom shortcuts familiar to users:
+- **Cmd/Ctrl + Plus (+)**: Increase zoom (up to 100%)
+- **Cmd/Ctrl + Minus (-)**: Decrease zoom (down to 50%)
+- **Cmd/Ctrl + Zero (0)**: Reset to 100%
+
+#### Visual Feedback
+- **Hover Controls**: Appear on hover to minimize UI clutter
+- **Disabled States**: Buttons disable at zoom limits
+- **Smooth Transitions**: Opacity animations for control visibility
+- **Tooltip Hints**: Clear labels for each control
+
+#### Accessibility Considerations
+- **Keyboard Navigation**: Full keyboard support for zoom operations
+- **ARIA Labels**: Implicit through button content and tooltips
+- **Graceful Degradation**: Falls back to 100% if storage unavailable
+- **Loading States**: Prevents layout shift during initialization
+
+### Performance Optimizations
+
+#### Memoization
+All zoom functions are memoized to prevent unnecessary re-renders:
+
+```tsx
+const increaseZoom = useCallback(() => {
+  if (!isEnabled) return
+
+  const currentIndex = ZOOM_LEVELS.indexOf(zoomLevel)
+  if (currentIndex < ZOOM_LEVELS.length - 1) {
+    setZoomLevel(ZOOM_LEVELS[currentIndex + 1])
+  }
+}, [isEnabled, zoomLevel, setZoomLevel])
+```
+
+#### Context Value Memoization
+The context value is memoized to prevent consumer re-renders:
+
+```tsx
+const contextValue = useMemo<ZoomContextValue>(() => ({
+  zoomLevel: isEnabled && !isLoading ? zoomLevel : DEFAULT_ZOOM,
+  setZoomLevel,
+  increaseZoom,
+  decreaseZoom,
+  resetZoom,
+  isEnabled,
+  isLoading: isEnabled ? isLoading : false,
+}), [zoomLevel, setZoomLevel, increaseZoom, decreaseZoom, resetZoom, isEnabled, isLoading])
+```
+
+#### Conditional Rendering
+Components check multiple conditions before rendering:
+- Mobile detection complete (`isMobile !== undefined`)
+- Storage loading complete (`!isLoading`)
+- Desktop confirmed (`isMobile === false`)
+
+### Configuration
+
+#### Zoom Levels
+Fixed zoom levels defined as constants:
+```tsx
+const ZOOM_LEVELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0] as const
+```
+
+#### Storage Key
+SessionStorage key for persistence:
+```tsx
+const STORAGE_KEY = 'exam-viewer-zoom'
+```
+
+#### Mobile Breakpoint
+Viewport width threshold for mobile detection:
+```tsx
+const MOBILE_BREAKPOINT = 1024 // pixels
+```
+
+### Limitations and Constraints
+
+1. **Desktop Only**: Feature is completely disabled on mobile devices
+2. **Fixed Zoom Levels**: Limited to predefined increments (not continuous)
+3. **Maximum 100%**: Cannot zoom beyond original size
+4. **Minimum 50%**: Cannot zoom below half size
+5. **Tab Isolation**: Zoom levels don't sync across tabs
+6. **Session Duration**: Settings lost when tab closes
+
 ## Other Notes
 
 ### Question Reporting Workflow

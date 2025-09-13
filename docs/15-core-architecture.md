@@ -9,9 +9,10 @@ This Next.js 15 application is a sophisticated exam paper viewing platform built
 The application follows a layered architecture pattern with clear separation of concerns:
 
 - **Presentation Layer**: React 19 components with Next.js 15 App Router
-- **State Management Layer**: TanStack Query v5 with user-scoped caching
+- **State Management Layer**: TanStack Query v5 with user-scoped caching and context-based UI state
 - **Authentication Layer**: Supabase Auth with SSR support and middleware protection
 - **Data Access Layer**: Supabase PostgreSQL with Row Level Security (RLS)
+- **Storage Abstraction Layer**: Generic storage hooks with graceful degradation
 - **Infrastructure Layer**: Vercel deployment-ready with edge optimization
 
 ### Design Patterns Used
@@ -19,8 +20,12 @@ The application follows a layered architecture pattern with clear separation of 
 1. **Server-First Rendering**: Prioritizes server components with selective client-side interactivity
 2. **Cache Isolation Pattern**: Per-user QueryClient instances prevent data leakage
 3. **Middleware Authentication**: Route-level protection before request processing
-4. **Optimistic UI Updates**: TanStack Query mutations with optimistic updates
-5. **Error Boundary Pattern**: Graceful error handling at multiple levels
+4. **Provider Hierarchy Pattern**: Context providers wrap feature-specific pages for scoped state
+5. **Storage Abstraction Pattern**: Generic hooks for storage with validation and fallback mechanisms
+6. **Layout-Based Protection**: Admin routes protected via route group layouts
+7. **GPU-Accelerated Transforms**: CSS transforms for performant UI animations
+8. **Error Boundary Pattern**: Graceful error handling at multiple levels
+9. **Mobile-First Optimization**: Feature exclusion and conditional rendering based on device capabilities
 
 ### Architectural Rationale
 
@@ -28,6 +33,8 @@ The application follows a layered architecture pattern with clear separation of 
 - **Supabase**: Provides authentication, database, and real-time capabilities in one platform
 - **TanStack Query**: Offers powerful caching with request deduplication and background refetching
 - **TypeScript Strict Mode**: Ensures type safety across the entire codebase
+- **Context-Based State**: Lightweight state management for UI features without external dependencies
+- **SessionStorage Persistence**: Preserves user preferences within browser sessions
 
 ## File Structure
 
@@ -59,19 +66,27 @@ src/
 ├── components/
 │   └── providers/
 │       ├── providers.tsx        # QueryClient and session providers
-│       └── auth-provider.tsx    # Authentication context
+│       ├── auth-provider.tsx    # Authentication context
+│       └── zoom-provider.tsx    # Zoom context for subject pages
 ├── lib/
 │   ├── supabase/
 │   │   ├── server.ts           # Server-side Supabase client
 │   │   ├── client.ts           # Browser Supabase client
 │   │   ├── queries.ts          # Server-side database queries
-│   │   └── client-queries.ts   # Client-side query hooks
+│   │   ├── client-queries.ts   # Client-side query hooks
+│   │   ├── admin-actions.ts    # Admin server actions
+│   │   └── admin-context.ts    # Admin verification utilities
 │   ├── config/
 │   │   └── cache.ts            # Cache configuration
 │   ├── cache/
 │   │   └── cache-utils.ts      # Cache management utilities
-│   └── queries/
-│       └── query-keys.ts       # Query key factory
+│   ├── queries/
+│   │   └── query-keys.ts       # Query key factory
+│   ├── hooks/
+│   │   ├── use-session-storage.ts  # Generic session storage hook
+│   │   └── use-mobile.ts       # Mobile detection hook
+│   └── utils/
+│       └── storage.ts          # Storage utility functions
 └── middleware.ts               # Authentication middleware
 ```
 
@@ -395,28 +410,197 @@ export default function Error({
 - Provides minimal UI without dependencies
 - Uses inline styles to avoid CSS loading issues
 
-### Admin Route Protection
+### Provider Hierarchy Pattern
 
-**Admin Layout Wrapper** (`src/app/dashboard/(admin)/layout.tsx`):
+**ZoomProvider** (`src/components/providers/zoom-provider.tsx`):
+
+The ZoomProvider demonstrates the provider hierarchy pattern, wrapping specific pages with feature-specific context:
+
+```typescript
+export function ZoomProvider({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile()
+  const isEnabled = isMobile === false // Only enable on desktop
+
+  // Use sessionStorage hook with validation
+  const [zoomLevel, setStoredZoom, isLoading] = useSessionStorage<ZoomLevel>({
+    key: STORAGE_KEY,
+    defaultValue: DEFAULT_ZOOM,
+    validator: isValidZoomLevel,
+  })
+
+  // Keyboard shortcuts (desktop only)
+  useEffect(() => {
+    if (!isEnabled || isLoading) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return
+      // Handle zoom shortcuts...
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isEnabled, isLoading, increaseZoom, decreaseZoom, resetZoom])
+
+  return (
+    <ZoomContext.Provider value={contextValue}>
+      {children}
+    </ZoomContext.Provider>
+  )
+}
+```
+
+**Integration in Subject Pages**:
+```typescript
+// src/app/subject/[slug]/page.tsx
+export default async function SubjectPage({ params, searchParams }: PageProps) {
+  // ... data fetching ...
+
+  return (
+    <ZoomProvider>
+      <SidebarProvider defaultOpen>
+        {/* Page content */}
+      </SidebarProvider>
+    </ZoomProvider>
+  )
+}
+```
+
+### Storage Abstraction Layer
+
+**Generic SessionStorage Hook** (`src/lib/hooks/use-session-storage.ts`):
+
+This hook provides a robust abstraction for browser storage with graceful degradation:
+
+```typescript
+export function useSessionStorage<T>({
+  key,
+  defaultValue,
+  validator,
+}: UseSessionStorageOptions<T>): [T, (value: T) => void, boolean] {
+  const [storedValue, setStoredValue] = useState<T>(defaultValue)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAvailable, setIsAvailable] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      // Test storage availability
+      const testKey = '__test__'
+      window.sessionStorage.setItem(testKey, 'test')
+      window.sessionStorage.removeItem(testKey)
+      setIsAvailable(true)
+
+      // Load and validate existing value
+      const item = window.sessionStorage.getItem(key)
+      if (item !== null) {
+        const parsed = JSON.parse(item)
+        if (!validator || validator(parsed)) {
+          setStoredValue(parsed)
+        } else {
+          // Invalid data, clear it
+          window.sessionStorage.removeItem(key)
+        }
+      }
+    } catch (error) {
+      // Storage not available (e.g., incognito mode)
+      console.warn(`SessionStorage not available for key "${key}":`, error)
+      setIsAvailable(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [key, defaultValue, validator])
+
+  // Returns in-memory value if storage fails
+  return [storedValue, setValue, isLoading]
+}
+```
+
+**Storage Utilities** (`src/lib/utils/storage.ts`):
+```typescript
+export function isStorageAvailable(type: 'localStorage' | 'sessionStorage'): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    const storage = window[type]
+    const testKey = '__storage_test__'
+    storage.setItem(testKey, 'test')
+    storage.removeItem(testKey)
+    return true
+  } catch {
+    return false
+  }
+}
+```
+
+### Admin Authentication Centralization
+
+**Admin Context** (`src/lib/supabase/admin-context.ts`):
+
+Centralized admin verification with React cache for request deduplication:
+
+```typescript
+import { cache } from 'react'
+
+// Cached admin verification - only checks once per request
+const getCachedAdminStatus = cache(async (userId: string): Promise<boolean> => {
+  const supabase = await createServerSupabaseClient()
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('is_admin')
+    .eq('user_id', userId)
+    .single()
+
+  return profile?.is_admin ?? false
+})
+
+export async function ensureAdmin(): Promise<string> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    throw new Error('Not authenticated')
+  }
+
+  // Use cached function to avoid multiple DB queries
+  const isAdmin = await getCachedAdminStatus(user.id)
+
+  if (!isAdmin) {
+    throw new Error('Unauthorized: Admin access required')
+  }
+
+  return user.id
+}
+```
+
+**Admin Layout Protection** (`src/app/dashboard/(admin)/layout.tsx`):
 ```typescript
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const supabase = await createServerSupabaseClient()
+
+  // Single admin verification for all admin routes
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     redirect('/auth/signin')
   }
-  
+
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('is_admin')
     .eq('user_id', user.id)
     .single()
-  
+
   if (!profile?.is_admin) {
+    // Non-admin users are redirected to the main dashboard
     redirect('/dashboard/study')
   }
-  
+
+  // Admin verified - render children
   return <>{children}</>
 }
 ```
@@ -458,6 +642,70 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 - `search_questions_paginated`: Paginated question search
 - `get_available_years`: Available years per subject
 
+## Performance Patterns
+
+### GPU-Accelerated Transforms
+
+The application uses CSS transforms for performant UI animations, particularly in the zoom feature:
+
+```typescript
+// src/components/questions/filtered-questions-view.tsx
+<div
+  className="origin-top transition-transform duration-200 ease-out"
+  style={{
+    transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
+    transformOrigin: 'top center',
+  }}
+>
+  {/* Content */}
+</div>
+```
+
+**Performance Benefits**:
+- **GPU Acceleration**: `transform: scale()` is GPU-accelerated by modern browsers
+- **No Reflow**: Transform doesn't trigger layout recalculation
+- **Smooth Animations**: 60fps animations without jank
+- **Battery Efficient**: Hardware acceleration reduces CPU usage
+
+### Mobile-First Optimization
+
+Features are conditionally enabled based on device capabilities:
+
+```typescript
+// src/components/providers/zoom-provider.tsx
+export function ZoomProvider({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile()
+  const isEnabled = isMobile === false // Only enable on desktop
+
+  // Desktop-only keyboard shortcuts
+  useEffect(() => {
+    if (!isEnabled || isLoading) return
+    // Add keyboard listeners only on desktop
+  }, [isEnabled, isLoading])
+}
+```
+
+**Mobile Detection Hook** (`src/lib/hooks/use-mobile.ts`):
+```typescript
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
+
+  useEffect(() => {
+    const checkMobile = () => window.innerWidth < MOBILE_BREAKPOINT
+
+    setIsMobile(checkMobile())
+
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+
+    mql.addEventListener("change", handleChange)
+    return () => mql.removeEventListener("change", handleChange)
+  }, [])
+
+  return isMobile // undefined during SSR, boolean after hydration
+}
+```
+
 ## Other Notes
 
 ### Performance Optimizations
@@ -467,6 +715,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 3. **Code Splitting**: Automatic at route boundaries
 4. **Streaming SSR**: Progressive rendering with Suspense boundaries
 5. **Query Deduplication**: TanStack Query prevents duplicate requests
+6. **GPU-Accelerated Transforms**: Use CSS `transform: scale()` for zoom without reflows
+7. **Conditional Feature Loading**: Desktop-only features excluded on mobile devices
+8. **Request Caching**: React `cache()` for deduplicating admin checks
 
 ### Security Architecture
 
@@ -476,6 +727,47 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 4. **Environment Variable Protection**: Server-only secrets
 5. **Cookie Security**: Secure, httpOnly, sameSite settings
 
+### Error Handling Improvements
+
+The application implements multiple layers of error handling with graceful degradation:
+
+**Storage Availability Detection**:
+```typescript
+// Gracefully handle storage restrictions (e.g., incognito mode)
+try {
+  const testKey = '__test__'
+  window.sessionStorage.setItem(testKey, 'test')
+  window.sessionStorage.removeItem(testKey)
+  setIsAvailable(true)
+} catch (error) {
+  // Continue with in-memory fallback
+  console.warn(`SessionStorage not available:`, error)
+  setIsAvailable(false)
+}
+```
+
+**Type-Safe Validation**:
+```typescript
+// Type guards ensure data integrity
+function isValidZoomLevel(value: unknown): value is ZoomLevel {
+  return typeof value === 'number' && ZOOM_LEVELS.includes(value as ZoomLevel)
+}
+
+// Validate stored data before use
+const parsed = JSON.parse(item)
+if (!validator || validator(parsed)) {
+  setStoredValue(parsed)
+} else {
+  // Invalid data, clear and use default
+  window.sessionStorage.removeItem(key)
+}
+```
+
+**Fallback Mechanisms**:
+- Storage failures fall back to in-memory state
+- Invalid stored data falls back to defaults
+- Missing features gracefully degrade on unsupported devices
+
 ### Development Workflow
 
 1. **Hot Module Replacement**: Via Turbopack
@@ -483,6 +775,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 3. **Linting**: ESLint with Next.js rules
 4. **Error Reporting**: Console logging in development
 5. **Environment Management**: .env.local for local development
+6. **Storage Testing**: Automatic detection and fallback for restricted environments
 
 ### Deployment Considerations
 
@@ -500,6 +793,22 @@ Currently uses console logging for errors. In production, consider:
 - User session replay tools
 - Custom logging infrastructure
 
+### Recent Architectural Improvements
+
+The architecture has been enhanced with several key patterns that improve robustness and maintainability:
+
+1. **Provider Hierarchy Pattern**: Feature-specific providers (like ZoomProvider) wrap only the pages that need them, reducing bundle size and improving code organization.
+
+2. **Storage Abstraction Layer**: Generic hooks for browser storage with automatic fallback to in-memory state when storage is unavailable (e.g., incognito mode).
+
+3. **Admin Authentication Centralization**: Single source of truth for admin verification using React's `cache()` to prevent duplicate database queries within the same request.
+
+4. **Performance Patterns**: GPU-accelerated CSS transforms for smooth animations, mobile-first optimization with feature exclusion, and request deduplication.
+
+5. **Error Handling Improvements**: Multi-layered error handling with graceful degradation, type-safe validation, and automatic fallback mechanisms.
+
+These patterns work together to create a more resilient system that gracefully handles edge cases while maintaining excellent performance across all devices.
+
 ### Future Architecture Considerations
 
 The architecture is designed to support:
@@ -509,3 +818,5 @@ The architecture is designed to support:
 - Internationalization (i18n)
 - A/B testing infrastructure
 - Advanced caching strategies
+- WebAssembly integration for compute-intensive tasks
+- Edge computing with Vercel Edge Functions

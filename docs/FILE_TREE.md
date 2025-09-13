@@ -97,12 +97,14 @@
 #### Provider Components (src/components/providers/)
 - auth-provider.tsx - Authentication context provider
 - providers.tsx - All providers wrapper
+- zoom-provider.tsx - Zoom context provider for question scaling
 
 #### Question Components (src/components/questions/)
 - filtered-questions-view.tsx - Filtered questions display
 - question-card.tsx - Individual question card
 - question-list.tsx - Question list container
 - question-report-dialog.tsx - Report question dialog
+- zoom-controls.tsx - Zoom control UI component
 
 #### Settings Components (src/components/settings/)
 - settings-section.tsx - Settings section wrapper
@@ -135,6 +137,7 @@
 - use-mobile.ts - Mobile detection hook
 - use-questions-query.ts - Questions query hook
 - use-safe-timeout.ts - Safe timeout hook
+- use-session-storage.ts - Session storage hook for persisting client state
 - use-topics.ts - Topics data hook
 - use-user-profile.ts - User profile hook
 - use-user-subjects.ts - User subjects hook
@@ -162,6 +165,7 @@
 - format-date.ts - Date formatting utilities
 - format-name.ts - Name formatting utilities
 - slug.ts - Slug generation utilities
+- storage.ts - Storage utility functions for sessionStorage/localStorage
 - subject-icons.ts - Subject icon mapping
 - url-filters.ts - URL filter utilities
 
@@ -169,4 +173,19 @@
 - Static assets and public files
 
 ## Documentation (docs/)
-- Documentation files (to be generated)
+- 01-authentication-system.md - Authentication system documentation
+- 02-database-supabase.md - Database and Supabase integration
+- 03-question-system.md - Question system architecture
+- 04-subject-management.md - Subject management documentation
+- 05-user-dashboard.md - User dashboard features
+- 06-settings-profile.md - Settings and profile management
+- 07-admin-features.md - Admin features and reports
+- 08-onboarding-flow.md - User onboarding flow
+- 09-ui-components.md - UI components documentation
+- 10-layout-navigation.md - Layout and navigation system
+- 11-landing-page.md - Landing page documentation
+- 12-state-management-hooks.md - State management and hooks
+- 13-caching-performance.md - Caching and performance
+- 14-utilities-helpers.md - Utility functions and helpers
+- 15-core-architecture.md - Core architecture overview
+- FILE_TREE.md - This file - project structure overview
