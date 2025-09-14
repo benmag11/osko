@@ -13,16 +13,14 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
-import type { Filters } from '@/lib/types/database'
+import { useFilters } from '@/components/providers/filter-provider'
 
 interface QuestionFilterAccordionProps {
   questionNumbers: number[]
-  filters: Filters
 }
 
-export function QuestionFilterAccordion({ questionNumbers, filters }: QuestionFilterAccordionProps) {
-  const { toggleQuestionNumber } = useFilterUpdates(filters)
+export function QuestionFilterAccordion({ questionNumbers }: QuestionFilterAccordionProps) {
+  const { filters, toggleQuestionNumber } = useFilters()
   const { state, setOpen } = useSidebar()
   const isCollapsed = state === 'collapsed'
 
@@ -65,7 +63,7 @@ export function QuestionFilterAccordion({ questionNumbers, filters }: QuestionFi
                 <Checkbox
                   checked={filters.questionNumbers?.includes(questionNumber) ?? false}
                   onCheckedChange={() => toggleQuestionNumber(questionNumber)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 data-[state=checked]:animate-scale-in"
                 />
                 <span className="text-sm font-sans text-warm-text-secondary">
                   Question {questionNumber}

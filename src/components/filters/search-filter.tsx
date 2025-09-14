@@ -9,15 +9,10 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { CollapsibleSidebarMenuButton } from '@/components/ui/collapsible-sidebar-menu-button'
-import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
-import type { Filters } from '@/lib/types/database'
+import { useFilters } from '@/components/providers/filter-provider'
 
-interface SearchFilterProps {
-  filters: Filters
-}
-
-export function SearchFilter({ filters }: SearchFilterProps) {
-  const { addSearchTerm } = useFilterUpdates(filters)
+export function SearchFilter() {
+  const { addSearchTerm } = useFilters()
   const [value, setValue] = useState('')
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'

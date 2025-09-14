@@ -6,15 +6,17 @@ import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import { useZoom } from '@/components/providers/zoom-provider'
 import { ZoomControls } from './zoom-controls'
-import type { Topic, Filters, PaginatedResponse } from '@/lib/types/database'
+import { useFilters } from '@/components/providers/filter-provider'
+import type { Topic, PaginatedResponse } from '@/lib/types/database'
 
 interface FilteredQuestionsViewProps {
   topics: Topic[]
-  filters: Filters
   initialData: PaginatedResponse
 }
 
-export function FilteredQuestionsView({ topics, filters, initialData }: FilteredQuestionsViewProps) {
+export function FilteredQuestionsView({ topics, initialData }: FilteredQuestionsViewProps) {
+  const { filters, urlFilters, isSyncing } = useFilters()
+
   const {
     questions,
     totalCount,
@@ -23,7 +25,7 @@ export function FilteredQuestionsView({ topics, filters, initialData }: Filtered
     isLoading,
     error
   } = useQuestionsQuery({
-    filters,
+    filters: urlFilters, // Use URL filters for actual data fetching
     initialData,
   })
 
@@ -33,7 +35,7 @@ export function FilteredQuestionsView({ topics, filters, initialData }: Filtered
     <>
       <AppliedFiltersDisplay
         topics={topics}
-        filters={filters}
+        filters={filters} // Use optimistic filters for instant UI feedback
         totalCount={totalCount}
         isLoading={isLoading}
       />
@@ -41,6 +43,16 @@ export function FilteredQuestionsView({ topics, filters, initialData }: Filtered
       <ZoomControls />
 
       <div className="relative">
+        {/* Loading overlay for filter changes */}
+        {isSyncing && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-sm animate-fade-in">
+            <div className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow-lg">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-sm text-muted-foreground">Applying filters...</span>
+            </div>
+          </div>
+        )}
+
         <div
           className="origin-top transition-transform duration-200 ease-out"
           style={{

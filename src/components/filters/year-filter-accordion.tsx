@@ -11,16 +11,14 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
-import type { Filters } from '@/lib/types/database'
+import { useFilters } from '@/components/providers/filter-provider'
 
 interface YearFilterAccordionProps {
   years: number[]
-  filters: Filters
 }
 
-export function YearFilterAccordion({ years, filters }: YearFilterAccordionProps) {
-  const { toggleYear } = useFilterUpdates(filters)
+export function YearFilterAccordion({ years }: YearFilterAccordionProps) {
+  const { filters, toggleYear } = useFilters()
   const { state, setOpen } = useSidebar()
   const isCollapsed = state === 'collapsed'
 
@@ -66,7 +64,7 @@ export function YearFilterAccordion({ years, filters }: YearFilterAccordionProps
                 <Checkbox
                   checked={filters.years?.includes(year) ?? false}
                   onCheckedChange={() => toggleYear(year)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 data-[state=checked]:animate-scale-in"
                 />
                 <span className="text-sm font-sans text-warm-text-secondary">
                   {year}

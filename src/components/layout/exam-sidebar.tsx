@@ -11,23 +11,21 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import type { Topic, Filters, Subject } from "@/lib/types/database"
+import type { Topic, Subject } from "@/lib/types/database"
 
 interface ExamSidebarProps extends React.ComponentProps<typeof Sidebar> {
   subject: Subject
   topics: Topic[]
   years: number[]
   questionNumbers: number[]
-  filters: Filters
 }
 
-export function ExamSidebar({ 
+export function ExamSidebar({
   subject,
-  topics, 
-  years, 
+  topics,
+  years,
   questionNumbers,
-  filters,
-  ...props 
+  ...props
 }: ExamSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -35,7 +33,7 @@ export function ExamSidebar({
         <SubjectSwitcher subject={subject} />
       </SidebarHeader>
       <SidebarContent>
-        <NavFilters topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
+        <NavFilters topics={topics} years={years} questionNumbers={questionNumbers} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

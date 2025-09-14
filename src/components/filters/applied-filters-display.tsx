@@ -2,7 +2,7 @@
 
 import { FilterTag } from './filter-tag'
 import { ClearFiltersButton } from './clear-filters-button'
-import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
+import { useFilters } from '@/components/providers/filter-provider'
 import type { Topic, Filters } from '@/lib/types/database'
 
 interface AppliedFiltersDisplayProps {
@@ -12,13 +12,13 @@ interface AppliedFiltersDisplayProps {
   isLoading?: boolean
 }
 
-export function AppliedFiltersDisplay({ 
-  topics, 
-  filters, 
+export function AppliedFiltersDisplay({
+  topics,
+  filters,
   totalCount,
-  isLoading 
+  isLoading
 }: AppliedFiltersDisplayProps) {
-  const { toggleTopic, toggleYear, toggleQuestionNumber, removeSearchTerm, clearAllFilters } = useFilterUpdates(filters)
+  const { toggleTopic, toggleYear, toggleQuestionNumber, removeSearchTerm, clearAllFilters } = useFilters()
   
   const hasFilters = !!(
     filters.searchTerms?.length ||

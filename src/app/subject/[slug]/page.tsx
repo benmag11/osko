@@ -16,6 +16,7 @@ import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-tri
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
 import { ZoomProvider } from '@/components/providers/zoom-provider'
+import { FilterProvider } from '@/components/providers/filter-provider'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -66,24 +67,25 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
 
   return (
     <ZoomProvider>
-      <SidebarProvider defaultOpen>
-        <MobileNavbar />
-        <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
-        <FloatingSidebarTrigger />
-        <SidebarInset>
-          <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
-            <div className="px-8 py-8">
-              <div className="mx-auto max-w-4xl space-y-8">
-                <FilteredQuestionsView
-                  topics={topics}
-                  filters={filters}
-                  initialData={initialData}
-                />
+      <FilterProvider initialFilters={filters}>
+        <SidebarProvider defaultOpen>
+          <MobileNavbar />
+          <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} />
+          <FloatingSidebarTrigger />
+          <SidebarInset>
+            <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
+              <div className="px-8 py-8">
+                <div className="mx-auto max-w-4xl space-y-8">
+                  <FilteredQuestionsView
+                    topics={topics}
+                    initialData={initialData}
+                  />
+                </div>
               </div>
-            </div>
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
+      </FilterProvider>
     </ZoomProvider>
   )
 }

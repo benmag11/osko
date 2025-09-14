@@ -13,16 +13,15 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useFilterUpdates } from '@/lib/hooks/use-filter-updates'
-import type { Topic, Filters } from '@/lib/types/database'
+import { useFilters } from '@/components/providers/filter-provider'
+import type { Topic } from '@/lib/types/database'
 
 interface TopicFilterAccordionProps {
   topics: Topic[]
-  filters: Filters
 }
 
-export function TopicFilterAccordion({ topics, filters }: TopicFilterAccordionProps) {
-  const { toggleTopic } = useFilterUpdates(filters)
+export function TopicFilterAccordion({ topics }: TopicFilterAccordionProps) {
+  const { filters, toggleTopic } = useFilters()
   const { state, setOpen } = useSidebar()
   const isCollapsed = state === 'collapsed'
 
@@ -65,7 +64,7 @@ export function TopicFilterAccordion({ topics, filters }: TopicFilterAccordionPr
                 <Checkbox
                   checked={filters.topicIds?.includes(topic.id) ?? false}
                   onCheckedChange={() => toggleTopic(topic.id)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 data-[state=checked]:animate-scale-in"
                 />
                 <span className="text-sm font-sans text-warm-text-secondary">
                   {topic.name}
