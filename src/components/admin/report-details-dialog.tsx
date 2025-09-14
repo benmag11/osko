@@ -61,15 +61,17 @@ export function ReportDetailsDialog({
   })
   
   const question = report.question
-  const questionTitle = question ? 
+  const questionTitle = question ?
     `${question.year}${
       question.paper_number ? ` - Paper ${question.paper_number}` : ''
     }${question.exam_type === 'deferred' ? ' - Deferred' : ''} - Question ${
       question.question_number
     }${
-      question.question_parts?.length > 0 
+      question.question_parts?.length > 0
         ? ` - ${question.question_parts.map(p => `(${p})`).join(', ')}`
         : ''
+    }${
+      question.additional_info ? ` - ${question.additional_info}` : ''
     }` : 'Unknown Question'
   
   return (

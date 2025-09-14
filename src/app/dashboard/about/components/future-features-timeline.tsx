@@ -16,84 +16,53 @@ interface TimelineItem {
 const timelineData: TimelineItem[] = [
   {
     id: '1',
-    title: 'Filter past exam',
-    description: 'Fil',
+    title: 'Past Questions Archive',
+    description: 'Filter all past exam questions by topic, question number, keyword, and year. Hopefully more filter options to come soon.',
     date: 'September 1st',
     side: 'left',
     status: 'complete'
   },
   {
     id: '2',
-    title: 'Collaborative Study Groups',
-    description: 'Connect with other students preparing for the same subjects. Share notes and learn together.',
-    date: 'Q1 2025',
+    title: 'Progress Tracking',
+    description: 'Mark each time you do a question, see a fresh looking dashboard showing your stats; How many questions you have done, what topics you have studied the most, etc.',
+    date: '1st October',
     side: 'right',
-    status: 'complete'
+    status: 'in-progress'
   },
   {
     id: '3',
-    title: 'Practice Exam Mode',
-    description: 'Take full-length practice exams under timed conditions with instant feedback.',
-    date: 'Q2 2025',
+    title: 'Exam Paper Archive',
+    description: 'View and download any past exam paper.',
+    date: '1st October',
     side: 'left',
     status: 'in-progress'
   },
   {
     id: '4',
-    title: 'Achievement System',
-    description: 'Earn badges and unlock rewards as you progress through your studies.',
-    date: 'Q2 2025',
+    title: 'Resource Archive',
+    description: 'A big index of all the online resources available for each subjects.',
+    date: '20th October',
     side: 'right',
     status: 'future'
   },
   {
     id: '5',
-    title: 'Smart Revision Scheduler',
-    description: 'AI-optimized study planner that creates personalized revision schedules.',
-    date: 'Q3 2025',
+    title: 'Worked Solutions for Maths',
+    description: 'Fully worked solutions for all past Maths questions.',
+    date: '31st October',
     side: 'left',
     status: 'future'
   },
   {
     id: '6',
-    title: 'Interactive Flashcards',
-    description: 'Create and share custom flashcard decks with spaced repetition.',
-    date: 'Q3 2025',
+    title: 'Flashcards',
+    description: 'Spaced-repetition flashcards for each subject covering all definitions and rote-learnable material.',
+    date: 'meh dk, each subject added over time',
     side: 'right',
     status: 'future'
   },
-  {
-    id: '7',
-    title: 'Live Q&A Sessions',
-    description: 'Join live sessions with expert teachers for real-time clarification.',
-    date: 'Q4 2025',
-    side: 'left',
-    status: 'future'
-  },
-  {
-    id: '8',
-    title: 'Advanced Analytics',
-    description: 'Deep insights into your learning patterns and personalized recommendations.',
-    date: 'Q4 2025',
-    side: 'right',
-    status: 'future'
-  },
-  {
-    id: '9',
-    title: 'Custom Themes',
-    description: 'Customize your study environment with themes and layouts.',
-    date: 'Q1 2026',
-    side: 'left',
-    status: 'future'
-  },
-  {
-    id: '10',
-    title: 'Mobile App Launch',
-    description: 'Native iOS and Android apps with cross-device sync.',
-    date: 'Q1 2026',
-    side: 'right',
-    status: 'future'
-  }
+
 ]
 
 function TimelineEntry({ item, index, totalItems }: { item: TimelineItem; index: number; totalItems: number }) {

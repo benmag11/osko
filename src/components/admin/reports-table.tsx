@@ -124,11 +124,13 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
         <TableBody>
           {reports.map((report) => {
             const question = report.question
-            const questionTitle = question ? 
+            const questionTitle = question ?
               `${question.year} Q${question.question_number}${
-                question.question_parts?.length > 0 
-                  ? ` (${question.question_parts.join(', ')})` 
+                question.question_parts?.length > 0
+                  ? ` (${question.question_parts.join(', ')})`
                   : ''
+              }${
+                question.additional_info ? ` - ${question.additional_info}` : ''
               }` : 'Unknown'
             
             const subjectName = report.question?.subject?.name || 'Unknown Subject'

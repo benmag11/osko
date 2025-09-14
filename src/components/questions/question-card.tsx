@@ -66,6 +66,11 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
     title += ` - ${formattedParts}`
   }
 
+  // Add additional info if it exists
+  if (question.additional_info) {
+    title += ` - ${question.additional_info}`
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

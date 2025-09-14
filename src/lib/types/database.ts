@@ -118,6 +118,7 @@ export interface Question {
   question_image_url: string | null
   marking_scheme_image_url: string | null
   full_text: string | null
+  additional_info: string | null
   word_coordinates: WordCoordinate[] | null
   created_at: string
   updated_at: string
@@ -200,6 +201,7 @@ export interface QuestionUpdatePayload {
   question_number?: number | null
   question_parts?: string[]
   exam_type?: 'normal' | 'deferred' | 'supplemental'
+  additional_info?: string | null
   topic_ids?: string[]
 }
 

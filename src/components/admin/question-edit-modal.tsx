@@ -49,6 +49,7 @@ export function QuestionEditModal({
   const [questionNumber, setQuestionNumber] = useState(question.question_number?.toString() ?? '')
   const [questionParts, setQuestionParts] = useState(question.question_parts.join(', '))
   const [examType, setExamType] = useState(question.exam_type)
+  const [additionalInfo, setAdditionalInfo] = useState(question.additional_info || '')
   const [selectedTopics, setSelectedTopics] = useState<string[]>(
     question.topics?.map(t => t.id) || []
   )
@@ -61,6 +62,7 @@ export function QuestionEditModal({
       setQuestionNumber(question.question_number?.toString() ?? '')
       setQuestionParts(question.question_parts.join(', '))
       setExamType(question.exam_type)
+      setAdditionalInfo(question.additional_info || '')
       setSelectedTopics(question.topics?.map(t => t.id) || [])
     }
   }, [open, question])
@@ -73,6 +75,7 @@ export function QuestionEditModal({
         question_number: questionNumber === '' ? null : parseInt(questionNumber),
         question_parts: questionParts.split(',').map(p => p.trim()).filter(Boolean),
         exam_type: examType as 'normal' | 'deferred' | 'supplemental',
+        additional_info: additionalInfo.trim() || null,
         topic_ids: selectedTopics
       }
       
@@ -168,7 +171,19 @@ export function QuestionEditModal({
               </SelectContent>
             </Select>
           </div>
-          
+
+          {/* Additional Info */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="additional-info" className="text-right">Additional Info</Label>
+            <Input
+              id="additional-info"
+              value={additionalInfo}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+              placeholder="e.g., Section 5"
+              className="col-span-3"
+            />
+          </div>
+
           {/* Topics */}
           <div className="grid grid-cols-4 items-start gap-4">
             <Label className="text-right pt-2">Topics</Label>
