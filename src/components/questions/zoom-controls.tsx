@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Plus, Minus } from 'lucide-react'
 import { useIsMobile } from '@/lib/hooks/use-mobile'
+import { useScrollPosition } from '@/lib/hooks/use-scroll-position'
 import { useZoom } from '@/components/providers/zoom-provider'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +17,20 @@ import { cn } from '@/lib/utils'
 export function ZoomControls() {
   const isMobile = useIsMobile()
   const { zoomLevel, increaseZoom, decreaseZoom, isLoading } = useZoom()
-  const [isVisible, setIsVisible] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+
+  // Track scroll position with threshold for detecting if at top
+  const { isAtTop } = useScrollPosition({
+    threshold: 10,
+    enabled: isMobile === false,
+  })
+
+  // Combine scroll and hover state for visibility
+  const isVisible = isAtTop || isHovered
+
+  // Handle mouse interactions
+  const handleMouseEnter = useCallback(() => setIsHovered(true), [])
+  const handleMouseLeave = useCallback(() => setIsHovered(false), [])
 
   // Don't render on mobile at all
   if (isMobile === true || isMobile === undefined || isLoading) {
@@ -28,19 +42,26 @@ export function ZoomControls() {
 
   return (
     <div
-      className="fixed top-16 right-4 z-40"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
+      className="fixed top-8 right-4 z-40"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Hover trigger area - extends left to catch mouse from edge */}
       <div className="absolute -left-24 top-0 w-28 h-24" />
 
-      {/* Controls container */}
-      <div className={cn(
-        "flex flex-col items-center gap-2 bg-cream-50 rounded-lg p-2 shadow-lg",
-        "transition-opacity duration-200",
-        isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
-      )}>
+      {/* Controls container with optimized transitions */}
+      <div
+        className={cn(
+          "flex flex-col items-center gap-2 bg-cream-50 rounded-lg p-2",
+          "border border-stone-200",
+          "transition-opacity duration-200 will-change-opacity",
+          isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        style={{
+          // Optimize rendering performance
+          transform: 'translateZ(0)',
+        }}
+      >
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
