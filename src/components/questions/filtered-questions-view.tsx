@@ -15,7 +15,7 @@ interface FilteredQuestionsViewProps {
 }
 
 export function FilteredQuestionsView({ topics, initialData }: FilteredQuestionsViewProps) {
-  const { filters, urlFilters, isSyncing } = useFilters()
+  const { filters, urlFilters } = useFilters()
 
   const {
     questions,
@@ -43,16 +43,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
       <ZoomControls />
 
       <div className="relative">
-        {/* Loading overlay for filter changes */}
-        {isSyncing && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-sm animate-fade-in">
-            <div className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 shadow-lg">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span className="text-sm text-muted-foreground">Applying filters...</span>
-            </div>
-          </div>
-        )}
-
         <div
           className="origin-top transition-transform duration-200 ease-out"
           style={{

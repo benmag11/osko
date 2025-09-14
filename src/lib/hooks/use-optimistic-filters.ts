@@ -7,7 +7,7 @@ import { updateSearchParams } from '@/lib/utils/url-filters'
 import type { Filters } from '@/lib/types/database'
 
 interface OptimisticFiltersOptions {
-  syncDelay?: number // Default 200ms
+  syncDelay?: number // Default 300ms
   replaceHistory?: boolean // Use replace instead of push
 }
 
@@ -15,14 +15,13 @@ export function useOptimisticFilters(
   initialFilters: Filters,
   options: OptimisticFiltersOptions = {}
 ) {
-  const { syncDelay = 200, replaceHistory = true } = options
+  const { syncDelay = 300, replaceHistory = true } = options
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   // Local optimistic state - this updates instantly
   const [optimisticFilters, setOptimisticFilters] = useState<Filters>(initialFilters)
-  const [isSyncing, setIsSyncing] = useState(false)
 
   // Track if we're currently applying a URL update to avoid loops
   const isApplyingUrlUpdate = useRef(false)
@@ -38,7 +37,6 @@ export function useOptimisticFilters(
   const syncToUrl = useDebouncedCallback(
     (filters: Filters) => {
       isApplyingUrlUpdate.current = true
-      setIsSyncing(true)
 
       const newParams = updateSearchParams(searchParams, filters)
       const query = newParams.toString()
@@ -51,10 +49,9 @@ export function useOptimisticFilters(
         router.push(url, { scroll: false })
       }
 
-      // Reset flags after navigation completes
+      // Reset flag after navigation completes
       requestAnimationFrame(() => {
         isApplyingUrlUpdate.current = false
-        setIsSyncing(false)
       })
     },
     syncDelay,
@@ -154,8 +151,6 @@ export function useOptimisticFilters(
     addSearchTerm,
     removeSearchTerm,
     clearAllFilters,
-    // Status
-    isSyncing,
   }), [
     optimisticFilters,
     initialFilters,
@@ -166,6 +161,5 @@ export function useOptimisticFilters(
     addSearchTerm,
     removeSearchTerm,
     clearAllFilters,
-    isSyncing,
   ])
 }

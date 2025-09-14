@@ -13,7 +13,6 @@ interface FilterContextValue {
   addSearchTerm: (term: string) => void
   removeSearchTerm: (term: string) => void
   clearAllFilters: () => void
-  isSyncing: boolean
 }
 
 const FilterContext = createContext<FilterContextValue | null>(null)
@@ -33,7 +32,7 @@ interface FilterProviderProps {
 
 export function FilterProvider({ children, initialFilters }: FilterProviderProps) {
   const filterState = useOptimisticFilters(initialFilters, {
-    syncDelay: 200,
+    syncDelay: 300,
     replaceHistory: true,
   })
 
