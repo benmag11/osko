@@ -99,14 +99,20 @@ export function QuestionEditModal({
     }
   })
   
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    updateMutation.mutate()
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Question Metadata</DialogTitle>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
+
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
           {/* Year Input */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="year" className="text-right">Year</Label>
@@ -209,18 +215,19 @@ export function QuestionEditModal({
             </div>
           </div>
         </div>
-        
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
-            onClick={() => updateMutation.mutate()}
+          <Button
+            type="submit"
             disabled={updateMutation.isPending}
           >
             {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
