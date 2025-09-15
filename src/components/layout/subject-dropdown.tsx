@@ -49,9 +49,9 @@ export function SubjectDropdown({
       sideOffset={4}
     >
       {/* Back to Dashboard */}
-      <DropdownMenuItem 
+      <DropdownMenuItem
         onClick={handleDashboardClick}
-        className="flex items-center gap-2.5 px-3 py-1.5 cursor-pointer hover:bg-cream-100 transition-colors"
+        className="gap-2.5 px-3 cursor-pointer"
       >
         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-stone-100">
           <Home className="h-3.5 w-3.5 text-warm-text-muted" />
@@ -94,10 +94,9 @@ export function SubjectDropdown({
                   key={subject.id}
                   onClick={() => handleSubjectClick(subject.slug)}
                   className={cn(
-                    "flex items-center gap-2.5 px-3 py-1.5 cursor-pointer transition-all",
-                    isActive ? 
-                      "bg-gradient-to-r from-cream-100 to-cream-200 text-warm-text-primary" : 
-                      "hover:bg-cream-50"
+                    "gap-2.5 px-3 cursor-pointer",
+                    isActive &&
+                      "bg-gradient-to-r from-cream-100 to-cream-200 text-warm-text-primary"
                   )}
                 >
                   <div className={cn(

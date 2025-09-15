@@ -181,4 +181,5 @@ src/
 - Static generation where possible for performance
 
 
-# NEVER STARTS THE DEV SERVER YOURSELF OR TRY AND OPEN THE WEBSITE.
+# NEVER STARTS THE DEV SERVER YOURSELF OR TRY AND OPEN THE WEBSITE. NEVER KILL WEBSITE SERVERS YOURSELF.
+# Never run npm run dev, i will always do it.
