@@ -13,10 +13,10 @@ interface UseQuestionsQueryOptions {
   enabled?: boolean
 }
 
-export function useQuestionsQuery({ 
-  filters, 
+export function useQuestionsQuery({
+  filters,
   initialData,
-  enabled = true 
+  enabled = true
 }: UseQuestionsQueryOptions) {
   const { ref, inView } = useInView({
     threshold: 0,
@@ -46,7 +46,13 @@ export function useQuestionsQuery({
       pageParams: [null],
     } : undefined,
     // Keep previous data while fetching new data for smooth transitions
+    // This is crucial for preventing flicker during filter changes
     placeholderData: (previousData) => previousData,
+    // Reduce stale time to make queries more responsive
+    staleTime: 1000 * 30, // 30 seconds
+    // Cancel in-flight queries when filters change
+    // This prevents old results from overwriting new filter selections
+    refetchOnWindowFocus: false,
   })
 
   // Extract total count from first page

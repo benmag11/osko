@@ -21,7 +21,7 @@ interface TopicFilterAccordionProps {
 }
 
 export function TopicFilterAccordion({ topics }: TopicFilterAccordionProps) {
-  const { filters, toggleTopic } = useFilters()
+  const { filters, toggleTopic, isPending } = useFilters()
   const { state, setOpen } = useSidebar()
   const isCollapsed = state === 'collapsed'
 
@@ -60,10 +60,13 @@ export function TopicFilterAccordion({ topics }: TopicFilterAccordionProps) {
         <SidebarMenuSub>
           {topics.map((topic) => (
             <SidebarMenuSubItem key={topic.id}>
-              <label className="flex cursor-pointer items-center gap-3 px-2 py-1.5">
+              <label className={`flex cursor-pointer items-center gap-3 px-2 py-1.5 ${
+                isPending ? 'opacity-70' : ''
+              }`}>
                 <Checkbox
                   checked={filters.topicIds?.includes(topic.id) ?? false}
                   onCheckedChange={() => toggleTopic(topic.id)}
+                  disabled={isPending}
                   className="h-4 w-4 data-[state=checked]:animate-scale-in"
                 />
                 <span className="text-sm font-sans text-warm-text-secondary">

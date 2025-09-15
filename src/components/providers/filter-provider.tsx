@@ -1,18 +1,18 @@
 'use client'
 
 import { createContext, useContext, ReactNode } from 'react'
-import { useOptimisticFilters } from '@/lib/hooks/use-optimistic-filters'
+import { useUrlFilters } from '@/lib/hooks/use-url-filters'
 import type { Filters } from '@/lib/types/database'
 
 interface FilterContextValue {
   filters: Filters
-  urlFilters: Filters
   toggleTopic: (topicId: string) => void
   toggleYear: (year: number) => void
   toggleQuestionNumber: (questionNumber: number) => void
   addSearchTerm: (term: string) => void
   removeSearchTerm: (term: string) => void
   clearAllFilters: () => void
+  isPending: boolean
 }
 
 const FilterContext = createContext<FilterContextValue | null>(null)
@@ -31,10 +31,7 @@ interface FilterProviderProps {
 }
 
 export function FilterProvider({ children, initialFilters }: FilterProviderProps) {
-  const filterState = useOptimisticFilters(initialFilters, {
-    syncDelay: 300,
-    replaceHistory: true,
-  })
+  const filterState = useUrlFilters(initialFilters)
 
   return (
     <FilterContext.Provider value={filterState}>

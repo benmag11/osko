@@ -20,7 +20,7 @@ interface QuestionFilterAccordionProps {
 }
 
 export function QuestionFilterAccordion({ questionNumbers }: QuestionFilterAccordionProps) {
-  const { filters, toggleQuestionNumber } = useFilters()
+  const { filters, toggleQuestionNumber, isPending } = useFilters()
   const { state, setOpen } = useSidebar()
   const isCollapsed = state === 'collapsed'
 
@@ -59,10 +59,13 @@ export function QuestionFilterAccordion({ questionNumbers }: QuestionFilterAccor
         <SidebarMenuSub>
           {questionNumbers.map((questionNumber) => (
             <SidebarMenuSubItem key={questionNumber}>
-              <label className="flex cursor-pointer items-center gap-3 px-2 py-1.5">
+              <label className={`flex cursor-pointer items-center gap-3 px-2 py-1.5 ${
+                isPending ? 'opacity-70' : ''
+              }`}>
                 <Checkbox
                   checked={filters.questionNumbers?.includes(questionNumber) ?? false}
                   onCheckedChange={() => toggleQuestionNumber(questionNumber)}
+                  disabled={isPending}
                   className="h-4 w-4 data-[state=checked]:animate-scale-in"
                 />
                 <span className="text-sm font-sans text-warm-text-secondary">

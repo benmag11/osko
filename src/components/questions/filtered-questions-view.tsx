@@ -15,7 +15,7 @@ interface FilteredQuestionsViewProps {
 }
 
 export function FilteredQuestionsView({ topics, initialData }: FilteredQuestionsViewProps) {
-  const { filters, urlFilters } = useFilters()
+  const { filters } = useFilters()
 
   const {
     questions,
@@ -25,7 +25,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     isLoading,
     error
   } = useQuestionsQuery({
-    filters: urlFilters, // Use URL filters for actual data fetching
+    filters, // Now using single source of truth
     initialData,
   })
 
