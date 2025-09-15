@@ -5,47 +5,33 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
 } from '@/components/ui/accordion'
+import { CollapsibleAccordionTrigger } from '@/components/ui/collapsible-accordion-trigger'
 import {
   SidebarMenuButton,
   SidebarMenuSub,
   SidebarMenuSubItem,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import { useFilters } from '@/components/providers/filter-provider'
 import type { Topic } from '@/lib/types/database'
 
 interface TopicFilterAccordionProps {
   topics: Topic[]
+  pendingAccordionRef: React.MutableRefObject<string | null>
 }
 
-export function TopicFilterAccordion({ topics }: TopicFilterAccordionProps) {
+export function TopicFilterAccordion({ topics, pendingAccordionRef }: TopicFilterAccordionProps) {
   const { filters, toggleTopic, isPending } = useFilters()
-  const { state, setOpen } = useSidebar()
-  const isCollapsed = state === 'collapsed'
-
-  const handleAccordionClick = (e: React.MouseEvent) => {
-    if (isCollapsed) {
-      e.preventDefault()
-      e.stopPropagation()
-      setOpen(true)
-      // Trigger accordion immediately on next tick
-      setTimeout(() => {
-        const trigger = e.currentTarget as HTMLElement
-        trigger?.click()
-      }, 0)
-    }
-  }
 
   return (
     <AccordionItem value="topics" className="border-0">
-      <AccordionTrigger 
+      <CollapsibleAccordionTrigger
+        value="topics"
+        pendingAccordionRef={pendingAccordionRef}
         className="p-0 hover:no-underline [&>svg]:hidden data-[state=open]:pb-0 [&[data-state=open]_[data-chevron]]:rotate-90"
-        onClick={handleAccordionClick}
       >
-        <SidebarMenuButton 
-          tooltip="Study by topic" 
+        <SidebarMenuButton
+          tooltip="Study by topic"
           className="w-full font-medium text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           asChild
         >
@@ -55,7 +41,7 @@ export function TopicFilterAccordion({ topics }: TopicFilterAccordionProps) {
             <ChevronRight className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200" data-chevron />
           </div>
         </SidebarMenuButton>
-      </AccordionTrigger>
+      </CollapsibleAccordionTrigger>
       <AccordionContent className="pt-2 pb-0">
         <SidebarMenuSub>
           {topics.map((topic) => (
