@@ -590,7 +590,6 @@ useZoom(): ZoomContextValue
 - **Image Optimization**: AVIF/WebP formats reduce image size by ~30-50%
 - **Code Splitting**: Route-based splitting keeps initial bundle under 100KB
 - **Prefetching**: Intersection Observer prefetches content 100px before viewport
-- **Zoom Transitions**: CSS transforms complete in 200ms with GPU acceleration
 
 ### Optimization Techniques
 1. **Parallel Data Fetching**: Use `Promise.allSettled()` for concurrent requests

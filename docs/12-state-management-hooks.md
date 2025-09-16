@@ -22,7 +22,6 @@ src/
     providers/
       providers.tsx          # Main provider wrapper with QueryClient management
       auth-provider.tsx      # Authentication context and session management
-      zoom-provider.tsx      # Zoom context and state management
   lib/
     hooks/
       use-audit-history.ts   # Audit log fetching for questions
@@ -31,7 +30,6 @@ src/
       use-mobile.ts          # Mobile device detection
       use-questions-query.ts # Infinite scrolling questions
       use-safe-timeout.ts    # Memory-safe timeout management
-      use-session-storage.ts # Generic sessionStorage with type safety
       use-topics.ts          # Subject topics fetching
       use-user-profile.ts    # User profile and authentication
       use-user-subjects.ts   # User's enrolled subjects
@@ -344,136 +342,6 @@ export function useIsMobile() {
 }
 ```
 
-### useSessionStorage Hook
-
-Generic hook for sessionStorage with type safety and error handling:
-
-```typescript
-export function useSessionStorage<T>({
-  key,
-  defaultValue,
-  validator,
-}: UseSessionStorageOptions<T>): [T, (value: T) => void, boolean] {
-  const [storedValue, setStoredValue] = useState<T>(defaultValue)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAvailable, setIsAvailable] = useState(false)
-
-  // Check storage availability and load initial value
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      // Test storage availability
-      const testKey = '__test__'
-      window.sessionStorage.setItem(testKey, 'test')
-      window.sessionStorage.removeItem(testKey)
-      setIsAvailable(true)
-
-      // Load existing value with validation
-      const item = window.sessionStorage.getItem(key)
-      if (item !== null) {
-        const parsed = JSON.parse(item)
-        if (!validator || validator(parsed)) {
-          setStoredValue(parsed)
-        } else {
-          window.sessionStorage.removeItem(key)
-        }
-      }
-    } catch (error) {
-      console.warn(`SessionStorage not available for key "${key}":`, error)
-      setIsAvailable(false)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [key, defaultValue, validator])
-
-  const setValue = useCallback((value: T) => {
-    setStoredValue(value)
-    if (typeof window !== 'undefined' && isAvailable) {
-      try {
-        window.sessionStorage.setItem(key, JSON.stringify(value))
-      } catch (error) {
-        console.warn(`Failed to save to sessionStorage:`, error)
-      }
-    }
-  }, [key, isAvailable])
-
-  return [storedValue, setValue, isLoading]
-}
-```
-
-### useZoom Hook
-
-Context-based zoom functionality for desktop users:
-
-```typescript
-export function useZoom() {
-  const context = useContext(ZoomContext)
-  if (!context) {
-    throw new Error('useZoom must be used within ZoomProvider')
-  }
-  return context
-}
-
-// The ZoomProvider manages zoom state with sessionStorage persistence
-export function ZoomProvider({ children }: { children: React.ReactNode }) {
-  const isMobile = useIsMobile()
-  const isEnabled = isMobile === false // Desktop only
-
-  const [zoomLevel, setStoredZoom, isLoading] = useSessionStorage<ZoomLevel>({
-    key: 'exam-viewer-zoom',
-    defaultValue: 1.0,
-    validator: isValidZoomLevel,
-  })
-
-  const increaseZoom = useCallback(() => {
-    if (!isEnabled) return
-    const currentIndex = ZOOM_LEVELS.indexOf(zoomLevel)
-    if (currentIndex < ZOOM_LEVELS.length - 1) {
-      setZoomLevel(ZOOM_LEVELS[currentIndex + 1])
-    }
-  }, [isEnabled, zoomLevel, setZoomLevel])
-
-  const decreaseZoom = useCallback(() => {
-    if (!isEnabled) return
-    const currentIndex = ZOOM_LEVELS.indexOf(zoomLevel)
-    if (currentIndex > 0) {
-      setZoomLevel(ZOOM_LEVELS[currentIndex - 1])
-    }
-  }, [isEnabled, zoomLevel, setZoomLevel])
-
-  // Keyboard shortcuts (Cmd/Ctrl + +/-, 0 to reset)
-  useEffect(() => {
-    if (!isEnabled || isLoading) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return
-      switch (e.key) {
-        case '=':
-        case '+':
-          e.preventDefault()
-          increaseZoom()
-          break
-        case '-':
-          e.preventDefault()
-          decreaseZoom()
-          break
-        case '0':
-          e.preventDefault()
-          resetZoom()
-          break
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isEnabled, isLoading, increaseZoom, decreaseZoom, resetZoom])
-
-  return { zoomLevel, increaseZoom, decreaseZoom, resetZoom, isEnabled, isLoading }
-}
-```
-
 ### useAuditHistory Hook
 
 Fetches question audit logs for admin features:
@@ -612,22 +480,6 @@ interface UseUserProfileReturn {
   error: Error | null
 }
 
-interface UseSessionStorageOptions<T> {
-  key: string
-  defaultValue: T
-  validator?: (value: unknown) => value is T
-}
-
-interface ZoomContextValue {
-  zoomLevel: number
-  setZoomLevel: (level: number) => void
-  increaseZoom: () => void
-  decreaseZoom: () => void
-  resetZoom: () => void
-  isEnabled: boolean
-  isLoading: boolean
-}
-
 interface UseAuditHistoryReturn {
   history: QuestionAuditLog[]
   isLoading: boolean
@@ -761,28 +613,6 @@ function useAuth(): {
 }
 ```
 
-#### useSessionStorage
-```typescript
-function useSessionStorage<T>(options: {
-  key: string
-  defaultValue: T
-  validator?: (value: unknown) => value is T
-}): [T, (value: T) => void, boolean]
-```
-
-#### useZoom
-```typescript
-function useZoom(): {
-  zoomLevel: number
-  setZoomLevel: (level: number) => void
-  increaseZoom: () => void
-  decreaseZoom: () => void
-  resetZoom: () => void
-  isEnabled: boolean
-  isLoading: boolean
-}
-```
-
 #### useAuditHistory
 ```typescript
 function useAuditHistory(questionId: string): {
@@ -841,51 +671,6 @@ export function useUser() {
 
 ### Hook Usage Patterns
 
-#### SessionStorage Hook Usage
-The `useSessionStorage` hook provides persistent state across page refreshes within a session:
-
-```typescript
-// Basic usage
-const [theme, setTheme, isLoading] = useSessionStorage({
-  key: 'user-theme',
-  defaultValue: 'light'
-})
-
-// With type validation
-const isValidZoomLevel = (value: unknown): value is number => {
-  return typeof value === 'number' && value >= 0.5 && value <= 1.0
-}
-
-const [zoom, setZoom, isLoading] = useSessionStorage({
-  key: 'zoom-level',
-  defaultValue: 1.0,
-  validator: isValidZoomLevel
-})
-```
-
-#### Zoom Provider Pattern
-The zoom feature demonstrates context-based state management with persistence:
-
-```typescript
-// In app layout
-<ZoomProvider>
-  <YourApp />
-</ZoomProvider>
-
-// In components
-function QuestionViewer() {
-  const { zoomLevel, isEnabled } = useZoom()
-
-  if (!isEnabled) return null // Mobile view
-
-  return (
-    <div style={{ transform: `scale(${zoomLevel})` }}>
-      {/* Content */}
-    </div>
-  )
-}
-```
-
 #### Audit History Integration
 Admin features use audit history for change tracking:
 
@@ -912,12 +697,10 @@ function QuestionEditor({ questionId }: { questionId: string }) {
 The application uses a layered storage approach:
 
 1. **Memory (React State)**: Immediate UI state
-2. **SessionStorage**: Per-session preferences (zoom level)
-3. **URL Parameters**: Shareable state (filters)
-4. **React Query Cache**: Server data with TTL
-5. **Supabase Database**: Persistent user data
+2. **URL Parameters**: Shareable state (filters)
+3. **React Query Cache**: Server data with TTL
+4. **Supabase Database**: Persistent user data
 
 Each storage layer has specific use cases:
-- **SessionStorage**: User preferences that should persist during a session but reset on new sessions
 - **URL State**: Shareable configurations like filter settings
 - **Query Cache**: Frequently accessed server data with automatic invalidation

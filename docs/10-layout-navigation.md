@@ -46,8 +46,7 @@ src/
 │   │   ├── subject-dropdown.tsx             # Subject dropdown menu
 │   │   └── dashboard-page.tsx               # Page wrapper component
 │   ├── questions/
-│   │   ├── filtered-questions-view.tsx      # Question list with zoom scaling
-│   │   └── zoom-controls.tsx                # Zoom UI controls overlay
+│   │   └── filtered-questions-view.tsx      # Question list display
 │   ├── providers/
 │   │   └── zoom-provider.tsx                # Zoom state management
 │   ├── ui/

@@ -15,7 +15,6 @@ import {
 import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
-import { ZoomProvider } from '@/components/providers/zoom-provider'
 import { FilterProvider } from '@/components/providers/filter-provider'
 
 interface PageProps {
@@ -66,26 +65,24 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <ZoomProvider>
-      <FilterProvider initialFilters={filters}>
-        <SidebarProvider defaultOpen>
-          <MobileNavbar />
-          <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} />
-          <FloatingSidebarTrigger />
-          <SidebarInset>
-            <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
-              <div className="px-8 py-8">
-                <div className="mx-auto max-w-4xl space-y-8">
-                  <FilteredQuestionsView
-                    topics={topics}
-                    initialData={initialData}
-                  />
-                </div>
+    <FilterProvider initialFilters={filters}>
+      <SidebarProvider defaultOpen>
+        <MobileNavbar />
+        <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} />
+        <FloatingSidebarTrigger />
+        <SidebarInset>
+          <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
+            <div className="px-8 py-8">
+              <div className="mx-auto max-w-4xl space-y-8">
+                <FilteredQuestionsView
+                  topics={topics}
+                  initialData={initialData}
+                />
               </div>
-            </main>
-          </SidebarInset>
-        </SidebarProvider>
-      </FilterProvider>
-    </ZoomProvider>
+            </div>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </FilterProvider>
   )
 }

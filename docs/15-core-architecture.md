@@ -731,37 +731,7 @@ export function useIsMobile() {
 
 The application implements multiple layers of error handling with graceful degradation:
 
-**Storage Availability Detection**:
-```typescript
-// Gracefully handle storage restrictions (e.g., incognito mode)
-try {
-  const testKey = '__test__'
-  window.sessionStorage.setItem(testKey, 'test')
-  window.sessionStorage.removeItem(testKey)
-  setIsAvailable(true)
-} catch (error) {
-  // Continue with in-memory fallback
-  console.warn(`SessionStorage not available:`, error)
-  setIsAvailable(false)
-}
-```
-
-**Type-Safe Validation**:
-```typescript
-// Type guards ensure data integrity
-function isValidZoomLevel(value: unknown): value is ZoomLevel {
-  return typeof value === 'number' && ZOOM_LEVELS.includes(value as ZoomLevel)
-}
-
-// Validate stored data before use
-const parsed = JSON.parse(item)
-if (!validator || validator(parsed)) {
-  setStoredValue(parsed)
-} else {
-  // Invalid data, clear and use default
-  window.sessionStorage.removeItem(key)
-}
-```
+The application uses comprehensive error handling patterns with type-safe validation and graceful degradation for robust operation.
 
 **Fallback Mechanisms**:
 - Storage failures fall back to in-memory state

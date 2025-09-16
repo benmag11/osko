@@ -4,8 +4,6 @@ import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-disp
 import { QuestionCard } from './question-card'
 import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
-import { useZoom } from '@/components/providers/zoom-provider'
-import { ZoomControls } from './zoom-controls'
 import { useFilters } from '@/components/providers/filter-provider'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
 
@@ -25,33 +23,20 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     isLoading,
     error
   } = useQuestionsQuery({
-    filters, // Now using single source of truth
+    filters,
     initialData,
   })
-
-  const { zoomLevel, isEnabled, isLoading: isZoomLoading } = useZoom()
 
   return (
     <>
       <AppliedFiltersDisplay
         topics={topics}
-        filters={filters} // Use optimistic filters for instant UI feedback
+        filters={filters}
         totalCount={totalCount}
         isLoading={isLoading}
       />
 
-      <ZoomControls />
-
-      <div className="relative">
-        <div
-          className="origin-top transition-transform duration-200 ease-out"
-          style={{
-            // Only apply transform on desktop and when not loading
-            transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
-            transformOrigin: 'top center',
-          }}
-        >
-          <div>
+      <div className="w-full">
         {error ? (
           <div className="flex flex-col items-center justify-center py-20">
             <p className="text-xl text-salmon-600 font-serif">Error loading questions</p>
@@ -74,7 +59,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                 <QuestionCard question={question} />
               </div>
             ))}
-            
+
             <div ref={loadMoreRef} className="h-20 mt-8">
               {isFetchingNextPage && (
                 <div className="flex justify-center">
@@ -84,8 +69,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
             </div>
           </>
         )}
-          </div>
-        </div>
       </div>
     </>
   )

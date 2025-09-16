@@ -97,14 +97,12 @@
 #### Provider Components (src/components/providers/)
 - auth-provider.tsx - Authentication context provider
 - providers.tsx - All providers wrapper
-- zoom-provider.tsx - Zoom context provider for question scaling
 
 #### Question Components (src/components/questions/)
 - filtered-questions-view.tsx - Filtered questions display
 - question-card.tsx - Individual question card
 - question-list.tsx - Question list container
 - question-report-dialog.tsx - Report question dialog
-- zoom-controls.tsx - Zoom control UI component
 
 #### Settings Components (src/components/settings/)
 - settings-section.tsx - Settings section wrapper
