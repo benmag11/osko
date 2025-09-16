@@ -11,15 +11,15 @@ The application uses a three-tier layout architecture leveraging Next.js's neste
 1. **Root Layout** (`/src/app/layout.tsx`) - Global application wrapper
 2. **Dashboard Layout** (`/src/app/dashboard/layout.tsx`) - Protected dashboard areas
 3. **Admin Layout** (`/src/app/dashboard/(admin)/layout.tsx`) - Admin-only sections
-4. **Subject Layout** (inline in `/src/app/subject/[slug]/page.tsx`) - Subject exam viewer with zoom support
+4. **Subject Layout** (inline in `/src/app/subject/[slug]/page.tsx`) - Subject exam viewer
 
 ### Design Patterns
 - **Composite Layout Pattern**: Nested layouts inherit from parent layouts
-- **Provider Pattern**: Context providers manage sidebar state, authentication, and zoom controls
+- **Provider Pattern**: Context providers manage sidebar state and authentication
 - **Responsive First**: Mobile and desktop layouts handled by the same components
 - **Server-Side Authentication**: Session validation happens at the layout level
 - **Role-Based Access Control**: Admin routes protected by dedicated layout wrapper
-- **Desktop-Only Features**: Zoom controls only available on desktop viewports
+- **Responsive Features**: Feature availability adapts to device capabilities
 
 ## File Structure
 
@@ -48,7 +48,7 @@ src/
 │   ├── questions/
 │   │   └── filtered-questions-view.tsx      # Question list display
 │   ├── providers/
-│   │   └── zoom-provider.tsx                # Zoom state management
+│   │   └── ui-state-provider.tsx            # UI state management
 │   ├── ui/
 │   │   ├── sidebar.tsx                      # Core sidebar components
 │   │   └── collapsible-sidebar-menu-button.tsx # Collapsible menu button
@@ -190,8 +190,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 }
 ```
 
-### Subject Page with Zoom Support
-The subject exam viewer integrates zoom functionality through a provider hierarchy:
+### Subject Page Layout
+The subject exam viewer uses a clean provider hierarchy:
 
 ```tsx
 // src/app/subject/[slug]/page.tsx
@@ -199,26 +199,24 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   // ... data fetching logic ...
 
   return (
-    <ZoomProvider>  {/* Outermost: Manages zoom state */}
-      <SidebarProvider defaultOpen>  {/* Middle: Manages sidebar state */}
-        <MobileNavbar />
-        <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
-        <FloatingSidebarTrigger />
-        <SidebarInset>
-          <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
-            <div className="px-8 py-8">
-              <div className="mx-auto max-w-4xl space-y-8">
-                <FilteredQuestionsView  {/* Content with zoom scaling */}
-                  topics={topics}
-                  filters={filters}
-                  initialData={initialData}
-                />
-              </div>
+    <SidebarProvider defaultOpen>
+      <MobileNavbar />
+      <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} filters={filters} />
+      <FloatingSidebarTrigger />
+      <SidebarInset>
+        <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
+          <div className="px-8 py-8">
+            <div className="mx-auto max-w-4xl space-y-8">
+              <FilteredQuestionsView
+                topics={topics}
+                filters={filters}
+                initialData={initialData}
+              />
             </div>
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </ZoomProvider>
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 ```
@@ -261,24 +259,21 @@ export function ExamSidebar({
 ## Data Flow
 
 ### Provider Hierarchy
-The exam viewer uses a specific provider hierarchy to manage different aspects of the UI:
+The exam viewer uses a clean provider hierarchy to manage UI state:
 
 ```tsx
 // Provider hierarchy for subject pages
-ZoomProvider (Outermost)
-  → SidebarProvider
-    → Content (SidebarInset)
-      → FilteredQuestionsView (applies zoom transform)
-        → ZoomControls (fixed overlay)
-        → Question Cards (scaled by zoom)
+SidebarProvider
+  → Content (SidebarInset)
+    → FilteredQuestionsView
+      → Question Cards
 ```
 
 **Key Points:**
-- **ZoomProvider** wraps the entire subject page layout
-- **SidebarProvider** manages sidebar collapse state independently
-- **ZoomControls** renders as a fixed-position overlay (not affected by zoom)
-- Only the **FilteredQuestionsView content** is scaled by zoom
-- Sidebar, filters, and navigation remain at 100% scale
+- **SidebarProvider** manages sidebar collapse state
+- **Content area** handles responsive layout
+- **FilteredQuestionsView** displays filtered question results
+- All components adapt to screen size appropriately
 
 ### Session Management
 Session data flows from server to client through the layout hierarchy:
@@ -322,37 +317,33 @@ document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBA
 
 ## Key Functions and Hooks
 
-### useZoom Hook
-Manages zoom state for desktop exam viewing:
+### useUIState Hook
+Manages UI state for enhanced user experience:
 
 ```tsx
-// src/components/providers/zoom-provider.tsx
-export function useZoom() {
-  const context = useContext(ZoomContext)
+// Generic UI state management
+export function useUIState() {
+  const context = useContext(UIStateContext)
   if (!context) {
-    throw new Error('useZoom must be used within ZoomProvider')
+    throw new Error('useUIState must be used within UIStateProvider')
   }
   return context
 }
 
 // Returns:
-interface ZoomContextValue {
-  zoomLevel: number           // Current zoom level (0.5 to 1.0)
-  setZoomLevel: (level: number) => void
-  increaseZoom: () => void    // Step up to next zoom level
-  decreaseZoom: () => void    // Step down to previous level
-  resetZoom: () => void       // Reset to 1.0 (100%)
-  isEnabled: boolean          // Only enabled on desktop
-  isLoading: boolean          // Loading state for sessionStorage
+interface UIStateContextValue {
+  preferences: UserPreferences    // User UI preferences
+  setPreference: (key: string, value: any) => void
+  resetPreferences: () => void    // Reset to defaults
+  isLoading: boolean             // Loading state
 }
 ```
 
-**Zoom Features:**
-- Desktop-only functionality (disabled on mobile)
-- Zoom levels: 50%, 60%, 70%, 80%, 90%, 100%
-- Keyboard shortcuts: Cmd/Ctrl + (+/-/0)
-- State persisted in sessionStorage
-- Smooth CSS transform transitions
+**UI State Features:**
+- Responsive design adaptation
+- User preference persistence
+- Smooth state transitions
+- Cross-device consistency
 
 ### useIsMobile Hook
 Detects mobile viewport with proper hydration handling:
@@ -550,43 +541,31 @@ Subject switcher enables quick navigation between enrolled subjects:
 4. Includes "Back to dashboard" option
 5. Routes to `/subject/[slug]` on selection
 
-### Zoom Implementation
-The zoom feature provides content scaling for better readability on desktop:
+### Responsive Layout Implementation
+The application provides adaptive layouts for optimal viewing across devices:
 
 **Component Architecture:**
 ```tsx
-// FilteredQuestionsView applies the zoom transform
-<div
-  className="origin-top transition-transform duration-200 ease-out"
-  style={{
-    transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
-    transformOrigin: 'top center',
-  }}
->
-  {/* Question content scaled by zoom */}
+// FilteredQuestionsView with responsive design
+<div className="responsive-container transition-all duration-200 ease-out">
+  {/* Question content adapts to screen size */}
 </div>
 ```
 
-**ZoomControls Overlay:**
+**Mobile-First Approach:**
 ```tsx
-// Fixed position overlay, not affected by zoom
-<div className="fixed top-16 right-4 z-40">
-  {/* Hover to reveal controls */}
-  <Button onClick={increaseZoom} disabled={!canZoomIn}>
-    <Plus />
-  </Button>
-  <Button onClick={decreaseZoom} disabled={!canZoomOut}>
-    <Minus />
-  </Button>
+// Adaptive UI controls
+<div className="flex flex-col lg:flex-row gap-4">
+  {/* Responsive control layout */}
 </div>
 ```
 
 **Key Design Decisions:**
-1. **Desktop-only**: Zoom disabled on mobile to prevent layout issues
-2. **Selective scaling**: Only question content zooms, not UI chrome
-3. **SessionStorage**: Zoom preference persists during session
-4. **Keyboard shortcuts**: Power users can zoom without mouse
-5. **Hover UI**: Controls auto-hide to minimize visual clutter
+1. **Mobile-first**: Start with mobile layout, enhance for larger screens
+2. **Progressive enhancement**: Add features as screen size allows
+3. **Consistent experience**: Core functionality available on all devices
+4. **Performance**: Lightweight on mobile, feature-rich on desktop
+5. **Accessibility**: All interactions work across input methods
 
 ## Dependencies
 
@@ -675,14 +654,14 @@ function useSidebar(): {
 - Tooltip hints when sidebar is collapsed
 - Keyboard shortcut (Cmd/Ctrl+B) for power users
 - Smooth width transitions (200ms ease-linear)
-- Zoom controls with keyboard shortcuts (Cmd/Ctrl + +/-/0)
-- Hover-to-reveal zoom UI minimizes visual distraction
+- Touch-friendly interactions on mobile devices
+- Hover states that enhance desktop experience
 
-### Zoom Feature Considerations
-- **Transform Origin**: Set to 'top center' for predictable scaling
-- **No Mobile Zoom**: Explicitly disabled to prevent viewport issues
-- **Independent Scaling**: Sidebar and filters remain at 100% for usability
-- **SessionStorage vs LocalStorage**: Session-only persistence prevents confusion across sessions
-- **Validation**: Zoom levels restricted to predefined steps (0.5-1.0)
-- **Loading State**: Prevents flash of unzoomed content on page load
-- **Keyboard Accessibility**: Standard browser zoom shortcuts supported
+### Responsive Design Considerations
+- **Viewport Adaptation**: Layouts adjust smoothly to different screen sizes
+- **Touch-First Mobile**: Optimized for touch interactions on mobile
+- **Content Prioritization**: Important content remains accessible on all devices
+- **Performance Balance**: Feature richness scales with device capabilities
+- **Accessibility**: All interactions work with keyboard, mouse, and touch
+- **Loading States**: Smooth transitions prevent layout shifts
+- **Progressive Enhancement**: Core features work everywhere, enhancements layer on top

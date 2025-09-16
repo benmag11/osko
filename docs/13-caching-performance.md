@@ -286,60 +286,18 @@ export const queryKeys = {
 
 ## Implementation Details
 
-### Zoom Feature Performance Optimizations
-The zoom feature for question viewing implements several performance optimizations to ensure smooth scaling without impacting page performance:
+### Performance Optimization Techniques
+The application implements several performance optimizations to ensure smooth user interactions:
 
-#### SessionStorage Caching
-The zoom level is cached in sessionStorage for per-tab persistence:
-
-```typescript
-// src/lib/hooks/use-session-storage.ts
-export function useSessionStorage<T>({
-  key,
-  defaultValue,
-  validator,
-}: UseSessionStorageOptions<T>) {
-  const [storedValue, setStoredValue] = useState<T>(defaultValue)
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Check storage availability and load initial value
-  useEffect(() => {
-    try {
-      const item = window.sessionStorage.getItem(key)
-      if (item !== null) {
-        const parsed = JSON.parse(item)
-        // Validate the parsed value if validator provided
-        if (!validator || validator(parsed)) {
-          setStoredValue(parsed)
-        } else {
-          // Invalid data, clear it
-          window.sessionStorage.removeItem(key)
-        }
-      }
-    } catch (error) {
-      console.warn(`SessionStorage not available or corrupted for key "${key}":`, error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [key, defaultValue, validator])
-}
-```
-
-**Benefits of sessionStorage over localStorage:**
-- **Per-tab isolation**: Each browser tab maintains its own zoom level
-- **Automatic cleanup**: Data cleared when tab closes, no persistent storage pollution
-- **No cross-tab conflicts**: Multiple tabs can have different zoom levels
-- **Error resilience**: Graceful fallback if storage unavailable
-
-#### CSS Transform Performance
-The zoom implementation uses GPU-accelerated CSS transforms for optimal performance:
+#### GPU-Accelerated Transforms
+CSS transforms are used for performant visual changes:
 
 ```tsx
-// src/components/questions/filtered-questions-view.tsx
+// Example: Smooth scaling transitions
 <div
   className="origin-top transition-transform duration-200 ease-out"
   style={{
-    transform: isEnabled && !isZoomLoading ? `scale(${zoomLevel})` : undefined,
+    transform: shouldScale ? `scale(${scaleValue})` : undefined,
     transformOrigin: 'top center',
   }}
 >
@@ -348,70 +306,50 @@ The zoom implementation uses GPU-accelerated CSS transforms for optimal performa
 **Performance characteristics:**
 - **GPU Acceleration**: `transform: scale()` is GPU-accelerated by modern browsers
 - **No Layout Reflows**: Transform changes don't trigger layout recalculation
-- **No React Re-renders**: CSS handles the visual change, React components don't re-render
 - **Smooth Transitions**: 200ms ease-out transition for natural feel
 - **Compositor-only Operation**: Scaling happens on the compositor thread
 
 #### Component Memoization
-The ZoomProvider uses React optimization techniques to prevent unnecessary re-renders:
+React optimization techniques prevent unnecessary re-renders:
 
 ```typescript
-// src/components/providers/zoom-provider.tsx
-// Memoized zoom control functions
-const increaseZoom = useCallback(() => {
-  if (!isEnabled) return
-  const currentIndex = ZOOM_LEVELS.indexOf(zoomLevel)
-  if (currentIndex < ZOOM_LEVELS.length - 1) {
-    setZoomLevel(ZOOM_LEVELS[currentIndex + 1])
-  }
-}, [isEnabled, zoomLevel, setZoomLevel])
+// Memoized functions and values
+const optimizedFunction = useCallback(() => {
+  // Function logic
+}, [dependency1, dependency2])
 
 // Memoized context value
-const contextValue = useMemo<ZoomContextValue>(() => ({
-  zoomLevel: isEnabled && !isLoading ? zoomLevel : DEFAULT_ZOOM,
-  setZoomLevel,
-  increaseZoom,
-  decreaseZoom,
-  resetZoom,
-  isEnabled,
-  isLoading: isEnabled ? isLoading : false,
-}), [zoomLevel, setZoomLevel, increaseZoom, decreaseZoom, resetZoom, isEnabled, isLoading])
+const contextValue = useMemo(() => ({
+  value1,
+  value2,
+  optimizedFunction,
+}), [value1, value2, optimizedFunction])
 ```
 
 **Optimization benefits:**
 - **useCallback**: Prevents function recreation on every render
-- **useMemo**: Context value only updates when dependencies change
+- **useMemo**: Values only update when dependencies change
 - **Prevents cascading re-renders**: Child components don't re-render unnecessarily
 
-#### Mobile Optimization
-The zoom feature intelligently disables itself on mobile devices:
+#### Mobile-First Optimization
+Features intelligently adapt to device capabilities:
 
 ```typescript
-// src/components/questions/zoom-controls.tsx
-export function ZoomControls() {
+export function ConditionalFeature() {
   const isMobile = useIsMobile()
 
-  // Don't render on mobile at all - early return
-  if (isMobile === true || isMobile === undefined || isLoading) {
+  // Don't render desktop-only features on mobile
+  if (isMobile === true) {
     return null
   }
-  // ... desktop-only zoom controls
+  // ... desktop-specific features
 }
 ```
 
-**Mobile performance benefits:**
+**Mobile optimization benefits:**
 - **No Component Mounting**: Returns `null` immediately on mobile
-- **No Event Listeners**: Keyboard shortcuts not attached on mobile
-- **No Storage Operations**: SessionStorage not accessed on mobile
+- **No Event Listeners**: Desktop-only interactions not attached
 - **Zero Runtime Cost**: Complete feature bypass for mobile users
-
-#### Performance Monitoring
-Key metrics for zoom feature performance:
-- **Transform Application**: < 1ms for scale change
-- **Visual Update**: 200ms smooth transition
-- **Storage Access**: < 5ms for sessionStorage read/write
-- **Memory Impact**: ~2KB for zoom state and handlers
-- **CPU Usage**: Near-zero during zoom (GPU handles transform)
 
 ### Cache Monitoring Tools
 The application includes development-only cache monitoring tools for debugging:
@@ -560,26 +498,21 @@ installCacheInspector(queryClient: QueryClient): void
 
 ### UI State Caching API
 ```typescript
-// SessionStorage hook for UI preferences
-useSessionStorage<T>({
+// Generic state caching hook for UI preferences
+useCachedState<T>({
   key: string,
   defaultValue: T,
   validator?: (value: unknown) => value is T
 }): [T, (value: T) => void, boolean]
 
-// Zoom context provider
-interface ZoomContextValue {
-  zoomLevel: number              // Current zoom level (0.5 to 1.0)
-  setZoomLevel: (level: number) => void
-  increaseZoom: () => void       // Step up to next zoom level
-  decreaseZoom: () => void       // Step down to previous zoom level
-  resetZoom: () => void          // Reset to default (1.0)
-  isEnabled: boolean             // Desktop-only feature flag
-  isLoading: boolean             // Storage loading state
+// Generic UI state management
+interface UIStateContextValue {
+  currentState: any              // Current UI state
+  setState: (state: any) => void
+  resetState: () => void         // Reset to default state
+  isEnabled: boolean             // Feature availability flag
+  isLoading: boolean             // Loading state
 }
-
-// Access zoom controls
-useZoom(): ZoomContextValue
 ```
 
 ## Other Notes
@@ -597,8 +530,8 @@ useZoom(): ZoomContextValue
 3. **Selective Invalidation**: Only invalidate affected queries, not entire cache
 4. **Memory Management**: Automatic cleanup of old QueryClient instances
 5. **Abort Signals**: Cancel in-flight requests when components unmount
-6. **GPU-Accelerated Transforms**: Use CSS `transform: scale()` for zoom without reflows
-7. **SessionStorage Caching**: Per-tab persistence for UI preferences like zoom level
+6. **GPU-Accelerated Transforms**: Use CSS `transform: scale()` for smooth animations without reflows
+7. **State Persistence**: Intelligent caching for UI preferences and user settings
 
 ### Cache Security Considerations
 - Each user gets an isolated QueryClient instance

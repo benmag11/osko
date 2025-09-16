@@ -67,7 +67,7 @@ src/
 │   └── providers/
 │       ├── providers.tsx        # QueryClient and session providers
 │       ├── auth-provider.tsx    # Authentication context
-│       └── zoom-provider.tsx    # Zoom context for subject pages
+│       └── ui-state-provider.tsx # UI state context for enhanced features
 ├── lib/
 │   ├── supabase/
 │   │   ├── server.ts           # Server-side Supabase client
@@ -83,7 +83,7 @@ src/
 │   ├── queries/
 │   │   └── query-keys.ts       # Query key factory
 │   ├── hooks/
-│   │   ├── use-session-storage.ts  # Generic session storage hook
+│   │   ├── use-storage.ts      # Generic storage abstraction hooks
 │   │   └── use-mobile.ts       # Mobile detection hook
 │   └── utils/
 │       └── storage.ts          # Storage utility functions
@@ -412,71 +412,70 @@ export default function Error({
 
 ### Provider Hierarchy Pattern
 
-**ZoomProvider** (`src/components/providers/zoom-provider.tsx`):
+**UIStateProvider** (`src/components/providers/ui-state-provider.tsx`):
 
-The ZoomProvider demonstrates the provider hierarchy pattern, wrapping specific pages with feature-specific context:
+The UIStateProvider demonstrates the provider hierarchy pattern, wrapping specific pages with enhanced UI context:
 
 ```typescript
-export function ZoomProvider({ children }: { children: React.ReactNode }) {
+export function UIStateProvider({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile()
-  const isEnabled = isMobile === false // Only enable on desktop
+  const [preferences, setPreferences] = useState<UIPreferences>(defaultPreferences)
 
-  // Use sessionStorage hook with validation
-  const [zoomLevel, setStoredZoom, isLoading] = useSessionStorage<ZoomLevel>({
-    key: STORAGE_KEY,
-    defaultValue: DEFAULT_ZOOM,
-    validator: isValidZoomLevel,
+  // Load user preferences with graceful fallback
+  const [storedPrefs, setStoredPrefs, isLoading] = useStorage<UIPreferences>({
+    key: PREFERENCES_KEY,
+    defaultValue: defaultPreferences,
+    validator: isValidPreferences,
   })
 
-  // Keyboard shortcuts (desktop only)
+  // Device-specific features
   useEffect(() => {
-    if (!isEnabled || isLoading) return
+    if (isLoading) return
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return
-      // Handle zoom shortcuts...
+    const handleFeatureAdaptation = () => {
+      // Adapt features based on device capabilities
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isEnabled, isLoading, increaseZoom, decreaseZoom, resetZoom])
+    handleFeatureAdaptation()
+  }, [isMobile, isLoading])
 
   return (
-    <ZoomContext.Provider value={contextValue}>
+    <UIStateContext.Provider value={contextValue}>
       {children}
-    </ZoomContext.Provider>
+    </UIStateContext.Provider>
   )
 }
 ```
 
-**Integration in Subject Pages**:
+**Integration in Enhanced Pages**:
 ```typescript
-// src/app/subject/[slug]/page.tsx
-export default async function SubjectPage({ params, searchParams }: PageProps) {
+// Example enhanced page with UI state
+export default async function EnhancedPage({ params, searchParams }: PageProps) {
   // ... data fetching ...
 
   return (
-    <ZoomProvider>
+    <UIStateProvider>
       <SidebarProvider defaultOpen>
-        {/* Page content */}
+        {/* Page content with enhanced features */}
       </SidebarProvider>
-    </ZoomProvider>
+    </UIStateProvider>
   )
 }
 ```
 
 ### Storage Abstraction Layer
 
-**Generic SessionStorage Hook** (`src/lib/hooks/use-session-storage.ts`):
+**Generic Storage Hook** (`src/lib/hooks/use-storage.ts`):
 
 This hook provides a robust abstraction for browser storage with graceful degradation:
 
 ```typescript
-export function useSessionStorage<T>({
+export function useStorage<T>({
   key,
   defaultValue,
   validator,
-}: UseSessionStorageOptions<T>): [T, (value: T) => void, boolean] {
+  storageType = 'sessionStorage'
+}: UseStorageOptions<T>): [T, (value: T) => void, boolean] {
   const [storedValue, setStoredValue] = useState<T>(defaultValue)
   const [isLoading, setIsLoading] = useState(true)
   const [isAvailable, setIsAvailable] = useState(false)
@@ -489,30 +488,31 @@ export function useSessionStorage<T>({
 
     try {
       // Test storage availability
+      const storage = window[storageType]
       const testKey = '__test__'
-      window.sessionStorage.setItem(testKey, 'test')
-      window.sessionStorage.removeItem(testKey)
+      storage.setItem(testKey, 'test')
+      storage.removeItem(testKey)
       setIsAvailable(true)
 
       // Load and validate existing value
-      const item = window.sessionStorage.getItem(key)
+      const item = storage.getItem(key)
       if (item !== null) {
         const parsed = JSON.parse(item)
         if (!validator || validator(parsed)) {
           setStoredValue(parsed)
         } else {
           // Invalid data, clear it
-          window.sessionStorage.removeItem(key)
+          storage.removeItem(key)
         }
       }
     } catch (error) {
       // Storage not available (e.g., incognito mode)
-      console.warn(`SessionStorage not available for key "${key}":`, error)
+      console.warn(`${storageType} not available for key "${key}":`, error)
       setIsAvailable(false)
     } finally {
       setIsLoading(false)
     }
-  }, [key, defaultValue, validator])
+  }, [key, defaultValue, validator, storageType])
 
   // Returns in-memory value if storage fails
   return [storedValue, setValue, isLoading]
