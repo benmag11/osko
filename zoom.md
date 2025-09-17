@@ -1,0 +1,1 @@
+We want to implement zoom functionality for our question card images in the exam-viewer. Fully understand con
