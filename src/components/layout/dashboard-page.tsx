@@ -12,7 +12,7 @@ export function DashboardPage({
   maxWidth = 'max-w-4xl' 
 }: DashboardPageProps) {
   return (
-    <div className={cn("flex-1 bg-cream-50", className)}>
+    <div className={cn("flex-1 bg-cream-base", className)}>
       <div className="px-8 py-8">
         <div className={cn("mx-auto", maxWidth)}>
           {children}

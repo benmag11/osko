@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 export function LandingNavigation() {
   return (
     <header className="bg-cream-50 border-b border-stone-200">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="container mx-auto px-6 md:px-8 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logo-full.svg"

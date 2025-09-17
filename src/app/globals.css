@@ -44,6 +44,7 @@
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
   /* Warm cream backgrounds */
+  --color-cream-base: #FEF5EB;
   --color-cream-50: #FFFEFB;
   --color-cream-100: #FFFEFD;
   --color-cream-200: #FFFDF8;

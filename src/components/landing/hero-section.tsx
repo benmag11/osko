@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button'
 
 // Shared image configuration to maintain consistency and avoid duplication
 const HERO_IMAGE_CONFIG = {
-  src: '/hero-image.svg',
-  alt: 'Student studying with laptop',
-  width: 500,
-  height: 500,
+  src: '/mascot-sitting.webp',
+  alt: 'Addy mascot sitting and studying',
+  width: 600,
+  height: 600,
   priority: true,
 } as const
 
@@ -22,7 +22,7 @@ export function HeroSection() {
             <h1 className="font-serif font-semibold text-warm-text-primary text-5xl sm:text-7xl md:text-8xl leading-tight">
               It&apos;s Studyclix...
             </h1>
-            <h2 className="font-sans font-semibold text-warm-text-secondary text-5xl sm:text-4xl md:text-5xl mt-3 mb-3">
+            <h2 className="font-sans font-semibold text-warm-text-secondary text-6xl sm:text-6xl md:text-7xl mt-3 mb-3">
               But It&apos;s{' '}
               <span className="text-salmon-500 italic">free</span>
             </h2>
@@ -41,7 +41,7 @@ export function HeroSection() {
           </div>
           
           {/* Divider - Mobile */}
-          <hr className="border-t-2 border-stone-400 w-40 sm:w-48 mb-8 sm:mb-10" />
+          <hr className="border-t-2 border-stone-400 w-40 sm:w-48 mb-12 sm:mb-16" />
           
           {/* CTA Buttons - Mobile (stacked and centered) */}
           <div className="flex flex-col gap-4 w-full sm:max-w-sm md:max-w-md">
@@ -67,7 +67,7 @@ export function HeroSection() {
             <div>
               {/* Text and divider wrapper - inline-block ensures divider matches text width */}
               <div className="inline-block">
-                <h2 className="font-sans font-semibold text-warm-text-secondary text-5xl lg:text-6xl">
+                <h2 className="font-sans font-semibold text-warm-text-secondary text-8xl lg:text-8xl">
                   But It&apos;s{' '}
                   <span className="text-salmon-500 italic">free</span>
                 </h2>
@@ -77,7 +77,7 @@ export function HeroSection() {
               </div>
               
               {/* CTA Buttons - extra large for maximum prominence */}
-              <div className="flex gap-4 mt-5 lg:mt-6">
+              <div className="flex gap-4 mt-8 lg:mt-10">
                 <Button asChild variant="primary" size="xl">
                   <Link href="/auth/signup">Sign Up</Link>
                 </Button>
@@ -88,7 +88,7 @@ export function HeroSection() {
             </div>
             
             {/* Right column - Hero Image */}
-            <div className="relative w-full h-[500px] flex items-center justify-center">
+            <div className="relative w-full h-[400px] flex items-center justify-center">
               <Image 
                 src={HERO_IMAGE_CONFIG.src}
                 alt={HERO_IMAGE_CONFIG.alt}

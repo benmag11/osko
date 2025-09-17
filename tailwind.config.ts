@@ -61,6 +61,7 @@ const config: Config = {
         },
         // Warm cream backgrounds
         "cream": {
+          base: "#FEF5EB", // Main content background
           50: "#FFFEFB",
           100: "#FFFEFD",
           200: "#FFFDF8",
