@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, memo } from 'react'
+import { useState, useCallback, useMemo, memo } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
@@ -13,9 +13,11 @@ import type { Question } from '@/lib/types/database'
 
 interface QuestionCardProps {
   question: Question
+  zoom?: number
 }
 
-export const QuestionCard = memo(function QuestionCard({ question }: QuestionCardProps) {
+export const QuestionCard = memo(function QuestionCard({ question, zoom }: QuestionCardProps) {
+  const effectiveZoom = zoom ?? 1
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
@@ -71,21 +73,49 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
     title += ` - ${question.additional_info}`
   }
 
+  const titleStyle = useMemo(() => ({
+    fontSize: `${1.125 * effectiveZoom}rem`,
+    lineHeight: `${1.75 * effectiveZoom}rem`
+  }), [effectiveZoom])
+
+  const actionsStyle = useMemo(() => ({
+    gap: `${0.5 * effectiveZoom}rem`
+  }), [effectiveZoom])
+
+  const actionButtonStyle = useMemo(() => ({
+    height: `${2 * effectiveZoom}rem`,
+    paddingLeft: `${1.5 * effectiveZoom}rem`,
+    paddingRight: `${1.5 * effectiveZoom}rem`,
+    fontSize: `${0.875 * effectiveZoom}rem`
+  }), [effectiveZoom])
+
+  const iconButtonStyle = useMemo(() => ({
+    height: `${2 * effectiveZoom}rem`,
+    width: `${2 * effectiveZoom}rem`,
+    padding: `${0.5 * effectiveZoom}rem`
+  }), [effectiveZoom])
+
+  const iconStyle = useMemo(() => ({
+    height: `${1 * effectiveZoom}rem`,
+    width: `${1 * effectiveZoom}rem`
+  }), [effectiveZoom])
+
   return (
     <div className="space-y-4" data-question-id={question.id}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-serif font-semibold text-warm-text-primary">
+      <div className="flex items-center justify-between" style={actionsStyle}>
+        <h3 className="text-lg font-serif font-semibold text-warm-text-primary" style={titleStyle}>
           {title}
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center" style={actionsStyle}>
           {isAdmin && (
             <Button
               onClick={() => setShowEditModal(true)}
               size="sm"
               variant="outline"
               className="gap-2"
+              style={actionButtonStyle}
             >
-              <Edit2 className="h-4 w-4" />
+              <Edit2 className="h-4 w-4" style={iconStyle} />
               Edit Metadata
             </Button>
           )}
@@ -96,8 +126,9 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
               variant="outline"
               className="p-2"
               title="Report an issue with this question"
+              style={iconButtonStyle}
             >
-              <Flag className="h-4 w-4" />
+              <Flag className="h-4 w-4" style={iconStyle} />
             </Button>
           )}
         </div>

@@ -186,7 +186,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                       <Separator className="bg-exam-text-muted/30" />
                     </div>
                   )}
-                  <QuestionCard question={question} />
+                  <QuestionCard question={question} zoom={zoom} />
                 </div>
               ))}
 

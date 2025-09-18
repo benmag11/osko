@@ -48,7 +48,7 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
               <Separator className="bg-exam-text-muted/30" />
             </div>
           )}
-          <QuestionCard question={question} />
+          <QuestionCard question={question} zoom={1} />
         </div>
       ))}
       
