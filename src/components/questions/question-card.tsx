@@ -78,6 +78,8 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
     lineHeight: `${1.75 * effectiveZoom}rem`
   }), [effectiveZoom])
 
+  const cardStackGap = useMemo(() => `${(1 * effectiveZoom).toFixed(3)}rem`, [effectiveZoom])
+
   const actionsStyle = useMemo(() => ({
     gap: `${0.5 * effectiveZoom}rem`
   }), [effectiveZoom])
@@ -101,8 +103,8 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
   }), [effectiveZoom])
 
   return (
-    <div className="space-y-4" data-question-id={question.id}>
-      <div className="flex items-center justify-between" style={actionsStyle}>
+    <div className="flex flex-col" data-question-id={question.id} style={{ gap: cardStackGap }}>
+      <div className="flex items-center justify-between">
         <h3 className="text-lg font-serif font-semibold text-warm-text-primary" style={titleStyle}>
           {title}
         </h3>
