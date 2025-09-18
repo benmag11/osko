@@ -67,7 +67,7 @@ export function HeroSection() {
             <div>
               {/* Text and divider wrapper - inline-block ensures divider matches text width */}
               <div className="inline-block">
-                <h2 className="font-sans font-semibold text-warm-text-secondary text-8xl lg:text-8xl">
+                <h2 className="font-sans font-semibold text-warm-text-secondary text-8xl lg:text-10xl">
                   But It&apos;s{' '}
                   <span className="text-salmon-500 italic">free</span>
                 </h2>
@@ -88,8 +88,8 @@ export function HeroSection() {
             </div>
             
             {/* Right column - Hero Image */}
-            <div className="relative w-full h-[400px] flex items-center justify-center">
-              <Image 
+            <div className="relative w-full h-[400px] -mt-6 lg:-mt-14 flex items-center justify-center">
+              <Image
                 src={HERO_IMAGE_CONFIG.src}
                 alt={HERO_IMAGE_CONFIG.alt}
                 width={HERO_IMAGE_CONFIG.width}

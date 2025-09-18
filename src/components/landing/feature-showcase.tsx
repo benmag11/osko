@@ -2,7 +2,7 @@ import Image from 'next/image'
 
 export function FeatureShowcase() {
   return (
-    <section className="py-12 md:py-16 lg:py-20 px-4 md:px-6">
+    <section className="pt-6 pb-12 md:pt-8 md:pb-16 lg:pt-10 lg:pb-20 px-4 md:px-6">
       <div className="container mx-auto max-w-screen-2xl">
         {/* Feature container with cream background */}
         <div
@@ -15,7 +15,7 @@ export function FeatureShowcase() {
           </h2>
 
           {/* Subheading with mascot emoji */}
-          <p className="font-sans text-warm-text-secondary text-xl md:text-2xl lg:text-3xl text-center mb-8 md:mb-10">
+          <p className="font-sans text-warm-text-secondary text-xl md:text-2xl lg:text-3xl text-center mb-4 md:mb-5 lg:mb-6">
             (And through an actually nice user interface ...) 🐹
           </p>
 
