@@ -73,34 +73,56 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
     title += ` - ${question.additional_info}`
   }
 
-  const titleStyle = useMemo(() => ({
-    fontSize: `${1.125 * effectiveZoom}rem`,
-    lineHeight: `${1.75 * effectiveZoom}rem`
-  }), [effectiveZoom])
+  const toRem = useCallback((value: number) => `${(value * effectiveZoom).toFixed(3)}rem`, [effectiveZoom])
 
-  const cardStackGap = useMemo(() => `${(1 * effectiveZoom).toFixed(3)}rem`, [effectiveZoom])
+  const titleStyle = useMemo(() => ({
+    fontSize: toRem(1.125),
+    lineHeight: toRem(1.75),
+  }), [toRem])
+
+  const cardStackGap = useMemo(() => toRem(1), [toRem])
 
   const actionsStyle = useMemo(() => ({
-    gap: `${0.5 * effectiveZoom}rem`
-  }), [effectiveZoom])
+    gap: toRem(0.5),
+  }), [toRem])
 
   const actionButtonStyle = useMemo(() => ({
-    height: `${2 * effectiveZoom}rem`,
-    paddingLeft: `${1.5 * effectiveZoom}rem`,
-    paddingRight: `${1.5 * effectiveZoom}rem`,
-    fontSize: `${0.875 * effectiveZoom}rem`
-  }), [effectiveZoom])
+    height: toRem(2),
+    paddingLeft: toRem(1.5),
+    paddingRight: toRem(1.5),
+    fontSize: toRem(0.875),
+    columnGap: toRem(0.5),
+  }), [toRem])
 
   const iconButtonStyle = useMemo(() => ({
-    height: `${2 * effectiveZoom}rem`,
-    width: `${2 * effectiveZoom}rem`,
-    padding: `${0.5 * effectiveZoom}rem`
-  }), [effectiveZoom])
+    height: toRem(2),
+    width: toRem(2),
+    padding: toRem(0.5),
+  }), [toRem])
 
   const iconStyle = useMemo(() => ({
-    height: `${1 * effectiveZoom}rem`,
-    width: `${1 * effectiveZoom}rem`
-  }), [effectiveZoom])
+    height: toRem(1),
+    width: toRem(1),
+  }), [toRem])
+
+  const markingToggleContainerStyle = useMemo(
+    () => ({
+      paddingTop: toRem(1),
+      paddingBottom: toRem(1),
+    }),
+    [toRem]
+  )
+
+  const markingToggleButtonStyle = useMemo(
+    () => ({
+      height: toRem(2.25),
+      paddingLeft: toRem(1.5),
+      paddingRight: toRem(1.5),
+      fontSize: toRem(0.875),
+      columnGap: toRem(0.5),
+    }),
+    [toRem]
+  )
 
   return (
     <div className="flex flex-col" data-question-id={question.id} style={{ gap: cardStackGap }}>
@@ -155,21 +177,22 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
         </div>
         
         <div className="bg-[#F5F4ED] rounded-b-xl border-t border-stone-300">
-          <div className="flex justify-center py-4">
+          <div className="flex justify-center" style={markingToggleContainerStyle}>
             {hasValidMarkingScheme ? (
               <Button
                 onClick={toggleMarkingScheme}
                 variant="outline"
                 className="border-stone-400 bg-cream-50 text-stone-700 hover:bg-stone-100 hover:border-stone-500 hover:text-stone-800 font-sans"
+                style={markingToggleButtonStyle}
               >
                 {showMarkingScheme ? (
                   <>
-                    <ChevronUp className="h-4 w-4" />
+                    <ChevronUp className="h-4 w-4" style={iconStyle} />
                     Hide marking scheme
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4" style={iconStyle} />
                     Show marking scheme
                   </>
                 )}
