@@ -72,7 +72,7 @@ export const QuestionCard = memo(function QuestionCard({ question }: QuestionCar
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-question-id={question.id}>
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-serif font-semibold text-warm-text-primary">
           {title}

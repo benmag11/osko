@@ -73,7 +73,7 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
         <SidebarInset>
           <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
             <div className="px-8 py-8">
-              <div className="mx-auto max-w-4xl space-y-8">
+              <div className="mx-auto w-full">
                 <FilteredQuestionsView
                   topics={topics}
                   initialData={initialData}
