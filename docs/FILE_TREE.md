@@ -134,7 +134,6 @@
 - use-is-admin.ts - Admin detection hook
 - use-mobile.ts - Mobile detection hook
 - use-questions-query.ts - Questions query hook
-- use-safe-timeout.ts - Safe timeout hook
 - use-session-storage.ts - Session storage hook for persisting client state
 - use-topics.ts - Topics data hook
 - use-user-profile.ts - User profile hook

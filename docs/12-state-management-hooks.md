@@ -29,7 +29,6 @@ src/
       use-is-admin.ts        # Admin role detection
       use-mobile.ts          # Mobile device detection
       use-questions-query.ts # Infinite scrolling questions
-      use-safe-timeout.ts    # Memory-safe timeout management
       use-topics.ts          # Subject topics fetching
       use-user-profile.ts    # User profile and authentication
       use-user-subjects.ts   # User's enrolled subjects
@@ -287,36 +286,6 @@ export function useUserProfile() {
 }
 ```
 
-### useSafeTimeout Hook
-
-Prevents memory leaks with automatic cleanup:
-
-```typescript
-export function useSafeTimeout() {
-  const timeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set())
-
-  const setSafeTimeout = useCallback((callback: () => void, delay: number) => {
-    const timeoutId = setTimeout(() => {
-      timeoutsRef.current.delete(timeoutId)
-      callback()
-    }, delay)
-    
-    timeoutsRef.current.add(timeoutId)
-    return timeoutId
-  }, [])
-
-  // Cleanup all timeouts on unmount
-  useEffect(() => {
-    const timeouts = timeoutsRef.current
-    return () => {
-      timeouts.forEach(clearTimeout)
-      timeouts.clear()
-    }
-  }, [])
-
-  return { setSafeTimeout, clearSafeTimeout, clearAllTimeouts }
-}
-```
 
 ### useIsMobile Hook
 
