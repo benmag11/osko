@@ -151,7 +151,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   return (
     <>
       <ZoomControls
-        zoom={zoom}
         canZoomIn={canZoomIn}
         canZoomOut={canZoomOut}
         onZoomIn={() => adjustZoom(1)}
