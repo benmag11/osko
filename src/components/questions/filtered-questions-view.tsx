@@ -4,9 +4,10 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-display'
 import { QuestionCard } from './question-card'
-import { ZoomControls } from './zoom-controls'
+import { ScrollAwareZoomControls } from './scroll-aware-zoom-controls'
 import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
+import { useScrollVisibility } from '@/lib/hooks/use-scroll-visibility'
 import { useFilters } from '@/components/providers/filter-provider'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
 import '../questions/styles/zoom.css'
@@ -32,6 +33,14 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
   const [zoom, setZoom] = useState(MAX_ZOOM)
+
+  // Scroll visibility for zoom controls
+  const { isVisible: controlsVisible, targetRef: filtersRef } = useScrollVisibility({
+    threshold: 0,
+    rootMargin: '-50px 0px 0px 0px', // Trigger when filters section is 50px from leaving viewport
+    initialVisible: true,
+    debounceMs: 50
+  })
 
   const {
     questions,
@@ -146,18 +155,20 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
 
   return (
     <>
-      <ZoomControls
+      <ScrollAwareZoomControls
         canZoomIn={canZoomIn}
         canZoomOut={canZoomOut}
         onZoomIn={() => adjustZoom(1)}
         onZoomOut={() => adjustZoom(-1)}
+        scrollTargetRef={filtersRef}
+        isScrolled={!controlsVisible}
       />
 
       <div
         className="exam-zoom-root mx-auto flex w-full flex-col items-center"
         style={{ '--exam-zoom': zoom } as CSSProperties}
       >
-        <div className="w-full" style={{ maxWidth: filterWidth }}>
+        <div ref={filtersRef} className="w-full" style={{ maxWidth: filterWidth }}>
           <AppliedFiltersDisplay
             topics={topics}
             filters={filters}
