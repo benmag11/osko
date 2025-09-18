@@ -16,7 +16,7 @@ export function FeatureShowcase() {
 
           {/* Subheading with mascot emoji */}
           <p className="font-sans text-warm-text-secondary text-xl md:text-2xl lg:text-3xl text-center mb-4 md:mb-5 lg:mb-6">
-            (And through an actually nice user interface ...) 🐹
+            And through a cleaner interface...?
           </p>
 
           {/* Image container */}
