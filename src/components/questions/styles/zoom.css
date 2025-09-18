@@ -1,0 +1,32 @@
+.exam-zoom-root {
+  --exam-zoom: 1;
+  gap: clamp(0.75rem, calc(var(--exam-zoom) * 2rem), 2rem);
+  transition: gap 140ms ease;
+}
+
+.exam-zoom-container {
+  --exam-zoom: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, calc(var(--exam-zoom) * 2.5rem), 2.5rem);
+  transition: gap 140ms ease;
+}
+
+.exam-zoom-separator {
+  padding-block: clamp(1rem, calc(var(--exam-zoom) * 2.5rem), 2.5rem);
+  transition: padding 140ms ease;
+}
+
+.exam-zoom-load-more {
+  margin-top: clamp(0.75rem, calc(var(--exam-zoom) * 2rem), 2rem);
+  transition: margin-top 140ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exam-zoom-root,
+  .exam-zoom-container,
+  .exam-zoom-separator,
+  .exam-zoom-load-more {
+    transition: none;
+  }
+}

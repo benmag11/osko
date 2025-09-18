@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-display'
 import { QuestionCard } from './question-card'
 import { ZoomControls } from './zoom-controls'
@@ -8,14 +9,12 @@ import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import { useFilters } from '@/components/providers/filter-provider'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
+import '../questions/styles/zoom.css'
 
 const MAX_ZOOM = 1
 const MIN_ZOOM = 0.5
 const ZOOM_STEP = 0.1
 const BASE_MAX_WIDTH_PX = 896 // Tailwind's max-w-4xl -> 56rem @ 16px
-const BASE_SECTION_GAP_REM = 2
-const BASE_INTER_CARD_GAP_REM = 5
-const BASE_LOAD_MORE_MARGIN_REM = 2
 
 type ViewportAnchor =
   | { type: 'question'; id: string; ratio: number }
@@ -144,9 +143,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const canZoomOut = zoom > MIN_ZOOM + 0.0001
   const maxWidth = `${(BASE_MAX_WIDTH_PX * zoom).toFixed(2)}px`
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
-  const sectionGap = `${(BASE_SECTION_GAP_REM * zoom).toFixed(3)}rem`
-  const interCardPadding = `${(BASE_INTER_CARD_GAP_REM * zoom).toFixed(3)}rem`
-  const loadMoreMarginTop = `${(BASE_LOAD_MORE_MARGIN_REM * zoom).toFixed(3)}rem`
 
   return (
     <>
@@ -157,7 +153,10 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
         onZoomOut={() => adjustZoom(-1)}
       />
 
-      <div className="mx-auto flex w-full flex-col items-center gap-8" style={{ gap: sectionGap }}>
+      <div
+        className="exam-zoom-root mx-auto flex w-full flex-col items-center"
+        style={{ '--exam-zoom': zoom } as CSSProperties}
+      >
         <div className="w-full" style={{ maxWidth: filterWidth }}>
           <AppliedFiltersDisplay
             topics={topics}
@@ -169,8 +168,8 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
 
         <div
           ref={containerRef}
-          className="relative w-full"
-          style={{ maxWidth: maxWidth }}
+          className="exam-zoom-container relative w-full"
+          style={{ maxWidth: maxWidth, '--exam-zoom': zoom } as CSSProperties}
         >
           {error ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -187,7 +186,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
               {questions.map((question, index) => (
                 <div key={question.id}>
                   {index > 0 && (
-                    <div style={{ paddingTop: interCardPadding, paddingBottom: interCardPadding }}>
+                    <div className="exam-zoom-separator">
                       <Separator className="bg-exam-text-muted/30" />
                     </div>
                   )}
@@ -195,7 +194,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                 </div>
               ))}
 
-              <div ref={loadMoreRef} className="h-20" style={{ marginTop: loadMoreMarginTop }}>
+              <div ref={loadMoreRef} className="h-20 exam-zoom-load-more">
                 {isFetchingNextPage && (
                   <div className="flex justify-center">
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />

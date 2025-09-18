@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback, useMemo, memo } from 'react'
+import { useState, useCallback, memo } from 'react'
+import type { CSSProperties } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
@@ -10,6 +11,8 @@ import { useAuth } from '@/components/providers/auth-provider'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
 import type { Question } from '@/lib/types/database'
+import { cn } from '@/lib/utils'
+import styles from './styles/question-card.module.css'
 
 interface QuestionCardProps {
   question: Question
@@ -17,7 +20,6 @@ interface QuestionCardProps {
 }
 
 export const QuestionCard = memo(function QuestionCard({ question, zoom }: QuestionCardProps) {
-  const effectiveZoom = zoom ?? 1
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
@@ -73,73 +75,25 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
     title += ` - ${question.additional_info}`
   }
 
-  const toRem = useCallback((value: number) => `${(value * effectiveZoom).toFixed(3)}rem`, [effectiveZoom])
-
-  const titleStyle = useMemo(() => ({
-    fontSize: toRem(1.125),
-    lineHeight: toRem(1.75),
-  }), [toRem])
-
-  const cardStackGap = useMemo(() => toRem(1), [toRem])
-
-  const actionsStyle = useMemo(() => ({
-    gap: toRem(0.5),
-  }), [toRem])
-
-  const actionButtonStyle = useMemo(() => ({
-    height: toRem(2),
-    paddingLeft: toRem(1.5),
-    paddingRight: toRem(1.5),
-    fontSize: toRem(0.875),
-    columnGap: toRem(0.5),
-  }), [toRem])
-
-  const iconButtonStyle = useMemo(() => ({
-    height: toRem(2),
-    width: toRem(2),
-    padding: toRem(0.5),
-  }), [toRem])
-
-  const iconStyle = useMemo(() => ({
-    height: toRem(1),
-    width: toRem(1),
-  }), [toRem])
-
-  const markingToggleContainerStyle = useMemo(
-    () => ({
-      paddingTop: toRem(1),
-      paddingBottom: toRem(1),
-    }),
-    [toRem]
-  )
-
-  const markingToggleButtonStyle = useMemo(
-    () => ({
-      height: toRem(2.25),
-      paddingLeft: toRem(1.5),
-      paddingRight: toRem(1.5),
-      fontSize: toRem(0.875),
-      columnGap: toRem(0.5),
-    }),
-    [toRem]
-  )
-
   return (
-    <div className="flex flex-col" data-question-id={question.id} style={{ gap: cardStackGap }}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-serif font-semibold text-warm-text-primary" style={titleStyle}>
+    <div
+      className={cn('flex flex-col', styles.card)}
+      data-question-id={question.id}
+      style={{ '--exam-zoom': zoom ?? 1 } as CSSProperties}
+    >
+      <div className={cn('flex items-center justify-between', styles.header)}>
+        <h3 className={cn('font-serif font-semibold text-warm-text-primary', styles.title)}>
           {title}
         </h3>
-        <div className="flex items-center" style={actionsStyle}>
+        <div className={cn('flex items-center', styles.actions)}>
           {isAdmin && (
             <Button
               onClick={() => setShowEditModal(true)}
               size="sm"
               variant="outline"
-              className="gap-2"
-              style={actionButtonStyle}
+              className={cn('gap-2', styles.adminButton)}
             >
-              <Edit2 className="h-4 w-4" style={iconStyle} />
+              <Edit2 className={cn('h-4 w-4', styles.icon)} />
               Edit Metadata
             </Button>
           )}
@@ -148,11 +102,10 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
               onClick={() => setShowReportDialog(true)}
               size="sm"
               variant="outline"
-              className="p-2"
+              className={cn('p-2', styles.iconButton)}
               title="Report an issue with this question"
-              style={iconButtonStyle}
             >
-              <Flag className="h-4 w-4" style={iconStyle} />
+              <Flag className={cn('h-4 w-4', styles.icon)} />
             </Button>
           )}
         </div>
@@ -177,22 +130,24 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
         </div>
         
         <div className="bg-[#F5F4ED] rounded-b-xl border-t border-stone-300">
-          <div className="flex justify-center" style={markingToggleContainerStyle}>
+          <div className={cn('flex justify-center', styles.markingToggleContainer)}>
             {hasValidMarkingScheme ? (
               <Button
                 onClick={toggleMarkingScheme}
                 variant="outline"
-                className="border-stone-400 bg-cream-50 text-stone-700 hover:bg-stone-100 hover:border-stone-500 hover:text-stone-800 font-sans"
-                style={markingToggleButtonStyle}
+                className={cn(
+                  'border-stone-400 bg-cream-50 text-stone-700 hover:bg-stone-100 hover:border-stone-500 hover:text-stone-800 font-sans',
+                  styles.markingToggleButton
+                )}
               >
                 {showMarkingScheme ? (
                   <>
-                    <ChevronUp className="h-4 w-4" style={iconStyle} />
+                    <ChevronUp className={cn('h-4 w-4', styles.icon)} />
                     Hide marking scheme
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-4 w-4" style={iconStyle} />
+                    <ChevronDown className={cn('h-4 w-4', styles.icon)} />
                     Show marking scheme
                   </>
                 )}

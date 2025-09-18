@@ -1,0 +1,83 @@
+.card {
+  --exam-zoom: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.6rem, calc(var(--exam-zoom) * 1.25rem), 1.4rem);
+  transition: gap 140ms ease;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(0.35rem, calc(var(--exam-zoom) * 0.75rem), 1rem);
+}
+
+.title {
+  font-family: var(--font-serif, inherit);
+  font-weight: 600;
+  color: rgb(var(--warm-text-primary-rgb, 31 31 31));
+  font-size: clamp(0.75rem, calc(var(--exam-zoom) * 1.125rem), 1.125rem);
+  line-height: clamp(1.1rem, calc(var(--exam-zoom) * 1.75rem), 1.75rem);
+  transition: font-size 140ms ease, line-height 140ms ease;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.25rem, calc(var(--exam-zoom) * 0.5rem), 0.75rem);
+  transition: gap 140ms ease;
+}
+
+.adminButton {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.25rem, calc(var(--exam-zoom) * 0.5rem), 0.75rem);
+  font-size: clamp(0.6rem, calc(var(--exam-zoom) * 0.875rem), 0.9rem);
+  padding-inline: clamp(0.5rem, calc(var(--exam-zoom) * 1.5rem), 1.5rem);
+  height: clamp(1rem, calc(var(--exam-zoom) * 2rem), 2.2rem);
+  transition: padding 140ms ease, font-size 140ms ease, height 140ms ease;
+}
+
+.iconButton {
+  height: clamp(1rem, calc(var(--exam-zoom) * 2rem), 2.2rem);
+  width: clamp(1rem, calc(var(--exam-zoom) * 2rem), 2.2rem);
+  padding: clamp(0.25rem, calc(var(--exam-zoom) * 0.5rem), 0.6rem);
+  transition: height 140ms ease, width 140ms ease, padding 140ms ease;
+}
+
+.icon {
+  height: clamp(0.5rem, calc(var(--exam-zoom) * 1rem), 1rem);
+  width: clamp(0.5rem, calc(var(--exam-zoom) * 1rem), 1rem);
+  transition: height 140ms ease, width 140ms ease;
+}
+
+.markingToggleContainer {
+  display: flex;
+  justify-content: center;
+  padding-block: clamp(0.6rem, calc(var(--exam-zoom) * 1rem), 1.4rem);
+  transition: padding 140ms ease;
+}
+
+.markingToggleButton {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.25rem, calc(var(--exam-zoom) * 0.5rem), 0.75rem);
+  font-size: clamp(0.6rem, calc(var(--exam-zoom) * 0.875rem), 0.9rem);
+  padding-inline: clamp(0.5rem, calc(var(--exam-zoom) * 1.5rem), 1.7rem);
+  height: clamp(1.1rem, calc(var(--exam-zoom) * 2.2rem), 2.6rem);
+  transition: padding 140ms ease, font-size 140ms ease, height 140ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .title,
+  .actions,
+  .adminButton,
+  .iconButton,
+  .icon,
+  .markingToggleContainer,
+  .markingToggleButton {
+    transition: none;
+  }
+}
