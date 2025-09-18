@@ -140,6 +140,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const canZoomIn = zoom < MAX_ZOOM - 0.0001
   const canZoomOut = zoom > MIN_ZOOM + 0.0001
   const maxWidth = `${(BASE_MAX_WIDTH_PX * zoom).toFixed(2)}px`
+  const filterWidth = `${BASE_MAX_WIDTH_PX}px`
 
   return (
     <>
@@ -151,19 +152,21 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
         onZoomOut={() => adjustZoom(-1)}
       />
 
-      <div
-        ref={containerRef}
-        className="relative mx-auto flex w-full flex-col space-y-8"
-        style={{ maxWidth: maxWidth }}
-      >
-        <AppliedFiltersDisplay
-          topics={topics}
-          filters={filters}
-          totalCount={totalCount}
-          isLoading={isLoading}
-        />
+      <div className="mx-auto flex w-full flex-col items-center gap-8">
+        <div className="w-full" style={{ maxWidth: filterWidth }}>
+          <AppliedFiltersDisplay
+            topics={topics}
+            filters={filters}
+            totalCount={totalCount}
+            isLoading={isLoading}
+          />
+        </div>
 
-        <div className="w-full">
+        <div
+          ref={containerRef}
+          className="relative w-full"
+          style={{ maxWidth: maxWidth }}
+        >
           {error ? (
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-xl text-salmon-600 font-serif">Error loading questions</p>
