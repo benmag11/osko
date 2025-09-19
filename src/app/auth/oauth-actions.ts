@@ -3,15 +3,33 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
+const FALLBACK_SITE_URL = 'http://localhost:3000'
+
+function getSiteUrl() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+
+  if (siteUrl) {
+    return siteUrl.replace(/\/$/, '')
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.trim()
+
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/\/$/, '')}`
+  }
+
+  return FALLBACK_SITE_URL
+}
+
 export async function signInWithGoogle() {
   const supabase = await createServerSupabaseClient()
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  const siteUrl = getSiteUrl()
+  const callbackUrl = new URL('/auth/callback', siteUrl).toString()
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: callbackUrl,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',

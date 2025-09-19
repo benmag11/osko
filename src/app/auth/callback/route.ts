@@ -1,31 +1,54 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+const DEFAULT_REDIRECT_PATH = '/dashboard/study'
+
+function resolveBaseUrl(request: Request, requestUrl: URL) {
+  const rawForwardedHost = request.headers.get('x-forwarded-host')
+  const rawForwardedProto = request.headers.get('x-forwarded-proto')
+  const forwardedHost = rawForwardedHost?.split(',')[0]?.trim()
+  const forwardedProto = rawForwardedProto?.split(',')[0]?.trim()
+  const isDevelopment = process.env.NODE_ENV === 'development'
+
+  if (!isDevelopment && forwardedHost) {
+    const protocol = forwardedProto ?? requestUrl.protocol.replace(':', '')
+    return `${protocol}://${forwardedHost}`
+  }
+
+  return requestUrl.origin
+}
+
+function sanitizeNextPath(nextParam: string | null) {
+  if (!nextParam) {
+    return DEFAULT_REDIRECT_PATH
+  }
+
+  const trimmed = nextParam.trim()
+
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
+    return DEFAULT_REDIRECT_PATH
+  }
+
+  return trimmed
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const error = requestUrl.searchParams.get('error')
   const error_description = requestUrl.searchParams.get('error_description')
 
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https'
-  const isDevelopment = process.env.NODE_ENV === 'development'
-  const baseUrl = isDevelopment || !forwardedHost
-    ? requestUrl.origin
-    : `${forwardedProto}://${forwardedHost}`
+  const baseUrl = resolveBaseUrl(request, requestUrl)
+  const next = sanitizeNextPath(requestUrl.searchParams.get('next'))
 
-  let next = requestUrl.searchParams.get('next') || '/dashboard/study'
-
-  if (!next.startsWith('/')) {
-    next = '/dashboard/study'
-  }
+  const redirectWithBase = (path: string) => NextResponse.redirect(new URL(path, baseUrl))
+  const redirectWithError = (message: string) =>
+    redirectWithBase(`/auth/signin?error=${encodeURIComponent(message)}`)
   
   // Handle OAuth errors (e.g., user cancelled the flow)
   if (error) {
     console.error('OAuth callback error:', error, error_description)
-    return NextResponse.redirect(
-      `${baseUrl}/auth/signin?error=${encodeURIComponent(error_description || error)}`
-    )
+    return redirectWithError(error_description || error)
   }
   
   if (code) {
@@ -34,9 +57,7 @@ export async function GET(request: Request) {
     
     if (exchangeError) {
       console.error('Code exchange error:', exchangeError)
-      return NextResponse.redirect(
-        `${baseUrl}/auth/signin?error=${encodeURIComponent('Authentication failed. Please try again.')}`
-      )
+      return redirectWithError('Authentication failed. Please try again.')
     }
     
     if (data?.user) {
@@ -60,19 +81,19 @@ export async function GET(request: Request) {
           console.error('Error creating user profile:', createError)
         }
         
-        return NextResponse.redirect(`${baseUrl}/onboarding`)
+        return redirectWithBase('/onboarding')
       }
       
       // If onboarding not completed, redirect to onboarding
       if (!profile.onboarding_completed) {
-        return NextResponse.redirect(`${baseUrl}/onboarding`)
+        return redirectWithBase('/onboarding')
       }
       
       // Successful authentication and onboarding completed
-      return NextResponse.redirect(`${baseUrl}${next}`)
+      return redirectWithBase(next)
     }
   }
   
   // No code or error in the URL, redirect to sign in
-  return NextResponse.redirect(`${baseUrl}/auth/signin`)
+  return redirectWithBase('/auth/signin')
 }
