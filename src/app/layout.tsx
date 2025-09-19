@@ -4,6 +4,8 @@ import './globals.css'
 import { Providers } from '@/components/providers/providers'
 import { Toaster } from 'sonner'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
@@ -41,6 +43,8 @@ export default async function RootLayout({
           {children}
         </Providers>
         <Toaster position="top-center" richColors />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
