@@ -5,6 +5,10 @@ import { redirect } from 'next/navigation'
 import { formatName } from '@/lib/utils/format-name'
 import { generateSlug } from '@/lib/utils/slug'
 
+// Dashboard requires runtime cookie access for Supabase auth
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function StudyPage() {
   const supabase = await createClient()
   

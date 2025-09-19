@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   description: 'Set up your profile and select your subjects to get started',
 }
 
+// This page reads auth cookies via the Supabase server client, so force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function OnboardingPage() {
   // Fetch all subjects from the database
   const subjects = await getAllSubjects()
