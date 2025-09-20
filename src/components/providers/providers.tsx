@@ -1,10 +1,15 @@
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  QueryClient,
+  QueryClientProvider,
+  hydrate,
+} from '@tanstack/react-query'
 import { useState, useEffect, useRef } from 'react'
 import { QUERY_CONFIG } from '@/lib/config/cache'
 import { AuthProvider } from './auth-provider'
 import { Session } from '@supabase/supabase-js'
+import type { DehydratedState } from '@tanstack/react-query'
 
 /**
  * Creates a new QueryClient instance with secure defaults
@@ -72,11 +77,18 @@ function getQueryClient(userId?: string) {
 interface ProvidersProps {
   children: React.ReactNode
   initialSession?: Session | null
+  initialQueryState?: DehydratedState | null
 }
 
-export function Providers({ children, initialSession }: ProvidersProps) {
+export function Providers({ children, initialSession, initialQueryState }: ProvidersProps) {
   const userId = initialSession?.user?.id
-  const [queryClient] = useState(() => getQueryClient(userId))
+  const [queryClient] = useState(() => {
+    const client = getQueryClient(userId)
+    if (initialQueryState) {
+      hydrate(client, initialQueryState)
+    }
+    return client
+  })
   const previousUserIdRef = useRef(userId)
   
   // Clean up query client when user changes

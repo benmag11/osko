@@ -1,16 +1,33 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from 'react'
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import { clearAllCache, invalidateUserCache } from '@/lib/cache/cache-utils'
 import { useRouter } from 'next/navigation'
+import type { UserProfile } from '@/lib/types/database'
+import { queryKeys } from '@/lib/queries/query-keys'
 
+/**
+ * Auth context keeps Supabase auth session and the lightweight `user_profiles` row.
+ * Note: the profile table only includes name/admin/onboarding metadata; email comes from `session.user`.
+ */
 interface AuthContextType {
   user: User | null
   session: Session | null
+  profile: UserProfile | null
+  profileError: Error | null
   isLoading: boolean
+  isProfileLoading: boolean
+  refetchProfile: () => Promise<UserProfile | null>
   signOut: () => Promise<void>
 }
 
@@ -33,18 +50,103 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
   const [session, setSession] = useState<Session | null>(initialSession)
   const [isLoading, setIsLoading] = useState(!initialSession)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profileError, setProfileError] = useState<Error | null>(null)
+  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(false)
   const [previousUserId, setPreviousUserId] = useState<string | null>(
     initialSession?.user?.id ?? null
   )
-  
+
   const queryClient = useQueryClient()
   const router = useRouter()
   const supabase = createClient()
-  
+  const profileAbortController = useRef<AbortController | null>(null)
+  const inFlightProfileRequest = useRef<Promise<UserProfile | null> | null>(null)
+
+  const hydrateProfileFromCache = useCallback((userId: string) => {
+    const cachedEntry = queryClient.getQueryData<{ user: User; profile: UserProfile | null }>(
+      queryKeys.user.profile(userId)
+    )
+
+    if (!cachedEntry) {
+      return false
+    }
+
+    setProfile(cachedEntry.profile ?? null)
+    setProfileError(null)
+    setIsProfileLoading(false)
+    return true
+  }, [queryClient])
+
+  const fetchProfile = useCallback(async (
+    userId: string,
+    options?: { force?: boolean }
+  ): Promise<UserProfile | null> => {
+    if (!userId) {
+      setProfile(null)
+      setProfileError(null)
+      setIsProfileLoading(false)
+      return null
+    }
+
+    if (!options?.force && inFlightProfileRequest.current) {
+      return inFlightProfileRequest.current
+    }
+
+    profileAbortController.current?.abort()
+    const controller = new AbortController()
+    profileAbortController.current = controller
+
+    const requestPromise = (async () => {
+      try {
+        setIsProfileLoading(true)
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at')
+          .eq('user_id', userId)
+          .abortSignal(controller.signal)
+          .single()
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            setProfile(null)
+            setProfileError(null)
+            return null
+          }
+          const formattedError = new Error(error.message)
+          setProfile(null)
+          setProfileError(formattedError)
+          return null
+        }
+
+        setProfile(data ?? null)
+        setProfileError(null)
+        return data ?? null
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          return null
+        }
+        const formattedError = error instanceof Error ? error : new Error('Failed to load profile')
+        setProfile(null)
+        setProfileError(formattedError)
+        return null
+      } finally {
+        if (inFlightProfileRequest.current === requestPromise) {
+          inFlightProfileRequest.current = null
+        }
+        if (profileAbortController.current === controller) {
+          profileAbortController.current = null
+        }
+        setIsProfileLoading(false)
+      }
+    })()
+
+    inFlightProfileRequest.current = requestPromise
+    return requestPromise
+  }, [supabase])
+
   const handleAuthChange = useCallback(
     async (event: AuthChangeEvent, newSession: Session | null) => {
-      console.log('Auth state changed:', event, newSession?.user?.id)
-      
       const newUserId = newSession?.user?.id ?? null
       const userChanged = previousUserId !== null && previousUserId !== newUserId
       
@@ -53,9 +155,14 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
         case 'SIGNED_OUT':
           // Complete cache clear on sign out
           clearAllCache(queryClient)
+          profileAbortController.current?.abort()
+          inFlightProfileRequest.current = null
+          setIsProfileLoading(false)
           setUser(null)
           setSession(null)
           setPreviousUserId(null)
+          setProfile(null)
+          setProfileError(null)
           router.push('/')
           break
           
@@ -63,12 +170,14 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
         case 'TOKEN_REFRESHED':
           if (userChanged) {
             // User changed - clear all cache for security
-            console.log('User changed, clearing cache')
             clearAllCache(queryClient)
           }
           setUser(newSession?.user ?? null)
           setSession(newSession)
           setPreviousUserId(newUserId)
+          if (newUserId && !hydrateProfileFromCache(newUserId)) {
+            void fetchProfile(newUserId, { force: true })
+          }
           break
           
         case 'USER_UPDATED':
@@ -76,6 +185,9 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
           await invalidateUserCache(queryClient)
           setUser(newSession?.user ?? null)
           setSession(newSession)
+          if (newUserId && !hydrateProfileFromCache(newUserId)) {
+            void fetchProfile(newUserId, { force: true })
+          }
           break
           
         case 'PASSWORD_RECOVERY':
@@ -83,12 +195,15 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
           setUser(newSession?.user ?? null)
           setSession(newSession)
           setPreviousUserId(newUserId)
+          if (newUserId && !hydrateProfileFromCache(newUserId)) {
+            void fetchProfile(newUserId, { force: true })
+          }
           break
       }
     },
-    [queryClient, router, previousUserId]
+    [fetchProfile, hydrateProfileFromCache, previousUserId, queryClient, router]
   )
-  
+
   // Set up auth state listener
   useEffect(() => {
     // Get initial session
@@ -100,6 +215,7 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
           setUser(currentSession.user)
           setSession(currentSession)
           setPreviousUserId(currentSession.user.id)
+          void fetchProfile(currentSession.user.id)
         }
       } catch (error) {
         console.error('Error getting initial session:', error)
@@ -107,11 +223,16 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
         setIsLoading(false)
       }
     }
-    
+
     if (!initialSession) {
       initializeAuth()
+    } else if (initialSession.user) {
+      if (!hydrateProfileFromCache(initialSession.user.id)) {
+        void fetchProfile(initialSession.user.id)
+      }
+      setIsLoading(false)
     }
-    
+
     // Listen to auth changes
     const {
       data: { subscription },
@@ -121,8 +242,14 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
     return () => {
       subscription.unsubscribe()
     }
-  }, [supabase, handleAuthChange, initialSession])
-  
+  }, [fetchProfile, hydrateProfileFromCache, supabase, handleAuthChange, initialSession])
+
+  useEffect(() => {
+    return () => {
+      profileAbortController.current?.abort()
+    }
+  }, [])
+
   // Check for session expiry periodically
   useEffect(() => {
     const checkSessionExpiry = () => {
@@ -132,11 +259,15 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
         
         // If session expired, clear cache and redirect
         if (now >= expiresAt) {
-          console.log('Session expired, clearing cache')
           clearAllCache(queryClient)
+          profileAbortController.current?.abort()
+          inFlightProfileRequest.current = null
+          setIsProfileLoading(false)
           setUser(null)
           setSession(null)
           setPreviousUserId(null)
+          setProfile(null)
+          setProfileError(null)
           router.push('/auth/signin')
         }
       }
@@ -153,34 +284,58 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
     try {
       // Clear cache first
       clearAllCache(queryClient)
-      
+      profileAbortController.current?.abort()
+      inFlightProfileRequest.current = null
+      setIsProfileLoading(false)
+
       // Sign out from Supabase
       await supabase.auth.signOut()
-      
+
       // Update state
       setUser(null)
       setSession(null)
       setPreviousUserId(null)
-      
+      setProfile(null)
+      setProfileError(null)
+
       // Redirect to home
       router.push('/')
     } catch (error) {
       console.error('Error during sign out:', error)
       // Even on error, clear local state and redirect
       clearAllCache(queryClient)
+      profileAbortController.current?.abort()
+      inFlightProfileRequest.current = null
+      setIsProfileLoading(false)
       setUser(null)
       setSession(null)
       setPreviousUserId(null)
+      setProfile(null)
+      setProfileError(null)
       router.push('/')
     }
   }
-  
+
+  const currentUserId = user?.id ?? null
+
+  const refetchProfile = useCallback(async () => {
+    if (!currentUserId) {
+      setProfile(null)
+      return null
+    }
+    return fetchProfile(currentUserId, { force: true })
+  }, [currentUserId, fetchProfile])
+
   const value = {
     user,
     session,
+    profile,
+    profileError,
     isLoading,
+    isProfileLoading,
+    refetchProfile,
     signOut,
   }
-  
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -23,14 +23,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { useUserProfile } from '@/lib/hooks/use-user-profile'
+import { useAuth } from '@/components/providers/auth-provider'
 import { formatName, formatInitials } from '@/lib/utils/format-name'
 import { clientSignOut } from '@/lib/auth/client-auth'
 import { useQueryClient } from '@tanstack/react-query'
 
 export function NavUser() {
   const { isMobile } = useSidebar()
-  const { user, profile } = useUserProfile()
+  const { user, profile } = useAuth()
   const queryClient = useQueryClient()
   
   if (!user) {
@@ -41,8 +41,7 @@ export function NavUser() {
     await clientSignOut(queryClient)
   }
   
-  const profileData = profile as { full_name?: string; name?: string } | null
-  const name = profileData?.full_name || profileData?.name || 'User'
+  const name = profile?.name || user.user_metadata?.full_name || 'User'
   const displayName = formatName(name)
   const initials = formatInitials(name)
   const email = user.email || ''

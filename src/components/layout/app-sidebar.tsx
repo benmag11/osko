@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   BookOpen,
   Info,
@@ -15,6 +15,9 @@ import {
 
 import { NavUser } from '@/components/layout/nav-user'
 import { useIsAdmin } from '@/lib/hooks/use-is-admin'
+import { useQueryClient } from '@tanstack/react-query'
+import { prefetchDashboardData } from '@/lib/supabase/dashboard-bootstrap.client'
+import { useNavigationMetrics } from '@/lib/metrics/use-navigation-metrics'
 import {
   Sidebar,
   SidebarContent,
@@ -66,6 +69,50 @@ const navItems: NavItem[] = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const { isAdmin } = useIsAdmin()
+  const queryClient = useQueryClient()
+  const router = useRouter()
+  const { markNavigation } = useNavigationMetrics()
+  const intentTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const prefetchedRoutesRef = React.useRef(new Set<string>())
+
+  React.useEffect(() => {
+    void prefetchDashboardData(queryClient)
+  }, [queryClient])
+
+  const schedulePrefetch = React.useCallback((href: string) => {
+    if (prefetchedRoutesRef.current.has(href)) {
+      return
+    }
+
+    if (intentTimeoutRef.current) {
+      clearTimeout(intentTimeoutRef.current)
+    }
+
+    intentTimeoutRef.current = setTimeout(() => {
+      prefetchedRoutesRef.current.add(href)
+      try {
+        router.prefetch(href)
+      } catch (error) {
+        console.debug('Failed to prefetch route', href, error)
+      }
+      void prefetchDashboardData(queryClient)
+    }, 120)
+  }, [queryClient, router])
+
+  const cancelPrefetch = React.useCallback(() => {
+    if (intentTimeoutRef.current) {
+      clearTimeout(intentTimeoutRef.current)
+      intentTimeoutRef.current = null
+    }
+  }, [])
+
+  React.useEffect(() => {
+    return () => {
+      if (intentTimeoutRef.current) {
+        clearTimeout(intentTimeoutRef.current)
+      }
+    }
+  }, [])
   
   // Filter nav items based on admin status
   const filteredNavItems = navItems.filter(item => !item.adminOnly || isAdmin)
@@ -115,13 +162,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu>
             {filteredNavItems.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild 
+                <SidebarMenuButton
+                  asChild
                   isActive={pathname === item.url}
                   tooltip={item.title}
                   className="text-[15px]"
                 >
-                  <Link href={item.url}>
+                  <Link
+                    href={item.url}
+                    onClick={(event) => {
+                      if (
+                        event.metaKey ||
+                        event.ctrlKey ||
+                        event.shiftKey ||
+                        event.altKey ||
+                        (event.nativeEvent instanceof MouseEvent && event.nativeEvent.button !== 0)
+                      ) {
+                        return
+                      }
+                      markNavigation(item.url)
+                    }}
+                    onPointerEnter={() => schedulePrefetch(item.url)}
+                    onPointerLeave={cancelPrefetch}
+                    onFocus={() => schedulePrefetch(item.url)}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </Link>

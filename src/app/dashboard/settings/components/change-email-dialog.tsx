@@ -18,10 +18,9 @@ import {
 } from '@/components/ui/input-otp'
 import { verifyPasswordForEmailChange, requestEmailChange, verifyEmailChangeOtp, resendEmailChangeOtp } from '../actions'
 import { Eye, EyeOff } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
-import { invalidateUserCache } from '@/lib/cache/cache-utils'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { useUserProfile } from '@/lib/hooks/use-user-profile'
 
 interface ChangeEmailDialogProps {
   open: boolean
@@ -47,7 +46,7 @@ export function ChangeEmailDialog({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [resendCooldown, setResendCooldown] = useState(0)
   const [emailChangeSuccess, setEmailChangeSuccess] = useState(false)
-  const queryClient = useQueryClient()
+  const { refetchProfile } = useUserProfile()
 
   const resetDialog = () => {
     setStep('password')
@@ -139,8 +138,8 @@ export function ChangeEmailDialog({
         await supabase.auth.refreshSession()
         
         // Invalidate cache to update email display throughout the app
-        await invalidateUserCache(queryClient)
-        
+        await refetchProfile()
+
         setEmailChangeSuccess(true)
         setSuccessMessage(result.message || 'Email successfully changed')
         

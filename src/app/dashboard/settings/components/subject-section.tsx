@@ -7,6 +7,10 @@ import { updateUserSubjects } from '../actions'
 import { ChevronDown, Check, X, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Subject } from '@/lib/types/database'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/queries/query-keys'
+import { useUserProfile } from '@/lib/hooks/use-user-profile'
+import { generateSlug } from '@/lib/utils/slug'
 
 interface SubjectSectionProps {
   allSubjects: Subject[]
@@ -20,6 +24,8 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
   )
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const queryClient = useQueryClient()
+  const { user, refetchProfile } = useUserProfile()
   
   // Store original subjects for cancel functionality
   const originalSubjectIds = useMemo(() => userSubjects.map(s => s.id), [userSubjects])
@@ -73,15 +79,37 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
 
     startTransition(async () => {
       const result = await updateUserSubjects(selectedSubjectIds)
-      
+
       if (result.error) {
         setError(result.error)
-      } else {
-        setIsExpanded(false)
-        setError(null)
+        return
       }
+
+      const updatedSubjects = allSubjects
+        .filter(subject => selectedSubjectIds.includes(subject.id))
+
+      if (user?.id) {
+        queryClient.setQueryData(
+          queryKeys.user.subjects(user.id),
+          updatedSubjects.map(subject => ({
+            ...subject,
+            slug: generateSlug(subject),
+          }))
+        )
+      }
+
+      await refetchProfile()
+      setIsExpanded(false)
+      setError(null)
     })
-  }, [selectedSubjectIds, hasChanges])
+  }, [
+    allSubjects,
+    hasChanges,
+    queryClient,
+    refetchProfile,
+    selectedSubjectIds,
+    user?.id,
+  ])
 
   return (
     <div className="px-6 py-5">

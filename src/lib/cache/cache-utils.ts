@@ -1,4 +1,22 @@
 import { QueryClient } from '@tanstack/react-query'
+import type { DefaultOptions } from '@tanstack/react-query'
+import { QUERY_CONFIG } from '@/lib/config/cache'
+
+type AnyDefaultOptions = DefaultOptions<unknown, unknown, unknown, unknown>
+
+function cloneDefaultOptions(options?: AnyDefaultOptions): AnyDefaultOptions | undefined {
+  if (!options) {
+    return undefined
+  }
+
+  return {
+    ...options,
+    queries: options.queries ? { ...options.queries } : undefined,
+    mutations: options.mutations ? { ...options.mutations } : undefined,
+  }
+}
+
+const originalDefaults = new WeakMap<QueryClient, AnyDefaultOptions | undefined>()
 
 /**
  * Cache invalidation utilities for managing React Query cache
@@ -27,19 +45,21 @@ export async function invalidateUserCache(queryClient: QueryClient) {
  * Should be called on sign-out to prevent data leakage
  */
 export function clearAllCache(queryClient: QueryClient) {
+  if (!originalDefaults.has(queryClient)) {
+    originalDefaults.set(queryClient, cloneDefaultOptions(queryClient.getDefaultOptions()))
+  }
+
   // Cancel all in-flight queries
   queryClient.cancelQueries()
   
   // Clear the entire cache
   queryClient.clear()
   
-  // Reset default options to ensure clean state
-  queryClient.setDefaultOptions({
-    queries: {
-      staleTime: 0,
-      gcTime: 0,
-    },
-  })
+  const defaults = originalDefaults.get(queryClient) ?? cloneDefaultOptions(QUERY_CONFIG.defaultOptions as AnyDefaultOptions)
+
+  if (defaults) {
+    queryClient.setDefaultOptions(cloneDefaultOptions(defaults)!)
+  }
 }
 
 /**

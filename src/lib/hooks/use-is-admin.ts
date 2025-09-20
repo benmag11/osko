@@ -1,12 +1,12 @@
 'use client'
 
-import { useUserProfile } from './use-user-profile'
+import { useAuth } from '@/components/providers/auth-provider'
 
 export function useIsAdmin() {
-  const { profile, isLoading } = useUserProfile()
-  
+  const { profile, isProfileLoading } = useAuth()
+
   return {
     isAdmin: profile?.is_admin ?? false,
-    isLoading,
+    isLoading: isProfileLoading,
   }
 }

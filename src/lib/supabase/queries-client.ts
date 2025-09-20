@@ -36,6 +36,33 @@ async function withRetryClient<T>(
   throw lastError
 }
 
+export async function getAllSubjectsClient(): Promise<Subject[]> {
+  return withRetryClient(async () => {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .in('level', ['Higher', 'Ordinary'])
+      .order('name')
+      .order('level')
+
+    if (error) {
+      console.error('Error fetching all subjects:', error)
+      throw new QueryError(
+        'Failed to fetch subjects',
+        'SUBJECTS_FETCH_ERROR',
+        error
+      )
+    }
+
+    return (data || []) as Subject[]
+  }).catch(error => {
+    console.error('Failed to fetch subjects after retries:', error)
+    return []
+  })
+}
+
 // Client-side version of getUserSubjects for use in hooks
 export async function getUserSubjectsClient(userId: string): Promise<UserSubjectWithSubject[]> {
   // Validate user ID format (UUID)

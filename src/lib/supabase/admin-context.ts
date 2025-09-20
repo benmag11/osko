@@ -7,7 +7,7 @@ import { cache } from 'react'
  * Cached admin verification function
  * Uses React's cache to ensure we only check once per request
  */
-const getCachedAdminStatus = cache(async (userId: string): Promise<boolean> => {
+export const getCachedAdminStatus = cache(async (userId: string): Promise<boolean> => {
   const supabase = await createServerSupabaseClient()
   
   const { data: profile } = await supabase

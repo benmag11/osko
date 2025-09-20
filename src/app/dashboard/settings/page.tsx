@@ -1,15 +1,15 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getAllSubjects, getUserSubjects } from '@/lib/supabase/queries'
 import { SettingsClient } from './settings-client'
 import { DashboardPage } from '@/components/layout/dashboard-page'
+import { getDashboardBootstrap } from '@/lib/supabase/dashboard-bootstrap'
+import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query'
+import { QUERY_CONFIG } from '@/lib/config/cache'
+import { queryKeys } from '@/lib/queries/query-keys'
+import { generateSlug } from '@/lib/utils/slug'
 
 export default async function SettingsPage() {
-  const supabase = await createServerSupabaseClient()
-  
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
+  const bootstrap = await getDashboardBootstrap()
+
+  if (!bootstrap.session?.user) {
     return (
       <DashboardPage>
         <p className="text-center text-warm-text-muted">
@@ -18,31 +18,31 @@ export default async function SettingsPage() {
       </DashboardPage>
     )
   }
-  
-  // Get user profile
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('name')
-    .eq('user_id', user.id)
-    .single()
-  
-  // Fetch all available subjects and user's current subjects
-  const [allSubjects, userSubjectsData] = await Promise.all([
-    getAllSubjects(),
-    getUserSubjects(user.id)
-  ])
-  
-  // Extract just the subject data from user subjects
-  const userSubjects = userSubjectsData.map(us => us.subject)
-  
+  const userId = bootstrap.session.user.id
+  const queryClient = new QueryClient({
+    defaultOptions: QUERY_CONFIG.defaultOptions,
+  })
+
+  const subjectsWithSlug = bootstrap.userSubjects.map((userSubject) => ({
+    ...userSubject.subject,
+    slug: generateSlug(userSubject.subject),
+  }))
+
+  queryClient.setQueryData(queryKeys.user.subjects(userId), subjectsWithSlug)
+  queryClient.setQueryData(queryKeys.subjects(), bootstrap.allSubjects)
+
+  const dehydratedState = dehydrate(queryClient)
+
   return (
     <DashboardPage>
-      <SettingsClient 
-        userEmail={user.email || ''}
-        userName={profile?.name || ''}
-        allSubjects={allSubjects}
-        userSubjects={userSubjects}
-      />
+      <HydrationBoundary state={dehydratedState}>
+        <SettingsClient 
+          userEmail={bootstrap.session.user.email || ''}
+          userName={bootstrap.profile?.name || ''}
+          allSubjects={bootstrap.allSubjects}
+          userSubjects={bootstrap.userSubjects.map(us => us.subject)}
+        />
+      </HydrationBoundary>
     </DashboardPage>
   )
 }
