@@ -96,10 +96,10 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
     profileAbortController.current?.abort()
     const controller = new AbortController()
     profileAbortController.current = controller
+    setIsProfileLoading(true)
 
     const requestPromise = (async () => {
       try {
-        setIsProfileLoading(true)
         const { data, error } = await supabase
           .from('user_profiles')
           .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at')
@@ -130,18 +130,19 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
         setProfile(null)
         setProfileError(formattedError)
         return null
-      } finally {
-        if (inFlightProfileRequest.current === requestPromise) {
-          inFlightProfileRequest.current = null
-        }
+      }
+    })()
+
+    inFlightProfileRequest.current = requestPromise
+    requestPromise.finally(() => {
+      if (inFlightProfileRequest.current === requestPromise) {
+        inFlightProfileRequest.current = null
         if (profileAbortController.current === controller) {
           profileAbortController.current = null
         }
         setIsProfileLoading(false)
       }
-    })()
-
-    inFlightProfileRequest.current = requestPromise
+    })
     return requestPromise
   }, [supabase])
 
