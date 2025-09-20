@@ -2,7 +2,7 @@ import { QueryClient } from '@tanstack/react-query'
 import type { DefaultOptions } from '@tanstack/react-query'
 import { QUERY_CONFIG } from '@/lib/config/cache'
 
-type AnyDefaultOptions = DefaultOptions<unknown, unknown, unknown, unknown>
+type AnyDefaultOptions = DefaultOptions
 
 function cloneDefaultOptions(options?: AnyDefaultOptions): AnyDefaultOptions | undefined {
   if (!options) {

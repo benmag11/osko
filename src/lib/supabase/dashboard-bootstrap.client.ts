@@ -4,24 +4,17 @@ import { createClient } from './client'
 import { getUserSubjectsClient, getAllSubjectsClient } from './queries-client'
 import { queryKeys } from '@/lib/queries/query-keys'
 import type { QueryClient } from '@tanstack/react-query'
-import type { DashboardBootstrapPayload } from './dashboard-bootstrap'
-import type { UserProfile, UserSubjectWithSubject, Subject } from '@/lib/types/database'
+import type { UserProfile, Subject } from '@/lib/types/database'
 import { generateSlug } from '@/lib/utils/slug'
 
 export async function prefetchDashboardData(
   queryClient: QueryClient
-): Promise<DashboardBootstrapPayload | null> {
+): Promise<void> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session?.user) {
-    return {
-      session: null,
-      profile: null,
-      userSubjects: [],
-      allSubjects: [],
-      isAdmin: false,
-    }
+    return
   }
 
   const userId = session.user.id
@@ -49,32 +42,16 @@ export async function prefetchDashboardData(
     queryClient.setQueryData(queryKeys.user.profile(userId), profileEntry)
   }
 
-  type SubjectWithSlug = Subject & { slug: string }
+  const cachedSubjects = queryClient.getQueryData(queryKeys.user.subjects(userId))
 
-  let userSubjects = queryClient.getQueryData<
-    UserSubjectWithSubject[] | SubjectWithSlug[]
-  >(
-    queryKeys.user.subjects(userId)
-  )
-
-  if (!userSubjects) {
-    userSubjects = await getUserSubjectsClient(userId)
+  if (!cachedSubjects) {
+    const userSubjects = await getUserSubjectsClient(userId)
+    const subjectsWithSlug = userSubjects.map(({ subject }) => ({
+      ...subject,
+      slug: generateSlug(subject),
+    }))
+    queryClient.setQueryData(queryKeys.user.subjects(userId), subjectsWithSlug)
   }
-
-  const subjectsWithSlug = (userSubjects ?? []).map((entry) => {
-    if ('subject' in entry) {
-      const subject = (entry as UserSubjectWithSubject).subject
-      return {
-        ...subject,
-        slug: generateSlug(subject),
-      }
-    }
-
-    const subject = entry as SubjectWithSlug
-    return subject.slug ? subject : { ...subject, slug: generateSlug(subject) }
-  })
-
-  queryClient.setQueryData(queryKeys.user.subjects(userId), subjectsWithSlug)
 
   let allSubjects = queryClient.getQueryData<Subject[]>(queryKeys.subjects())
 
@@ -84,12 +61,4 @@ export async function prefetchDashboardData(
   }
 
   queryClient.setQueryData(queryKeys.user.admin(userId), profileEntry.profile?.is_admin ?? false)
-
-  return {
-    session,
-    profile: profileEntry.profile,
-    userSubjects: userSubjects ?? [],
-    allSubjects: allSubjects ?? [],
-    isAdmin: profileEntry.profile?.is_admin ?? false,
-  }
 }
