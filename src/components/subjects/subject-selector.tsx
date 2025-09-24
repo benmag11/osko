@@ -130,15 +130,15 @@ export function SubjectSelector({
         {showSelectedPanel && (
           <div className="order-1 lg:order-2 lg:col-span-1">
             <Card className={cn(
-              "lg:sticky lg:top-4 border-stone-400",
+              "lg:sticky lg:top-4 border-stone-400 gap-4",
               actions && "lg:h-[596px]" // Optimized height for better proportion
             )}>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-0">
                 <CardTitle className="text-lg">
                   Selected Subjects ({selectedSubjectsWithDetails.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent>
                 {/* ScrollArea only on desktop, natural flow on mobile */}
                 <div className="lg:h-[404px] lg:overflow-y-auto lg:pr-4">
                   {selectedSubjectsWithDetails.length === 0 ? (
