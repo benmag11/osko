@@ -19,7 +19,7 @@ export function HeroSection() {
         <div className="lg:hidden flex flex-col items-center text-center">
           {/* Combined headline for mobile */}
           <div className="mb-8 sm:mb-10 w-full">
-            <h1 className="font-serif font-semibold text-warm-text-primary text-5xl sm:text-7xl md:text-8xl leading-tight">
+            <h1 className="font-serif font-semibold text-warm-text-primary text-6xl sm:text-7xl md:text-8xl leading-tight">
               It&apos;s Studyclix...
             </h1>
             <h2 className="font-sans font-semibold text-warm-text-secondary text-6xl sm:text-6xl md:text-7xl mt-3 mb-3">
