@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -131,19 +131,16 @@ export function SubjectSelector({
           <div className="order-1 lg:order-2 lg:col-span-1">
             <Card className={cn(
               "lg:sticky lg:top-4 border-stone-400",
-              actions && "lg:h-[616px]" // Match onboarding card height when actions present
+              actions && "lg:h-[596px]" // Optimized height for better proportion
             )}>
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2">
                 <CardTitle className="text-lg">
                   Selected Subjects ({selectedSubjectsWithDetails.length})
                 </CardTitle>
-                <CardDescription className="text-sm">
-                  Your chosen subjects and levels
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {/* ScrollArea only on desktop, natural flow on mobile */}
-                <div className="lg:h-[378px] lg:overflow-y-auto lg:pr-4">
+                <div className="lg:h-[404px] lg:overflow-y-auto lg:pr-4">
                   {selectedSubjectsWithDetails.length === 0 ? (
                     <p className="text-sm text-[#9e9e9e] text-center py-8">
                       No subjects selected yet
