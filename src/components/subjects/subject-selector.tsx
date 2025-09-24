@@ -209,7 +209,7 @@ export function SubjectSelector({
 
           {/* Subject Cards Grid - 2 columns as requested */}
           <div className="lg:h-[560px] lg:overflow-y-auto lg:pr-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {filteredSubjects.map((group) => (
                 <SubjectCard
                   key={group.name}
