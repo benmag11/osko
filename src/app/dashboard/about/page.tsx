@@ -24,7 +24,7 @@ export default function AboutPage() {
           <div className="prose prose-stone max-w-3xl mx-auto">
             <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
               Adding subjects takes a lot of time. All (popular) subjects 
-              fully uploaded by <b><i>October 1st</i></b>.
+              fully uploaded by <b><i>October 10th</i></b>.
             </p>
           </div>
         </div>
@@ -43,20 +43,17 @@ export default function AboutPage() {
       {/* Why I Built This Section */}
       <section className="mb-12">
         <h2 className="text-4xl font-sans font-semibold text-stone-800 mb-6">
-          Why did I spend my summer building this website?
+          Why this website exists?
         </h2>
         <div className="prose prose-stone max-w-none">
           <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-            [This is placeholder text that you can replace with your personal story about why you built OSCO. 
-            You might want to talk about your motivation, the problems you saw with existing resources, 
-            your vision for helping students prepare for the Leaving Certificate, or any personal experiences 
-            that inspired you to create this platform. This section gives your project a human touch and helps 
-            users connect with the mission behind OSCO.]
+            I spent all of 6th year complaining that Studyclix was fairly shite for the 90 euro everyone paid for it, so decided to put my time where my mouth was and built this.
           </p>
           <p className="text-warm-text-secondary leading-relaxed font-serif text-xl mt-4">
-            [You could also discuss the technical challenges you overcame, the features you&apos;re most proud of, 
-            or your future plans for the platform. This is your space to share your journey and passion for 
-            education technology.]
+            I got 625, am studying engineering in UCD, and so eventually, when I find the time, I will give the greatest Maths grinds the Leaving Cert has ever seen. Stay tuned. 
+          </p>
+          <p className="text-warm-text-secondary leading-relaxed font-serif text-xl mt-4">
+            I hope someone finds some usefulness in the literal hundreds of hours I have spent making this website, it will only get better, and I won't sell out (for a while anyways).
           </p>
         </div>
       </section>

@@ -11,17 +11,17 @@ const subjects: SubjectStatus[] = [
   { name: 'Biology', isCompleted: true },
   { name: 'Chemistry', isCompleted: true },
   { name: 'Computer Science', isCompleted: true },
-  { name: 'Construction', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Construction', isCompleted: false, expectedDate: 'October 10th' },
   { name: 'English', isCompleted: true },
   { name: 'French', isCompleted: true },
-  { name: 'Geography', isCompleted: false, expectedDate: 'October 1st' },
-  { name: 'German', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Geography', isCompleted: false, expectedDate: 'October 10th' },
+  { name: 'German', isCompleted: false, expectedDate: 'October 10th' },
   { name: 'History', isCompleted: true },
-  { name: 'Irish', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Irish', isCompleted: false, expectedDate: 'October 10th' },
   { name: 'Mathematics', isCompleted: true },
-  { name: 'Physical Education', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Physical Education', isCompleted: false, expectedDate: 'October 10th' },
   { name: 'Physics', isCompleted: true },
-  { name: 'Spanish', isCompleted: false, expectedDate: 'October 1st' },
+  { name: 'Spanish', isCompleted: false, expectedDate: 'October 10th' },
 ]
 
 export function SubjectStatusTable() {
