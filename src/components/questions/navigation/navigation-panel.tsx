@@ -96,11 +96,11 @@ export function QuestionNavigationPanel({
     >
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="icon"
         aria-label="Open question navigation"
         className={cn(
-          'fixed right-6 top-24 z-40 h-11 w-11 rounded-full border-stone-300 bg-white/95 shadow-sm backdrop-blur transition-all duration-300',
+          'fixed right-6 top-8 z-40 h-10 w-10 transition-all duration-300',
           isScrolled ? 'opacity-70 hover:opacity-100' : 'opacity-100',
           isOpen && 'opacity-100',
         )}
@@ -113,12 +113,12 @@ export function QuestionNavigationPanel({
         onMouseEnter={() => setIsTriggerHover(true)}
         onMouseLeave={() => setIsTriggerHover(false)}
       >
-        <ChevronsDown className="h-5 w-5 text-stone-600" />
+        <ChevronsDown className="h-6 w-6 text-stone-600" />
       </Button>
 
       <div
         className={cn(
-          'pointer-events-none fixed right-6 top-36 z-40 w-[min(320px,28vw)] max-w-sm transition-all duration-300 ease-out',
+          'pointer-events-none fixed right-6 top-16 z-40 w-[min(320px,28vw)] max-w-sm transition-all duration-300 ease-out',
           isOpen
             ? 'pointer-events-auto translate-y-0 opacity-100'
             : 'translate-y-2 opacity-0'
@@ -127,7 +127,7 @@ export function QuestionNavigationPanel({
         onMouseLeave={() => setIsPanelHover(false)}
       >
         <div
-          className="flex flex-col gap-3 rounded-2xl border border-stone-200/70 bg-white/97 p-4 shadow-[0_15px_30px_-12px_rgba(0,0,0,0.25)] overflow-hidden"
+          className="flex flex-col gap-3 rounded-2xl border border-stone-300 bg-white/90 p-4 shadow-[0_15px_30px_-12px_rgba(0,0,0,0.25)] overflow-hidden"
           style={{ height: PANEL_MAX_HEIGHT }}
         >
           <div className="flex flex-col gap-3 flex-shrink-0">
@@ -146,25 +146,24 @@ export function QuestionNavigationPanel({
           </div>
 
           <div className="flex flex-1 flex-col overflow-hidden min-h-0">
-            <div className="mb-2 flex items-center justify-between text-xs text-warm-text-muted flex-shrink-0">
-              <span>
-                Questions
-                {formattedTotalCount && (
-                  <span className="ml-1 font-semibold text-warm-text-secondary">· {formattedTotalCount}</span>
-                )}
-              </span>
-              {isNavigating && (
-                <span className="flex items-center gap-1 text-salmon-500">
+            <div className="mb-2 flex items-center justify-between flex-shrink-0">
+              <span className="text-sm font-medium text-warm-text-secondary">Jump to question</span>
+
+              {isNavigating ? (
+                <span className="flex items-center gap-1 text-xs text-salmon-500">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   Jumping…
                 </span>
-              )}
-              {!isNavigating && isFetching && !showLoadingState && (
-                <span className="flex items-center gap-1 text-stone-400">
+              ) : isFetching && !showLoadingState ? (
+                <span className="flex items-center gap-1 text-xs text-stone-400">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   Updating…
                 </span>
-              )}
+              ) : formattedTotalCount ? (
+                <span className="flex items-center text-xs text-salmon-500">
+                  {formattedTotalCount} questions
+                </span>
+              ) : null}
             </div>
 
             {showLoadingState && (
@@ -203,16 +202,16 @@ export function QuestionNavigationPanel({
                         type="button"
                         onClick={() => onSelectQuestion(item)}
                         className={cn(
-                          'w-full rounded-lg px-3 py-2 text-left text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-salmon-400/60',
+                          'flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-salmon-400/60',
                           isActive
                             ? 'bg-salmon-500/15 text-salmon-600 shadow-[inset_0_0_0_1px_rgba(217,119,87,0.4)]'
                             : 'text-warm-text-secondary hover:bg-stone-100/80'
                         )}
                       >
-                        <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-md bg-stone-100 text-[11px] font-medium text-stone-500">
+                        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-stone-100 text-[11px] font-medium text-stone-500">
                           {item.position}
                         </span>
-                        <span className="align-middle leading-5">{item.title}</span>
+                        <span className="flex-1 leading-5">{item.title}</span>
                       </button>
                     )
                   })}

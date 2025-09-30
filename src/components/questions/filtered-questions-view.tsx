@@ -39,6 +39,8 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const [isNavigating, setIsNavigating] = useState(false)
   const programmaticScrollRef = useRef(false)
   const hasNextPageRef = useRef(false)
+  const navigationSequenceRef = useRef(0)
+  const activeNavigationTokenRef = useRef<number | null>(null)
 
   // Scroll visibility for zoom controls
   const { isVisible: controlsVisible, targetRef: filtersRef } = useScrollVisibility({
@@ -124,6 +126,10 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   }, [])
 
   const updateActiveQuestion = useCallback(() => {
+    if (programmaticScrollRef.current) {
+      return
+    }
+
     const anchor = captureAnchor()
     if (anchor?.type === 'question') {
       setActiveQuestionId(anchor.id)
@@ -222,6 +228,72 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const handleQuestionSelect = useCallback(async (item: QuestionNavigationItem) => {
     setIsNavigating(true)
 
+    const navigationToken = navigationSequenceRef.current + 1
+    navigationSequenceRef.current = navigationToken
+    activeNavigationTokenRef.current = navigationToken
+
+    const settleScroll = async (
+      initialElement: HTMLElement,
+      offset: number,
+    ) => {
+      if (typeof window === 'undefined') {
+        return
+      }
+
+      await new Promise<void>((resolve) => {
+        const settleFramesRequired = 6
+        const velocityThreshold = 0.5
+        const maxDurationMs = 3000
+        let animationFrameId: number | null = null
+        let stableFrameCount = 0
+        let lastScrollY = window.scrollY
+        const startTime = performance.now()
+
+        const cancel = () => {
+          if (animationFrameId !== null) {
+            window.cancelAnimationFrame(animationFrameId)
+            animationFrameId = null
+          }
+        }
+
+        const step = () => {
+          if (activeNavigationTokenRef.current !== navigationToken) {
+            cancel()
+            resolve()
+            return
+          }
+
+          const elapsed = performance.now() - startTime
+          const candidateElement = findQuestionNode(item.id) ?? initialElement
+
+          if (candidateElement) {
+            const rect = candidateElement.getBoundingClientRect()
+            const absoluteTop = rect.top + window.scrollY
+            const targetTop = Math.max(absoluteTop - offset, 0)
+            const distanceToTarget = Math.abs(window.scrollY - targetTop)
+            const velocity = Math.abs(window.scrollY - lastScrollY)
+
+            if (distanceToTarget <= 2 || velocity <= velocityThreshold) {
+              stableFrameCount += 1
+            } else {
+              stableFrameCount = 0
+            }
+          }
+
+          if (stableFrameCount >= settleFramesRequired || elapsed >= maxDurationMs) {
+            cancel()
+            resolve()
+            return
+          }
+
+          lastScrollY = window.scrollY
+          animationFrameId = window.requestAnimationFrame(step)
+        }
+
+        animationFrameId = window.requestAnimationFrame(step)
+      })
+    }
+
     try {
       const element = await ensureQuestionInDom(item.id)
 
@@ -230,24 +302,34 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
         return
       }
 
+      if (typeof window === 'undefined') {
+        setActiveQuestionId(item.id)
+        return
+      }
+
       programmaticScrollRef.current = true
 
+      const offset = Math.max(window.innerHeight * 0.2, 120)
       const rect = element.getBoundingClientRect()
       const absoluteTop = rect.top + window.scrollY
-      const offset = Math.max(window.innerHeight * 0.2, 120)
       const targetTop = Math.max(absoluteTop - offset, 0)
 
-      window.scrollTo({ top: targetTop, behavior: 'smooth' })
       setActiveQuestionId(item.id)
+      window.scrollTo({ top: targetTop, behavior: 'smooth' })
 
-      window.setTimeout(() => {
+      await settleScroll(element, offset)
+
+      if (activeNavigationTokenRef.current === navigationToken) {
         programmaticScrollRef.current = false
         updateActiveQuestion()
-      }, 650)
+      }
     } finally {
-      setIsNavigating(false)
+      if (activeNavigationTokenRef.current === navigationToken) {
+        activeNavigationTokenRef.current = null
+        setIsNavigating(false)
+      }
     }
-  }, [ensureQuestionInDom, updateActiveQuestion])
+  }, [ensureQuestionInDom, findQuestionNode, updateActiveQuestion])
 
   useLayoutEffect(() => {
     if (!pendingAnchorRef.current) return
