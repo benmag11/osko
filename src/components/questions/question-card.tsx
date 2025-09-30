@@ -12,6 +12,7 @@ import { QuestionEditModal } from '@/components/admin/question-edit-modal'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
 import type { Question } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
+import { formatQuestionTitle } from '@/lib/utils/question-format'
 import styles from './styles/question-card.module.css'
 
 interface QuestionCardProps {
@@ -41,39 +42,7 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
   }, [])
-  
-  // Format question parts with parentheses
-  const formattedParts = question.question_parts.length > 0
-    ? question.question_parts.map(part => `(${part})`).join(', ')
-    : ''
-  
-  // Build title with format: [year] - Paper [paper_number] - [Deferred] - Question [question_number] - [subparts]
-  let title = `${question.year}`
-  
-  // Add paper number if it exists
-  if (question.paper_number) {
-    title += ` - Paper ${question.paper_number}`
-  }
-  
-  // Add "Deferred" as a separate segment if exam_type is deferred
-  if (question.exam_type === 'deferred') {
-    title += ' - Deferred'
-  }
-  
-  // Add question number if it exists (null means no question number)
-  if (question.question_number !== null) {
-    title += ` - Question ${question.question_number}`
-  }
-  
-  // Add formatted parts if they exist
-  if (formattedParts) {
-    title += ` - ${formattedParts}`
-  }
-
-  // Add additional info if it exists
-  if (question.additional_info) {
-    title += ` - ${question.additional_info}`
-  }
+  const title = formatQuestionTitle(question)
 
   return (
     <div

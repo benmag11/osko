@@ -26,3 +26,18 @@ export function buildSearchQueryParams(
  * This ensures TypeScript catches any parameter mismatches
  */
 export type SearchQueryParams = ReturnType<typeof buildSearchQueryParams>
+
+/**
+ * Query parameter builder for the get_question_navigation_list RPC function
+ * Mirrors the filter structure of search_questions_paginated without cursor/limit
+ */
+export function buildNavigationQueryParams(filters: Filters) {
+  return {
+    p_subject_id: filters.subjectId,
+    p_search_terms: filters.searchTerms || null,
+    p_years: filters.years || null,
+    p_topic_ids: filters.topicIds || null,
+    p_exam_types: filters.examTypes || null,
+    p_question_numbers: filters.questionNumbers || null,
+  }
+}

@@ -1,14 +1,16 @@
 'use client'
 
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-display'
 import { QuestionCard } from './question-card'
-import { ScrollAwareZoomControls } from './scroll-aware-zoom-controls'
 import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import { useScrollVisibility } from '@/lib/hooks/use-scroll-visibility'
 import { useFilters } from '@/components/providers/filter-provider'
+import { useQuestionNavigationList } from '@/lib/hooks/use-question-navigation-list'
+import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation-list'
+import { QuestionNavigationPanel } from './navigation/navigation-panel'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
 import '../questions/styles/zoom.css'
 
@@ -33,6 +35,10 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
   const [zoom, setZoom] = useState(MAX_ZOOM)
+  const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
+  const programmaticScrollRef = useRef(false)
+  const hasNextPageRef = useRef(false)
 
   // Scroll visibility for zoom controls
   const { isVisible: controlsVisible, targetRef: filtersRef } = useScrollVisibility({
@@ -48,11 +54,27 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     isFetchingNextPage,
     loadMoreRef,
     isLoading,
-    error
+    error,
+    hasNextPage,
+    fetchNextPage,
   } = useQuestionsQuery({
     filters,
     initialData,
   })
+
+  const {
+    items: navigationItems,
+    totalCount: navigationTotalCount,
+    isLoading: isNavigationLoading,
+    isFetching: isNavigationFetching,
+    error: navigationError,
+    refetch: refetchNavigation,
+    idToIndex: navigationIndexMap,
+  } = useQuestionNavigationList(filters)
+
+  useEffect(() => {
+    hasNextPageRef.current = Boolean(hasNextPage)
+  }, [hasNextPage])
 
   const captureAnchor = useCallback((): ViewportAnchor | null => {
     if (typeof window === 'undefined') return null
@@ -101,6 +123,47 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     return { type: 'container', ratio: containerRatio }
   }, [])
 
+  const updateActiveQuestion = useCallback(() => {
+    const anchor = captureAnchor()
+    if (anchor?.type === 'question') {
+      setActiveQuestionId(anchor.id)
+    }
+  }, [captureAnchor])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    let rafId: number | null = null
+
+    const handleScroll = () => {
+      if (programmaticScrollRef.current) {
+        return
+      }
+
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+
+      rafId = window.requestAnimationFrame(() => {
+        updateActiveQuestion()
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    updateActiveQuestion()
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+    }
+  }, [updateActiveQuestion])
+
+  useEffect(() => {
+    updateActiveQuestion()
+  }, [questions, updateActiveQuestion])
+
   const restoreAnchor = useCallback((anchor: ViewportAnchor | null) => {
     if (!anchor || typeof window === 'undefined') return
     const container = containerRef.current
@@ -131,6 +194,61 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     window.scrollTo({ top: targetTop })
   }, [])
 
+  const findQuestionNode = useCallback((questionId: string) => {
+    if (!containerRef.current) return null
+    return containerRef.current.querySelector<HTMLElement>(`[data-question-id='${questionId}']`)
+  }, [])
+
+  const ensureQuestionInDom = useCallback(async (questionId: string) => {
+    let element = findQuestionNode(questionId)
+    if (element) {
+      return element
+    }
+
+    const MAX_FETCH_ATTEMPTS = 40
+    let attempts = 0
+
+    while (!element && hasNextPageRef.current && attempts < MAX_FETCH_ATTEMPTS) {
+      await fetchNextPage()
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      element = findQuestionNode(questionId)
+      attempts += 1
+    }
+
+    return element ?? null
+  }, [fetchNextPage, findQuestionNode])
+
+  const handleQuestionSelect = useCallback(async (item: QuestionNavigationItem) => {
+    setIsNavigating(true)
+
+    try {
+      const element = await ensureQuestionInDom(item.id)
+
+      if (!element) {
+        console.warn(`Question ${item.id} not found in DOM after fetching additional pages.`)
+        return
+      }
+
+      programmaticScrollRef.current = true
+
+      const rect = element.getBoundingClientRect()
+      const absoluteTop = rect.top + window.scrollY
+      const offset = Math.max(window.innerHeight * 0.2, 120)
+      const targetTop = Math.max(absoluteTop - offset, 0)
+
+      window.scrollTo({ top: targetTop, behavior: 'smooth' })
+      setActiveQuestionId(item.id)
+
+      window.setTimeout(() => {
+        programmaticScrollRef.current = false
+        updateActiveQuestion()
+      }, 650)
+    } finally {
+      setIsNavigating(false)
+    }
+  }, [ensureQuestionInDom, updateActiveQuestion])
+
   useLayoutEffect(() => {
     if (!pendingAnchorRef.current) return
     restoreAnchor(pendingAnchorRef.current)
@@ -152,16 +270,26 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const canZoomOut = zoom > MIN_ZOOM + 0.0001
   const maxWidth = `${(BASE_MAX_WIDTH_PX * zoom).toFixed(2)}px`
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
+  const activeIndex = activeQuestionId ? navigationIndexMap.get(activeQuestionId) ?? null : null
 
   return (
     <>
-      <ScrollAwareZoomControls
+      <QuestionNavigationPanel
         canZoomIn={canZoomIn}
         canZoomOut={canZoomOut}
         onZoomIn={() => adjustZoom(1)}
         onZoomOut={() => adjustZoom(-1)}
-        scrollTargetRef={filtersRef}
+        items={navigationItems}
+        activeQuestionId={activeQuestionId}
+        activeIndex={activeIndex}
         isScrolled={!controlsVisible}
+        isLoading={isNavigationLoading}
+        isFetching={isNavigationFetching}
+        isNavigating={isNavigating}
+        totalCount={navigationTotalCount}
+        error={navigationError}
+        onRetry={() => refetchNavigation()}
+        onSelectQuestion={handleQuestionSelect}
       />
 
       <div

@@ -26,8 +26,8 @@ export function useQuestionsQuery({
   const {
     data,
     error,
-    fetchNextPage,
     hasNextPage,
+    fetchNextPage,
     isFetchingNextPage,
     status,
     isLoading,
@@ -35,7 +35,7 @@ export function useQuestionsQuery({
   } = useInfiniteQuery({
     queryKey: queryKeys.infinite(filters),
     queryFn: async ({ pageParam, signal }) => {
-      return searchQuestionsClient(filters, pageParam, signal)
+      return searchQuestionsClient(filters, { cursor: pageParam, signal })
     },
     initialPageParam: null as QuestionCursor | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor,
@@ -95,6 +95,7 @@ export function useQuestionsQuery({
     isFetchingNextPage,
     hasNextPage,
     loadMoreRef: ref,
+    fetchNextPage,
     status,
     refetch,
   }

@@ -1,9 +1,20 @@
 'use client'
 
 import { createClient } from './client'
-import { buildSearchQueryParams } from './query-builders'
+import { buildSearchQueryParams, buildNavigationQueryParams } from './query-builders'
 import { QueryError } from '@/lib/errors'
-import type { Filters, PaginatedResponse, QuestionCursor } from '@/lib/types/database'
+import type {
+  Filters,
+  PaginatedResponse,
+  QuestionCursor,
+  NavigationListResponse,
+} from '@/lib/types/database'
+
+export interface SearchQuestionsClientOptions {
+  cursor?: QuestionCursor | null
+  signal?: AbortSignal
+  limit?: number
+}
 
 // Error handling wrapper with retry logic (same as server queries)
 async function withRetry<T>(
@@ -43,8 +54,7 @@ async function withRetry<T>(
  */
 export async function searchQuestionsClient(
   filters: Filters,
-  cursor?: QuestionCursor | null,
-  signal?: AbortSignal
+  { cursor = null, signal, limit }: SearchQuestionsClientOptions = {}
 ): Promise<PaginatedResponse> {
   // Check if the signal is already aborted
   if (signal?.aborted) {
@@ -69,7 +79,7 @@ export async function searchQuestionsClient(
     })
     
     // Build query parameters using shared builder
-    const queryParams = buildSearchQueryParams(filters, cursor, 20)
+    const queryParams = buildSearchQueryParams(filters, cursor, limit ?? 20)
     
     // Race between the RPC call and the abort signal
     const { data, error } = await Promise.race([
@@ -95,5 +105,59 @@ export async function searchQuestionsClient(
     }
     
     return data as PaginatedResponse
+  })
+}
+
+/**
+ * Optimized navigation list fetcher using get_question_navigation_list RPC
+ * Returns minimal fields required for navigation titles in a single request
+ */
+export async function getNavigationListClient(
+  filters: Filters,
+  { signal }: { signal?: AbortSignal } = {}
+): Promise<NavigationListResponse> {
+  if (signal?.aborted) {
+    throw new Error('Request was cancelled')
+  }
+
+  return withRetry(async () => {
+    const supabase = createClient()
+
+    if (signal?.aborted) {
+      throw new Error('Request was cancelled')
+    }
+
+    const abortPromise = new Promise<never>((_, reject) => {
+      if (signal) {
+        const handler = () => reject(new Error('Request was cancelled'))
+        signal.addEventListener('abort', handler, { once: true })
+      }
+    })
+
+    const queryParams = buildNavigationQueryParams(filters)
+
+    const { data, error } = await Promise.race([
+      supabase.rpc('get_question_navigation_list', queryParams),
+      abortPromise,
+    ])
+
+    if (error) {
+      console.error('Error fetching question navigation list:', error)
+      throw new QueryError(
+        'Failed to fetch question navigation list',
+        'QUESTION_NAVIGATION_LIST_ERROR',
+        error,
+      )
+    }
+
+    if (!data) {
+      throw new QueryError(
+        'No data returned from question navigation list',
+        'NO_DATA_ERROR',
+        null,
+      )
+    }
+
+    return data as NavigationListResponse
   })
 }

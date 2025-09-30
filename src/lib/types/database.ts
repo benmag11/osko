@@ -46,6 +46,17 @@ export interface Database {
         }
         Returns: PaginatedResponse
       }
+      get_question_navigation_list: {
+        Args: {
+          p_subject_id: string
+          p_search_terms?: string[] | null
+          p_years?: number[] | null
+          p_topic_ids?: string[] | null
+          p_exam_types?: string[] | null
+          p_question_numbers?: number[] | null
+        }
+        Returns: NavigationListResponse
+      }
       get_available_years: {
         Args: {
           p_subject_id: string
@@ -129,6 +140,16 @@ export interface Question {
   subject?: Subject
 }
 
+export interface QuestionNavigationFields {
+  id: string
+  year: number
+  paper_number: number | null
+  question_number: number | null
+  question_parts: string[]
+  exam_type: 'normal' | 'deferred' | 'supplemental'
+  additional_info: string | null
+}
+
 export interface QuestionTopic {
   question_id: string
   topic_id: string
@@ -156,6 +177,11 @@ export interface QuestionCursor {
 export interface PaginatedResponse {
   questions: Question[]
   next_cursor: QuestionCursor | null
+  total_count: number
+}
+
+export interface NavigationListResponse {
+  items: QuestionNavigationFields[]
   total_count: number
 }
 
