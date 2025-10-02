@@ -28,7 +28,7 @@ interface QuestionNavigationPanelProps {
   onSelectQuestion: (item: QuestionNavigationItem) => void | Promise<void>
 }
 
-const PANEL_MAX_HEIGHT = 'min(70vh, 520px)'
+const PANEL_MAX_HEIGHT = 'min(70vh, 600px)'
 
 export function QuestionNavigationPanel({
   canZoomIn,
@@ -113,12 +113,15 @@ export function QuestionNavigationPanel({
         onMouseEnter={() => setIsTriggerHover(true)}
         onMouseLeave={() => setIsTriggerHover(false)}
       >
-        <ChevronsDown className="h-6 w-6 text-stone-600" />
+        <ChevronsDown className={cn(
+          "h-6 w-6 transition-colors duration-300",
+          isOpen ? "text-salmon-500" : "text-stone-600"
+        )} />
       </Button>
 
       <div
         className={cn(
-          'pointer-events-none fixed right-6 top-16 z-40 w-[min(320px,28vw)] max-w-sm transition-all duration-300 ease-out',
+          'pointer-events-none fixed right-6 top-20 z-40 w-[min(320px,28vw)] max-w-sm transition-all duration-300 ease-out',
           isOpen
             ? 'pointer-events-auto translate-y-0 opacity-100'
             : 'translate-y-2 opacity-0'
@@ -127,7 +130,7 @@ export function QuestionNavigationPanel({
         onMouseLeave={() => setIsPanelHover(false)}
       >
         <div
-          className="flex flex-col gap-3 rounded-2xl border border-stone-300 bg-white/90 p-4 shadow-[0_15px_30px_-12px_rgba(0,0,0,0.25)] overflow-hidden"
+          className="flex flex-col gap-3 rounded-2xl border border-stone-300 bg-white p-4 shadow-[0_15px_30px_-12px_rgba(0,0,0,0.25)] overflow-hidden"
           style={{ height: PANEL_MAX_HEIGHT }}
         >
           <div className="flex flex-col gap-3 flex-shrink-0">
