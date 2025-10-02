@@ -119,6 +119,17 @@ export function QuestionNavigationPanel({
         )} />
       </Button>
 
+      {/* Invisible bridge to prevent panel from closing when mouse travels through gap */}
+      <div
+        className={cn(
+          'fixed right-6 top-[4.5rem] z-40 h-3 w-[min(320px,28vw)] max-w-sm',
+          isOpen ? 'pointer-events-auto' : 'pointer-events-none'
+        )}
+        onMouseEnter={() => setIsPanelHover(true)}
+        onMouseLeave={() => setIsPanelHover(false)}
+        aria-hidden="true"
+      />
+
       <div
         className={cn(
           'pointer-events-none fixed right-6 top-20 z-40 w-[min(320px,28vw)] max-w-sm transition-all duration-300 ease-out',
