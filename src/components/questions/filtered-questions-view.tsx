@@ -238,6 +238,8 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
 
     setIsNavigating(true)
     setAutoFetchPauseCount((count) => count + 1)
+    programmaticScrollRef.current = true
+    programmaticNavigationOwnerRef.current = navigationToken
     setActiveQuestionId(item.id)
 
     try {
@@ -331,9 +333,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
         }
 
         const offset = Math.max(window.innerHeight * 0.2, 120)
-
-        programmaticScrollRef.current = true
-        programmaticNavigationOwnerRef.current = navigationToken
 
         await new Promise<void>((resolve) => {
           const maxDurationMs = 1600

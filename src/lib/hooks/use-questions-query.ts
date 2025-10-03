@@ -11,12 +11,14 @@ interface UseQuestionsQueryOptions {
   filters: Filters
   initialData?: PaginatedResponse
   enabled?: boolean
+  pauseAutoFetch?: boolean
 }
 
 export function useQuestionsQuery({
   filters,
   initialData,
-  enabled = true
+  enabled = true,
+  pauseAutoFetch = false
 }: UseQuestionsQueryOptions) {
   const { ref, inView } = useInView({
     threshold: 0,
@@ -82,10 +84,10 @@ export function useQuestionsQuery({
 
   // Automatically fetch next page when scrolling
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+    if (!pauseAutoFetch && inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage()
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+  }, [pauseAutoFetch, inView, hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return {
     questions,
