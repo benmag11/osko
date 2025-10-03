@@ -142,9 +142,15 @@ export function QuestionNavigationPanel({
       >
         <div
           className="flex flex-col gap-3 rounded-2xl border border-stone-300 bg-white p-4 shadow-[0_15px_30px_-12px_rgba(0,0,0,0.25)] overflow-hidden"
-          style={{ height: PANEL_MAX_HEIGHT }}
+          style={{ height: PANEL_MAX_HEIGHT, touchAction: 'pan-y' }}
         >
-          <div className="flex flex-col gap-3 flex-shrink-0">
+          <div
+            className="flex flex-col gap-3 flex-shrink-0"
+            onWheel={(e) => {
+              // Prevent wheel events on non-scrollable area from reaching the window
+              e.preventDefault()
+            }}
+          >
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-medium text-warm-text-secondary">Zoom</span>
               <div className="flex items-center gap-2">
@@ -160,7 +166,13 @@ export function QuestionNavigationPanel({
           </div>
 
           <div className="flex flex-1 flex-col overflow-hidden min-h-0">
-            <div className="mb-2 flex items-center justify-between flex-shrink-0">
+            <div
+              className="mb-2 flex items-center justify-between flex-shrink-0"
+              onWheel={(e) => {
+                // Prevent wheel events on header from reaching the window
+                e.preventDefault()
+              }}
+            >
               <span className="text-sm font-medium text-warm-text-secondary">Jump to question</span>
 
               {isNavigating ? (

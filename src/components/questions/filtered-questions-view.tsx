@@ -12,6 +12,7 @@ import { useQuestionNavigationList } from '@/lib/hooks/use-question-navigation-l
 import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation-list'
 import { QuestionNavigationPanel } from './navigation/navigation-panel'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
+import { useAuth } from '@/components/providers/auth-provider'
 import '../questions/styles/zoom.css'
 
 const MAX_ZOOM = 1
@@ -32,6 +33,7 @@ interface FilteredQuestionsViewProps {
 
 export function FilteredQuestionsView({ topics, initialData }: FilteredQuestionsViewProps) {
   const { filters } = useFilters()
+  const { user, profile } = useAuth()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
   const [zoom, setZoom] = useState(MAX_ZOOM)
@@ -426,6 +428,8 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const maxWidth = `${(BASE_MAX_WIDTH_PX * zoom).toFixed(2)}px`
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
   const activeIndex = activeQuestionId ? navigationIndexMap.get(activeQuestionId) ?? null : null
+  const canReport = Boolean(user)
+  const isAdmin = Boolean(profile?.is_admin)
 
   return (
     <>
@@ -484,7 +488,13 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                       <Separator className="bg-exam-text-muted/30" />
                     </div>
                   )}
-                  <QuestionCard question={question} zoom={zoom} />
+                  <QuestionCard
+                    question={question}
+                    zoom={zoom}
+                    availableTopics={topics}
+                    canReport={canReport}
+                    isAdmin={isAdmin}
+                  />
                 </div>
               ))}
 

@@ -1,16 +1,13 @@
 'use client'
 
-import { useState, useCallback, memo } from 'react'
+import { useState, useCallback, memo, forwardRef } from 'react'
 import type { CSSProperties } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
-import { useIsAdmin } from '@/lib/hooks/use-is-admin'
-import { useTopics } from '@/lib/hooks/use-topics'
-import { useAuth } from '@/components/providers/auth-provider'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
-import type { Question } from '@/lib/types/database'
+import type { Question, Topic } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
 import styles from './styles/question-card.module.css'
@@ -18,15 +15,22 @@ import styles from './styles/question-card.module.css'
 interface QuestionCardProps {
   question: Question
   zoom?: number
+  availableTopics?: Topic[]
+  canReport?: boolean
+  isAdmin?: boolean
 }
 
-export const QuestionCard = memo(function QuestionCard({ question, zoom }: QuestionCardProps) {
+export const QuestionCard = memo(function QuestionCard({
+  question,
+  zoom,
+  availableTopics,
+  canReport = false,
+  isAdmin = false,
+}: QuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
-  const { isAdmin } = useIsAdmin()
-  const { user } = useAuth()
-  const { topics } = useTopics(question.subject_id)
+  const topics = availableTopics ?? []
   
   // Check if URLs are valid
   const hasValidQuestionImage = question.question_image_url &&
@@ -72,7 +76,7 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
               Edit Metadata
             </Button>
           )}
-          {user && (
+          {canReport && (
             <Button
               onClick={() => setShowReportDialog(true)}
               size="sm"
@@ -146,16 +150,16 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
         </div>
       </div>
       
-      {isAdmin && (
+      {isAdmin && showEditModal && (
         <QuestionEditModal
           question={question}
-          topics={topics || []}
+          topics={topics}
           open={showEditModal}
           onOpenChange={setShowEditModal}
         />
       )}
-      
-      {user && (
+
+      {canReport && showReportDialog && (
         <QuestionReportDialog
           question={question}
           open={showReportDialog}
