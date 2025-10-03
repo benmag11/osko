@@ -29,15 +29,21 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
   const { topics } = useTopics(question.subject_id)
   
   // Check if URLs are valid
-  const hasValidQuestionImage = question.question_image_url && 
+  const hasValidQuestionImage = question.question_image_url &&
     question.question_image_url !== 'placeholder' &&
-    (question.question_image_url.startsWith('http') || 
+    (question.question_image_url.startsWith('http') ||
      question.question_image_url.startsWith('/'))
-     
-  const hasValidMarkingScheme = question.marking_scheme_image_url && 
+
+  const hasValidMarkingScheme = question.marking_scheme_image_url &&
     question.marking_scheme_image_url !== 'placeholder' &&
-    (question.marking_scheme_image_url.startsWith('http') || 
+    (question.marking_scheme_image_url.startsWith('http') ||
      question.marking_scheme_image_url.startsWith('/'))
+
+  // Use real dimensions from database with sensible fallbacks
+  const questionImageWidth = question.question_image_width ?? 2480
+  const questionImageHeight = question.question_image_height ?? 1500
+  const markingSchemeWidth = question.marking_scheme_image_width ?? 2480
+  const markingSchemeHeight = question.marking_scheme_image_height ?? 1500
   
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
@@ -86,8 +92,8 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
             <Image
               src={question.question_image_url!}
               alt={`Question ${question.question_number ?? 'image'}`}
-              width={1073}
-              height={800}
+              width={questionImageWidth}
+              height={questionImageHeight}
               className="w-full h-auto"
               priority={false}
             />
@@ -131,8 +137,8 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
               <Image
                 src={question.marking_scheme_image_url!}
                 alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                width={1073}
-                height={800}
+                width={markingSchemeWidth}
+                height={markingSchemeHeight}
                 className="w-full h-auto rounded-lg"
               />
             </div>

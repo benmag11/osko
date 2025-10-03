@@ -128,6 +128,10 @@ export interface Question {
   exam_type: 'normal' | 'deferred' | 'supplemental'
   question_image_url: string | null
   marking_scheme_image_url: string | null
+  question_image_width: number | null
+  question_image_height: number | null
+  marking_scheme_image_width: number | null
+  marking_scheme_image_height: number | null
   full_text: string | null
   additional_info: string | null
   word_coordinates: WordCoordinate[] | null
