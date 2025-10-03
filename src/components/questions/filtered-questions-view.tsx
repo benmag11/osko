@@ -38,9 +38,12 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
   const [isNavigating, setIsNavigating] = useState(false)
   const programmaticScrollRef = useRef(false)
+  const programmaticNavigationOwnerRef = useRef<number | null>(null)
   const hasNextPageRef = useRef(false)
   const navigationSequenceRef = useRef(0)
   const activeNavigationTokenRef = useRef<number | null>(null)
+  const [autoFetchPauseCount, setAutoFetchPauseCount] = useState(0)
+  const pauseAutoFetch = autoFetchPauseCount > 0
 
   // Scroll visibility for zoom controls
   const { isVisible: controlsVisible, targetRef: filtersRef } = useScrollVisibility({
@@ -62,6 +65,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   } = useQuestionsQuery({
     filters,
     initialData,
+    pauseAutoFetch,
   })
 
   const {
@@ -226,73 +230,15 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   }, [fetchNextPage, findQuestionNode])
 
   const handleQuestionSelect = useCallback(async (item: QuestionNavigationItem) => {
-    setIsNavigating(true)
-
     const navigationToken = navigationSequenceRef.current + 1
     navigationSequenceRef.current = navigationToken
     activeNavigationTokenRef.current = navigationToken
 
-    const settleScroll = async (
-      initialElement: HTMLElement,
-      offset: number,
-    ) => {
-      if (typeof window === 'undefined') {
-        return
-      }
+    const isTokenActive = () => activeNavigationTokenRef.current === navigationToken
 
-      await new Promise<void>((resolve) => {
-        const settleFramesRequired = 6
-        const velocityThreshold = 0.5
-        const maxDurationMs = 3000
-        let animationFrameId: number | null = null
-        let stableFrameCount = 0
-        let lastScrollY = window.scrollY
-        const startTime = performance.now()
-
-        const cancel = () => {
-          if (animationFrameId !== null) {
-            window.cancelAnimationFrame(animationFrameId)
-            animationFrameId = null
-          }
-        }
-
-        const step = () => {
-          if (activeNavigationTokenRef.current !== navigationToken) {
-            cancel()
-            resolve()
-            return
-          }
-
-          const elapsed = performance.now() - startTime
-          const candidateElement = findQuestionNode(item.id) ?? initialElement
-
-          if (candidateElement) {
-            const rect = candidateElement.getBoundingClientRect()
-            const absoluteTop = rect.top + window.scrollY
-            const targetTop = Math.max(absoluteTop - offset, 0)
-            const distanceToTarget = Math.abs(window.scrollY - targetTop)
-            const velocity = Math.abs(window.scrollY - lastScrollY)
-
-            if (distanceToTarget <= 2 || velocity <= velocityThreshold) {
-              stableFrameCount += 1
-            } else {
-              stableFrameCount = 0
-            }
-          }
-
-          if (stableFrameCount >= settleFramesRequired || elapsed >= maxDurationMs) {
-            cancel()
-            resolve()
-            return
-          }
-
-          lastScrollY = window.scrollY
-          animationFrameId = window.requestAnimationFrame(step)
-        }
-
-        animationFrameId = window.requestAnimationFrame(step)
-      })
-    }
+    setIsNavigating(true)
+    setAutoFetchPauseCount((count) => count + 1)
+    setActiveQuestionId(item.id)
 
     try {
       const element = await ensureQuestionInDom(item.id)
@@ -302,34 +248,162 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
         return
       }
 
-      if (typeof window === 'undefined') {
-        setActiveQuestionId(item.id)
+      if (!isTokenActive()) {
         return
       }
 
-      programmaticScrollRef.current = true
+      if (typeof window === 'undefined') {
+        return
+      }
 
-      const offset = Math.max(window.innerHeight * 0.2, 120)
-      const rect = element.getBoundingClientRect()
-      const absoluteTop = rect.top + window.scrollY
-      const targetTop = Math.max(absoluteTop - offset, 0)
+      const waitForElementStability = async (): Promise<HTMLElement> => {
+        if (typeof window === 'undefined') {
+          return element
+        }
 
-      setActiveQuestionId(item.id)
-      window.scrollTo({ top: targetTop, behavior: 'smooth' })
+        let latestElement = element
 
-      await settleScroll(element, offset)
+        await new Promise<void>((resolve) => {
+          const stableFramesRequired = 8
+          const movementThreshold = 0.5
+          const maxDurationMs = 2000
+          let stableFrameCount = 0
+          let animationFrameId: number | null = null
+          let lastRect = latestElement.getBoundingClientRect()
+          const startTime = performance.now()
 
-      if (activeNavigationTokenRef.current === navigationToken) {
+          const finish = () => {
+            if (animationFrameId !== null) {
+              window.cancelAnimationFrame(animationFrameId)
+              animationFrameId = null
+            }
+            resolve()
+          }
+
+          const step = () => {
+            if (!isTokenActive()) {
+              finish()
+              return
+            }
+
+            const candidate = findQuestionNode(item.id) ?? latestElement
+            if (candidate !== latestElement) {
+              latestElement = candidate
+              lastRect = latestElement.getBoundingClientRect()
+              stableFrameCount = 0
+            }
+
+            const rect = latestElement.getBoundingClientRect()
+            const deltaTop = Math.abs(rect.top - lastRect.top)
+            const deltaHeight = Math.abs(rect.height - lastRect.height)
+
+            if (deltaTop <= movementThreshold && deltaHeight <= movementThreshold && rect.height > 0) {
+              stableFrameCount += 1
+            } else {
+              stableFrameCount = 0
+            }
+
+            lastRect = rect
+
+            if (stableFrameCount >= stableFramesRequired || performance.now() - startTime >= maxDurationMs) {
+              finish()
+              return
+            }
+
+            animationFrameId = window.requestAnimationFrame(step)
+          }
+
+          animationFrameId = window.requestAnimationFrame(step)
+        })
+
+        return latestElement
+      }
+
+      const stableElement = await waitForElementStability()
+
+      if (!isTokenActive()) {
+        return
+      }
+
+      const performScroll = async (targetElement: HTMLElement) => {
+        if (typeof window === 'undefined') {
+          return
+        }
+
+        const offset = Math.max(window.innerHeight * 0.2, 120)
+
+        programmaticScrollRef.current = true
+        programmaticNavigationOwnerRef.current = navigationToken
+
+        await new Promise<void>((resolve) => {
+          const maxDurationMs = 1600
+          const settleThreshold = 1.5
+          let animationFrameId: number | null = null
+          const startTime = performance.now()
+          let currentElement = targetElement
+
+          const finish = () => {
+            if (animationFrameId !== null) {
+              window.cancelAnimationFrame(animationFrameId)
+              animationFrameId = null
+            }
+            resolve()
+          }
+
+          const step = () => {
+            if (!isTokenActive()) {
+              finish()
+              return
+            }
+
+            const candidate = findQuestionNode(item.id) ?? currentElement
+            if (candidate !== currentElement) {
+              currentElement = candidate
+            }
+
+            const rect = currentElement.getBoundingClientRect()
+            const absoluteTop = rect.top + window.scrollY
+            const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+            const targetTop = clamp(absoluteTop - offset, 0, maxScroll)
+            const currentTop = window.scrollY
+            const distance = targetTop - currentTop
+
+            if (Math.abs(distance) <= settleThreshold || performance.now() - startTime >= maxDurationMs) {
+              window.scrollTo({ top: targetTop })
+              finish()
+              return
+            }
+
+            const nextTop = currentTop + distance * 0.28
+            window.scrollTo({ top: nextTop })
+            animationFrameId = window.requestAnimationFrame(step)
+          }
+
+          animationFrameId = window.requestAnimationFrame(step)
+        })
+      }
+
+      await performScroll(stableElement)
+
+      if (isTokenActive() && programmaticNavigationOwnerRef.current === navigationToken) {
         programmaticScrollRef.current = false
-        updateActiveQuestion()
+        programmaticNavigationOwnerRef.current = null
+        setActiveQuestionId(item.id)
       }
     } finally {
+      if (programmaticNavigationOwnerRef.current === navigationToken) {
+        programmaticScrollRef.current = false
+        programmaticNavigationOwnerRef.current = null
+      }
+
       if (activeNavigationTokenRef.current === navigationToken) {
         activeNavigationTokenRef.current = null
         setIsNavigating(false)
       }
+
+      setAutoFetchPauseCount((count) => Math.max(0, count - 1))
     }
-  }, [ensureQuestionInDom, findQuestionNode, updateActiveQuestion])
+  }, [ensureQuestionInDom, findQuestionNode])
 
   useLayoutEffect(() => {
     if (!pendingAnchorRef.current) return
