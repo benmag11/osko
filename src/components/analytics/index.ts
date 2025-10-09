@@ -1,0 +1,1 @@
+export { GoogleAnalytics, trackEvent } from './google-analytics'
