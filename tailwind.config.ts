@@ -122,12 +122,6 @@ const config: Config = {
         "exam-text-muted": "#737373",
         "exam-neutral": "#6B6B6B",
         "exam-neutral-dark": "#404040",
-        // Filter section colors (already warm)
-        "filter-section-bg": "#F5F4ED",
-        "filter-section-border": "#F0EEE6",
-        "filter-pill-bg": "#FFFEFB",
-        "filter-pill-border": "#D0D0D0",
-        "filter-clear-text": "#E59C84",
       },
       borderRadius: {
         lg: "var(--radius)",

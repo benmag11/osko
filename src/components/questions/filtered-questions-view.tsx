@@ -1,21 +1,25 @@
 'use client'
 
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-display'
 import { QuestionCard } from './question-card'
-import { ScrollAwareZoomControls } from './scroll-aware-zoom-controls'
 import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import { useScrollVisibility } from '@/lib/hooks/use-scroll-visibility'
 import { useFilters } from '@/components/providers/filter-provider'
+import { useQuestionNavigationList } from '@/lib/hooks/use-question-navigation-list'
+import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation-list'
+import { QuestionNavigationPanel } from './navigation/navigation-panel'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
+import { useAuth } from '@/components/providers/auth-provider'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import '../questions/styles/zoom.css'
 
 const MAX_ZOOM = 1
 const MIN_ZOOM = 0.5
 const ZOOM_STEP = 0.1
-const BASE_MAX_WIDTH_PX = 896 // Tailwind's max-w-4xl -> 56rem @ 16px
+const BASE_MAX_WIDTH_PX = EXAM_VIEW_BASE_MAX_WIDTH_PX // Tailwind's max-w-4xl -> 56rem @ 16px
 
 type ViewportAnchor =
   | { type: 'question'; id: string; ratio: number }
@@ -30,9 +34,19 @@ interface FilteredQuestionsViewProps {
 
 export function FilteredQuestionsView({ topics, initialData }: FilteredQuestionsViewProps) {
   const { filters } = useFilters()
+  const { user, profile } = useAuth()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
   const [zoom, setZoom] = useState(MAX_ZOOM)
+  const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
+  const programmaticScrollRef = useRef(false)
+  const programmaticNavigationOwnerRef = useRef<number | null>(null)
+  const hasNextPageRef = useRef(false)
+  const navigationSequenceRef = useRef(0)
+  const activeNavigationTokenRef = useRef<number | null>(null)
+  const [autoFetchPauseCount, setAutoFetchPauseCount] = useState(0)
+  const pauseAutoFetch = autoFetchPauseCount > 0
 
   // Scroll visibility for zoom controls
   const { isVisible: controlsVisible, targetRef: filtersRef } = useScrollVisibility({
@@ -48,11 +62,28 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     isFetchingNextPage,
     loadMoreRef,
     isLoading,
-    error
+    error,
+    hasNextPage,
+    fetchNextPage,
   } = useQuestionsQuery({
     filters,
     initialData,
+    pauseAutoFetch,
   })
+
+  const {
+    items: navigationItems,
+    totalCount: navigationTotalCount,
+    isLoading: isNavigationLoading,
+    isFetching: isNavigationFetching,
+    error: navigationError,
+    refetch: refetchNavigation,
+    idToIndex: navigationIndexMap,
+  } = useQuestionNavigationList(filters)
+
+  useEffect(() => {
+    hasNextPageRef.current = Boolean(hasNextPage)
+  }, [hasNextPage])
 
   const captureAnchor = useCallback((): ViewportAnchor | null => {
     if (typeof window === 'undefined') return null
@@ -101,6 +132,51 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     return { type: 'container', ratio: containerRatio }
   }, [])
 
+  const updateActiveQuestion = useCallback(() => {
+    if (programmaticScrollRef.current) {
+      return
+    }
+
+    const anchor = captureAnchor()
+    if (anchor?.type === 'question') {
+      setActiveQuestionId(anchor.id)
+    }
+  }, [captureAnchor])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    let rafId: number | null = null
+
+    const handleScroll = () => {
+      if (programmaticScrollRef.current) {
+        return
+      }
+
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+
+      rafId = window.requestAnimationFrame(() => {
+        updateActiveQuestion()
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    updateActiveQuestion()
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+      }
+    }
+  }, [updateActiveQuestion])
+
+  useEffect(() => {
+    updateActiveQuestion()
+  }, [questions, updateActiveQuestion])
+
   const restoreAnchor = useCallback((anchor: ViewportAnchor | null) => {
     if (!anchor || typeof window === 'undefined') return
     const container = containerRef.current
@@ -131,6 +207,206 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     window.scrollTo({ top: targetTop })
   }, [])
 
+  const findQuestionNode = useCallback((questionId: string) => {
+    if (!containerRef.current) return null
+    return containerRef.current.querySelector<HTMLElement>(`[data-question-id='${questionId}']`)
+  }, [])
+
+  const ensureQuestionInDom = useCallback(async (questionId: string) => {
+    let element = findQuestionNode(questionId)
+    if (element) {
+      return element
+    }
+
+    const MAX_FETCH_ATTEMPTS = 40
+    let attempts = 0
+
+    while (!element && hasNextPageRef.current && attempts < MAX_FETCH_ATTEMPTS) {
+      await fetchNextPage()
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      element = findQuestionNode(questionId)
+      attempts += 1
+    }
+
+    return element ?? null
+  }, [fetchNextPage, findQuestionNode])
+
+  const handleQuestionSelect = useCallback(async (item: QuestionNavigationItem) => {
+    const navigationToken = navigationSequenceRef.current + 1
+    navigationSequenceRef.current = navigationToken
+    activeNavigationTokenRef.current = navigationToken
+
+    const isTokenActive = () => activeNavigationTokenRef.current === navigationToken
+
+    setIsNavigating(true)
+    setAutoFetchPauseCount((count) => count + 1)
+    programmaticScrollRef.current = true
+    programmaticNavigationOwnerRef.current = navigationToken
+    setActiveQuestionId(item.id)
+
+    try {
+      const element = await ensureQuestionInDom(item.id)
+
+      if (!element) {
+        console.warn(`Question ${item.id} not found in DOM after fetching additional pages.`)
+        return
+      }
+
+      if (!isTokenActive()) {
+        return
+      }
+
+      if (typeof window === 'undefined') {
+        return
+      }
+
+      const waitForElementStability = async (): Promise<HTMLElement> => {
+        if (typeof window === 'undefined') {
+          return element
+        }
+
+        let latestElement = element
+
+        await new Promise<void>((resolve) => {
+          const stableFramesRequired = 8
+          const movementThreshold = 0.5
+          const maxDurationMs = 2000
+          let stableFrameCount = 0
+          let animationFrameId: number | null = null
+          let lastRect = latestElement.getBoundingClientRect()
+          const startTime = performance.now()
+
+          const finish = () => {
+            if (animationFrameId !== null) {
+              window.cancelAnimationFrame(animationFrameId)
+              animationFrameId = null
+            }
+            resolve()
+          }
+
+          const step = () => {
+            if (!isTokenActive()) {
+              finish()
+              return
+            }
+
+            const candidate = findQuestionNode(item.id) ?? latestElement
+            if (candidate !== latestElement) {
+              latestElement = candidate
+              lastRect = latestElement.getBoundingClientRect()
+              stableFrameCount = 0
+            }
+
+            const rect = latestElement.getBoundingClientRect()
+            const deltaTop = Math.abs(rect.top - lastRect.top)
+            const deltaHeight = Math.abs(rect.height - lastRect.height)
+
+            if (deltaTop <= movementThreshold && deltaHeight <= movementThreshold && rect.height > 0) {
+              stableFrameCount += 1
+            } else {
+              stableFrameCount = 0
+            }
+
+            lastRect = rect
+
+            if (stableFrameCount >= stableFramesRequired || performance.now() - startTime >= maxDurationMs) {
+              finish()
+              return
+            }
+
+            animationFrameId = window.requestAnimationFrame(step)
+          }
+
+          animationFrameId = window.requestAnimationFrame(step)
+        })
+
+        return latestElement
+      }
+
+      const stableElement = await waitForElementStability()
+
+      if (!isTokenActive()) {
+        return
+      }
+
+      const performScroll = async (targetElement: HTMLElement) => {
+        if (typeof window === 'undefined') {
+          return
+        }
+
+        const offset = Math.max(window.innerHeight * 0.2, 120)
+
+        await new Promise<void>((resolve) => {
+          const maxDurationMs = 1600
+          const settleThreshold = 1.5
+          let animationFrameId: number | null = null
+          const startTime = performance.now()
+          let currentElement = targetElement
+
+          const finish = () => {
+            if (animationFrameId !== null) {
+              window.cancelAnimationFrame(animationFrameId)
+              animationFrameId = null
+            }
+            resolve()
+          }
+
+          const step = () => {
+            if (!isTokenActive()) {
+              finish()
+              return
+            }
+
+            const candidate = findQuestionNode(item.id) ?? currentElement
+            if (candidate !== currentElement) {
+              currentElement = candidate
+            }
+
+            const rect = currentElement.getBoundingClientRect()
+            const absoluteTop = rect.top + window.scrollY
+            const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+            const targetTop = clamp(absoluteTop - offset, 0, maxScroll)
+            const currentTop = window.scrollY
+            const distance = targetTop - currentTop
+
+            if (Math.abs(distance) <= settleThreshold || performance.now() - startTime >= maxDurationMs) {
+              window.scrollTo({ top: targetTop })
+              finish()
+              return
+            }
+
+            const nextTop = currentTop + distance * 0.28
+            window.scrollTo({ top: nextTop })
+            animationFrameId = window.requestAnimationFrame(step)
+          }
+
+          animationFrameId = window.requestAnimationFrame(step)
+        })
+      }
+
+      await performScroll(stableElement)
+
+      if (isTokenActive() && programmaticNavigationOwnerRef.current === navigationToken) {
+        programmaticScrollRef.current = false
+        programmaticNavigationOwnerRef.current = null
+        setActiveQuestionId(item.id)
+      }
+    } finally {
+      if (programmaticNavigationOwnerRef.current === navigationToken) {
+        programmaticScrollRef.current = false
+        programmaticNavigationOwnerRef.current = null
+      }
+
+      if (activeNavigationTokenRef.current === navigationToken) {
+        activeNavigationTokenRef.current = null
+        setIsNavigating(false)
+      }
+
+      setAutoFetchPauseCount((count) => Math.max(0, count - 1))
+    }
+  }, [ensureQuestionInDom, findQuestionNode])
+
   useLayoutEffect(() => {
     if (!pendingAnchorRef.current) return
     restoreAnchor(pendingAnchorRef.current)
@@ -152,16 +428,28 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const canZoomOut = zoom > MIN_ZOOM + 0.0001
   const maxWidth = `${(BASE_MAX_WIDTH_PX * zoom).toFixed(2)}px`
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
+  const activeIndex = activeQuestionId ? navigationIndexMap.get(activeQuestionId) ?? null : null
+  const canReport = Boolean(user)
+  const isAdmin = Boolean(profile?.is_admin)
 
   return (
     <>
-      <ScrollAwareZoomControls
+      <QuestionNavigationPanel
         canZoomIn={canZoomIn}
         canZoomOut={canZoomOut}
         onZoomIn={() => adjustZoom(1)}
         onZoomOut={() => adjustZoom(-1)}
-        scrollTargetRef={filtersRef}
+        items={navigationItems}
+        activeQuestionId={activeQuestionId}
+        activeIndex={activeIndex}
         isScrolled={!controlsVisible}
+        isLoading={isNavigationLoading}
+        isFetching={isNavigationFetching}
+        isNavigating={isNavigating}
+        totalCount={navigationTotalCount}
+        error={navigationError}
+        onRetry={() => refetchNavigation()}
+        onSelectQuestion={handleQuestionSelect}
       />
 
       <div
@@ -201,7 +489,15 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                       <Separator className="bg-exam-text-muted/30" />
                     </div>
                   )}
-                  <QuestionCard question={question} zoom={zoom} />
+                  <QuestionCard
+                    question={question}
+                    zoom={zoom}
+                    availableTopics={topics}
+                    canReport={canReport}
+                    isAdmin={isAdmin}
+                    displayWidth={BASE_MAX_WIDTH_PX * zoom}
+                    isPriority={index === 0}
+                  />
                 </div>
               ))}
 

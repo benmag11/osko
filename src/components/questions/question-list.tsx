@@ -2,8 +2,11 @@
 
 import { Separator } from '@/components/ui/separator'
 import { QuestionCard } from './question-card'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import type { Filters, PaginatedResponse } from '@/lib/types/database'
+import { useAuth } from '@/components/providers/auth-provider'
+import { useTopics } from '@/lib/hooks/use-topics'
 
 interface QuestionListProps {
   initialData: PaginatedResponse
@@ -11,6 +14,10 @@ interface QuestionListProps {
 }
 
 export function QuestionList({ initialData, filters }: QuestionListProps) {
+  const { user, profile } = useAuth()
+  const { topics } = useTopics(filters.subjectId)
+  const canReport = Boolean(user)
+  const isAdmin = Boolean(profile?.is_admin)
   const { 
     questions, 
     isFetchingNextPage, 
@@ -48,7 +55,15 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
               <Separator className="bg-exam-text-muted/30" />
             </div>
           )}
-          <QuestionCard question={question} zoom={1} />
+          <QuestionCard
+            question={question}
+            zoom={1}
+            availableTopics={topics}
+            canReport={canReport}
+            isAdmin={isAdmin}
+            displayWidth={EXAM_VIEW_BASE_MAX_WIDTH_PX}
+            isPriority={index === 0}
+          />
         </div>
       ))}
       

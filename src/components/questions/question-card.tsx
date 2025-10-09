@@ -1,82 +1,109 @@
 'use client'
 
-import { useState, useCallback, memo } from 'react'
+import { useState, useCallback, memo, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
-import { useIsAdmin } from '@/lib/hooks/use-is-admin'
-import { useTopics } from '@/lib/hooks/use-topics'
-import { useAuth } from '@/components/providers/auth-provider'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
-import type { Question } from '@/lib/types/database'
+import type { Question, Topic } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
+import { formatQuestionTitle } from '@/lib/utils/question-format'
+import { useInView } from 'react-intersection-observer'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import styles from './styles/question-card.module.css'
 
 interface QuestionCardProps {
   question: Question
   zoom?: number
+  availableTopics?: Topic[]
+  canReport?: boolean
+  isAdmin?: boolean
+  displayWidth?: number
+  isPriority?: boolean
 }
 
-export const QuestionCard = memo(function QuestionCard({ question, zoom }: QuestionCardProps) {
+export const QuestionCard = memo(function QuestionCard({
+  question,
+  zoom,
+  availableTopics,
+  canReport = false,
+  isAdmin = false,
+  displayWidth,
+  isPriority = false,
+}: QuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
-  const { isAdmin } = useIsAdmin()
-  const { user } = useAuth()
-  const { topics } = useTopics(question.subject_id)
+  const topics = availableTopics ?? []
   
   // Check if URLs are valid
-  const hasValidQuestionImage = question.question_image_url && 
+  const hasValidQuestionImage = question.question_image_url &&
     question.question_image_url !== 'placeholder' &&
-    (question.question_image_url.startsWith('http') || 
+    (question.question_image_url.startsWith('http') ||
      question.question_image_url.startsWith('/'))
-     
-  const hasValidMarkingScheme = question.marking_scheme_image_url && 
+
+  const hasValidMarkingScheme = question.marking_scheme_image_url &&
     question.marking_scheme_image_url !== 'placeholder' &&
-    (question.marking_scheme_image_url.startsWith('http') || 
+    (question.marking_scheme_image_url.startsWith('http') ||
      question.marking_scheme_image_url.startsWith('/'))
+
+  // Use real dimensions from database with sensible fallbacks
+  const questionImageWidth = question.question_image_width ?? 2480
+  const questionImageHeight = question.question_image_height ?? 1500
+  const markingSchemeWidth = question.marking_scheme_image_width ?? 2480
+  const markingSchemeHeight = question.marking_scheme_image_height ?? 1500
   
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
   }, [])
-  
-  // Format question parts with parentheses
-  const formattedParts = question.question_parts.length > 0
-    ? question.question_parts.map(part => `(${part})`).join(', ')
-    : ''
-  
-  // Build title with format: [year] - Paper [paper_number] - [Deferred] - Question [question_number] - [subparts]
-  let title = `${question.year}`
-  
-  // Add paper number if it exists
-  if (question.paper_number) {
-    title += ` - Paper ${question.paper_number}`
-  }
-  
-  // Add "Deferred" as a separate segment if exam_type is deferred
-  if (question.exam_type === 'deferred') {
-    title += ' - Deferred'
-  }
-  
-  // Add question number if it exists (null means no question number)
-  if (question.question_number !== null) {
-    title += ` - Question ${question.question_number}`
-  }
-  
-  // Add formatted parts if they exist
-  if (formattedParts) {
-    title += ` - ${formattedParts}`
-  }
+  const title = formatQuestionTitle(question)
+  const rawDisplayWidth = displayWidth ?? (EXAM_VIEW_BASE_MAX_WIDTH_PX * (zoom ?? 1))
+  const maxDisplayWidth = Math.max(1, Math.round(rawDisplayWidth))
+  const questionImageSizes = `(max-width: 640px) 100vw, ${maxDisplayWidth}px`
+  const markingSchemeSizes = `(max-width: 640px) 100vw, ${Math.max(1, maxDisplayWidth - 32)}px`
+  const { ref: cardRef, inView } = useInView({
+    threshold: 0,
+    rootMargin: '200px',
+    triggerOnce: false,
+  })
+  const markingSchemePrefetchRef = useRef<HTMLLinkElement | null>(null)
 
-  // Add additional info if it exists
-  if (question.additional_info) {
-    title += ` - ${question.additional_info}`
-  }
+  useEffect(() => {
+    if (!inView) {
+      return
+    }
+
+    const url = question.marking_scheme_image_url
+    if (!url || url === 'placeholder' || (!url.startsWith('http') && !url.startsWith('/'))) {
+      return
+    }
+
+    if (markingSchemePrefetchRef.current) {
+      return
+    }
+
+    const link = document.createElement('link')
+    link.rel = 'prefetch'
+    link.as = 'image'
+    link.href = url
+    link.setAttribute('fetchpriority', 'low')
+
+    document.head.appendChild(link)
+    markingSchemePrefetchRef.current = link
+
+    return () => {
+      if (markingSchemePrefetchRef.current === link) {
+        link.remove()
+        markingSchemePrefetchRef.current = null
+      }
+    }
+  }, [inView, question.marking_scheme_image_url])
 
   return (
     <div
+      ref={cardRef}
       className={cn('flex flex-col', styles.card)}
       data-question-id={question.id}
       style={{ '--exam-zoom': zoom ?? 1 } as CSSProperties}
@@ -97,7 +124,7 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
               Edit Metadata
             </Button>
           )}
-          {user && (
+          {canReport && (
             <Button
               onClick={() => setShowReportDialog(true)}
               size="sm"
@@ -117,10 +144,12 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
             <Image
               src={question.question_image_url!}
               alt={`Question ${question.question_number ?? 'image'}`}
-              width={1073}
-              height={800}
+              width={questionImageWidth}
+              height={questionImageHeight}
               className="w-full h-auto"
-              priority={false}
+              priority={isPriority}
+              fetchPriority={isPriority ? 'high' : 'auto'}
+              sizes={questionImageSizes}
             />
           ) : (
             <div className="flex items-center justify-center h-48 bg-stone-100">
@@ -162,25 +191,26 @@ export const QuestionCard = memo(function QuestionCard({ question, zoom }: Quest
               <Image
                 src={question.marking_scheme_image_url!}
                 alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                width={1073}
-                height={800}
+                width={markingSchemeWidth}
+                height={markingSchemeHeight}
                 className="w-full h-auto rounded-lg"
+                sizes={markingSchemeSizes}
               />
             </div>
           )}
         </div>
       </div>
       
-      {isAdmin && (
+      {isAdmin && showEditModal && (
         <QuestionEditModal
           question={question}
-          topics={topics || []}
+          topics={topics}
           open={showEditModal}
           onOpenChange={setShowEditModal}
         />
       )}
-      
-      {user && (
+
+      {canReport && showReportDialog && (
         <QuestionReportDialog
           question={question}
           open={showReportDialog}

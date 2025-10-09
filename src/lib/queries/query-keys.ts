@@ -10,6 +10,7 @@ export const queryKeys = {
   lists: () => [...queryKeys.all, 'list'] as const,
   list: (filters: Filters) => [...queryKeys.lists(), filters] as const,
   infinite: (filters: Filters) => [...queryKeys.list(filters), 'infinite'] as const,
+  navigation: (filters: Filters) => [...queryKeys.list(filters), 'navigation'] as const,
   subjects: () => ['subjects'] as const,
   subject: (slug: string) => [...queryKeys.subjects(), slug] as const,
   topics: (subjectId: string) => ['topics', subjectId] as const,

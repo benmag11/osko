@@ -49,9 +49,7 @@ export default function AboutPage() {
           <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
             I spent all of 6th year complaining that Studyclix was fairly shite for the 90 euro everyone paid for it, so decided to put my time where my mouth was and built this.
           </p>
-          <p className="text-warm-text-secondary leading-relaxed font-serif text-xl mt-4">
-            I got 625, am studying engineering in UCD, and so eventually, when I find the time, I will give the greatest Maths grinds the Leaving Cert has ever seen. Stay tuned. 
-          </p>
+      
           <p className="text-warm-text-secondary leading-relaxed font-serif text-xl mt-4">
             I hope someone finds some usefulness in the literal hundreds of hours I have spent making this website, it will only get better, and I won&apos;t sell out (for a while anyways).
           </p>
