@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, memo, forwardRef } from 'react'
+import { useState, useCallback, memo, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,8 @@ import { QuestionReportDialog } from '@/components/questions/question-report-dia
 import type { Question, Topic } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
+import { useInView } from 'react-intersection-observer'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import styles from './styles/question-card.module.css'
 
 interface QuestionCardProps {
@@ -18,6 +20,8 @@ interface QuestionCardProps {
   availableTopics?: Topic[]
   canReport?: boolean
   isAdmin?: boolean
+  displayWidth?: number
+  isPriority?: boolean
 }
 
 export const QuestionCard = memo(function QuestionCard({
@@ -26,6 +30,8 @@ export const QuestionCard = memo(function QuestionCard({
   availableTopics,
   canReport = false,
   isAdmin = false,
+  displayWidth,
+  isPriority = false,
 }: QuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -53,9 +59,51 @@ export const QuestionCard = memo(function QuestionCard({
     setShowMarkingScheme(prev => !prev)
   }, [])
   const title = formatQuestionTitle(question)
+  const rawDisplayWidth = displayWidth ?? (EXAM_VIEW_BASE_MAX_WIDTH_PX * (zoom ?? 1))
+  const maxDisplayWidth = Math.max(1, Math.round(rawDisplayWidth))
+  const questionImageSizes = `(max-width: 640px) 100vw, ${maxDisplayWidth}px`
+  const markingSchemeSizes = `(max-width: 640px) 100vw, ${Math.max(1, maxDisplayWidth - 32)}px`
+  const { ref: cardRef, inView } = useInView({
+    threshold: 0,
+    rootMargin: '200px',
+    triggerOnce: false,
+  })
+  const markingSchemePrefetchRef = useRef<HTMLLinkElement | null>(null)
+
+  useEffect(() => {
+    if (!inView) {
+      return
+    }
+
+    const url = question.marking_scheme_image_url
+    if (!url || url === 'placeholder' || (!url.startsWith('http') && !url.startsWith('/'))) {
+      return
+    }
+
+    if (markingSchemePrefetchRef.current) {
+      return
+    }
+
+    const link = document.createElement('link')
+    link.rel = 'prefetch'
+    link.as = 'image'
+    link.href = url
+    link.setAttribute('fetchpriority', 'low')
+
+    document.head.appendChild(link)
+    markingSchemePrefetchRef.current = link
+
+    return () => {
+      if (markingSchemePrefetchRef.current === link) {
+        link.remove()
+        markingSchemePrefetchRef.current = null
+      }
+    }
+  }, [inView, question.marking_scheme_image_url])
 
   return (
     <div
+      ref={cardRef}
       className={cn('flex flex-col', styles.card)}
       data-question-id={question.id}
       style={{ '--exam-zoom': zoom ?? 1 } as CSSProperties}
@@ -99,7 +147,9 @@ export const QuestionCard = memo(function QuestionCard({
               width={questionImageWidth}
               height={questionImageHeight}
               className="w-full h-auto"
-              priority={false}
+              priority={isPriority}
+              fetchPriority={isPriority ? 'high' : 'auto'}
+              sizes={questionImageSizes}
             />
           ) : (
             <div className="flex items-center justify-center h-48 bg-stone-100">
@@ -144,6 +194,7 @@ export const QuestionCard = memo(function QuestionCard({
                 width={markingSchemeWidth}
                 height={markingSchemeHeight}
                 className="w-full h-auto rounded-lg"
+                sizes={markingSchemeSizes}
               />
             </div>
           )}

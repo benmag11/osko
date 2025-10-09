@@ -13,12 +13,13 @@ import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation
 import { QuestionNavigationPanel } from './navigation/navigation-panel'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
 import { useAuth } from '@/components/providers/auth-provider'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import '../questions/styles/zoom.css'
 
 const MAX_ZOOM = 1
 const MIN_ZOOM = 0.5
 const ZOOM_STEP = 0.1
-const BASE_MAX_WIDTH_PX = 896 // Tailwind's max-w-4xl -> 56rem @ 16px
+const BASE_MAX_WIDTH_PX = EXAM_VIEW_BASE_MAX_WIDTH_PX // Tailwind's max-w-4xl -> 56rem @ 16px
 
 type ViewportAnchor =
   | { type: 'question'; id: string; ratio: number }
@@ -494,6 +495,8 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                     availableTopics={topics}
                     canReport={canReport}
                     isAdmin={isAdmin}
+                    displayWidth={BASE_MAX_WIDTH_PX * zoom}
+                    isPriority={index === 0}
                   />
                 </div>
               ))}

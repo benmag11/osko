@@ -2,6 +2,7 @@
 
 import { Separator } from '@/components/ui/separator'
 import { QuestionCard } from './question-card'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import type { Filters, PaginatedResponse } from '@/lib/types/database'
 import { useAuth } from '@/components/providers/auth-provider'
@@ -60,6 +61,8 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
             availableTopics={topics}
             canReport={canReport}
             isAdmin={isAdmin}
+            displayWidth={EXAM_VIEW_BASE_MAX_WIDTH_PX}
+            isPriority={index === 0}
           />
         </div>
       ))}
