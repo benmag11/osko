@@ -1,9 +1,10 @@
 'use client'
 
 import * as React from 'react'
+import { cn } from '@/lib/utils'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useVSCodeSidebar } from './sidebar-context'
-import { SubjectSelector } from './subject-selector'
+import { SidebarHeader } from './sidebar-header'
 import { ActivityBar } from './activity-bar'
 import { SidePanel } from './side-panel'
 import { MobileDrawer } from './mobile-drawer'
@@ -22,7 +23,7 @@ export function VSCodeSidebar({
   years,
   questionNumbers,
 }: VSCodeSidebarProps) {
-  const { isMobile, openMobile, setOpenMobile } = useVSCodeSidebar()
+  const { isMobile, isCollapsed, openMobile, setOpenMobile } = useVSCodeSidebar()
 
   // Mobile: Render Sheet-based drawer
   if (isMobile === true) {
@@ -46,23 +47,30 @@ export function VSCodeSidebar({
   // Desktop: Render VS Code style sidebar
   return (
     <TooltipProvider delayDuration={0}>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden lg:flex flex-col w-[328px] bg-cream-100 border-r border-stone-200">
-        {/* Subject Selector - Full Width at Top */}
-        <div className="shrink-0 border-b border-stone-200">
-          <SubjectSelector subject={subject} />
-        </div>
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-30 hidden lg:flex flex-col bg-white border-r border-stone-200',
+          'transition-[width] duration-200 ease-out',
+          isCollapsed ? 'w-12' : 'w-[328px]'
+        )}
+      >
+        {/* Header with Logo and Toggle */}
+        <SidebarHeader />
 
         {/* Main Content: Activity Bar + Side Panel */}
         <div className="flex flex-1 min-h-0">
-          {/* Activity Bar */}
+          {/* Activity Bar - always visible */}
           <ActivityBar />
 
-          {/* Side Panel */}
-          <SidePanel
-            topics={topics}
-            years={years}
-            questionNumbers={questionNumbers}
-          />
+          {/* Side Panel - hidden when collapsed */}
+          {!isCollapsed && (
+            <SidePanel
+              subject={subject}
+              topics={topics}
+              years={years}
+              questionNumbers={questionNumbers}
+            />
+          )}
         </div>
       </aside>
     </TooltipProvider>

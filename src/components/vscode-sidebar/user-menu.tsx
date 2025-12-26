@@ -25,7 +25,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useVSCodeSidebar } from './sidebar-context'
 
 export function UserMenu() {
-  const { isMobile } = useVSCodeSidebar()
+  const { isMobile, isCollapsed } = useVSCodeSidebar()
   const { user, profile } = useAuth()
   const queryClient = useQueryClient()
 
@@ -42,24 +42,34 @@ export function UserMenu() {
   const initials = formatInitials(name)
   const email = user.email || ''
 
+  const triggerButton = (
+    <button className="flex h-11 w-12 items-center justify-center transition-colors duration-150 hover:bg-stone-100">
+      <Avatar className="h-7 w-7 rounded-lg">
+        <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+    </button>
+  )
+
   return (
     <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <button className="flex h-12 w-12 items-center justify-center hover:bg-cream-300/50 transition-colors">
-              <Avatar className="h-7 w-7 rounded-lg">
-                <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8}>
-          {displayName}
-        </TooltipContent>
-      </Tooltip>
+      {isCollapsed ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              {triggerButton}
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={8}>
+            {displayName}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <DropdownMenuTrigger asChild>
+          {triggerButton}
+        </DropdownMenuTrigger>
+      )}
       <DropdownMenuContent
         className="w-56 rounded-lg"
         side={isMobile ? 'top' : 'right'}

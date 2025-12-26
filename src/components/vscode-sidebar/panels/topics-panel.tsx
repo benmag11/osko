@@ -13,28 +13,28 @@ export function TopicsPanel({ topics }: TopicsPanelProps) {
 
   if (topics.length === 0) {
     return (
-      <p className="text-sm text-warm-text-muted py-2">
+      <p className="text-sm text-stone-400 py-4 px-3 text-center">
         No topics available for this subject.
       </p>
     )
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0.5">
       {topics.map((topic) => (
         <label
           key={topic.id}
-          className={`flex cursor-pointer items-center gap-3 px-2 py-1.5 rounded-md hover:bg-cream-200/50 transition-colors ${
-            isPending ? 'opacity-70' : ''
+          className={`flex cursor-pointer items-center gap-3 px-3 py-2 rounded-md transition-colors duration-150 hover:bg-stone-50 ${
+            isPending ? 'opacity-60' : ''
           }`}
         >
           <Checkbox
             checked={filters.topicIds?.includes(topic.id) ?? false}
             onCheckedChange={() => toggleTopic(topic.id)}
             disabled={isPending}
-            className="h-4 w-4 data-[state=checked]:animate-scale-in"
+            className="h-4 w-4 border-stone-200 data-[state=checked]:bg-salmon-500 data-[state=checked]:border-salmon-500"
           />
-          <span className="text-sm font-sans text-warm-text-secondary">
+          <span className="text-sm text-stone-600">
             {topic.name}
           </span>
         </label>

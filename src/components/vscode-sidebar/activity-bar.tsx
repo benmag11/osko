@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Search, ListFilter, CalendarSearch, ArrowDown01, type LucideIcon } from 'lucide-react'
+import { Search, ListFilter, CalendarSearch, ArrowDown01, BookOpen, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -18,36 +18,56 @@ interface ActivityBarButtonProps {
 }
 
 function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonProps) {
-  const { activePanel, setActivePanel } = useVSCodeSidebar()
-  const isActive = activePanel === panelId
+  const { activePanel, setActivePanel, isCollapsed, setIsCollapsed } = useVSCodeSidebar()
+  // Only show as active when sidebar is expanded
+  const isActive = activePanel === panelId && !isCollapsed
 
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          onClick={() => setActivePanel(panelId)}
-          className={cn(
-            'relative flex h-12 w-12 items-center justify-center',
-            'text-warm-text-muted transition-colors',
-            'hover:text-warm-text-primary hover:bg-cream-300/50',
-            isActive && 'text-salmon-600 bg-cream-100'
-          )}
-        >
-          {/* Active indicator - left border */}
-          {isActive && (
-            <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-salmon-500" />
-          )}
-          <Icon className="h-5 w-5" />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={8}>
-        {tooltip}
-      </TooltipContent>
-    </Tooltip>
+  const handleClick = () => {
+    // If collapsed, expand first then switch panel
+    if (isCollapsed) {
+      setIsCollapsed(false)
+    }
+    setActivePanel(panelId)
+  }
+
+  const buttonElement = (
+    <button
+      onClick={handleClick}
+      className={cn(
+        'relative flex h-11 w-12 items-center justify-center',
+        'text-stone-500 transition-all duration-150',
+        // Hover styles only when NOT active
+        !isActive && 'hover:text-stone-600 hover:bg-stone-100',
+        // Active state with left indicator line (inset 2px from edge)
+        isActive && [
+          'text-salmon-500 bg-stone-50',
+          'before:absolute before:left-[2px] before:top-1/2 before:-translate-y-1/2',
+          'before:h-5 before:w-[2px] before:rounded-full before:bg-salmon-500',
+        ]
+      )}
+    >
+      <Icon className="h-5 w-5" />
+    </button>
   )
+
+  // Only show tooltip when sidebar is collapsed
+  if (isCollapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {buttonElement}
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return buttonElement
 }
 
-const PANEL_CONFIG: { id: PanelId; icon: LucideIcon; tooltip: string }[] = [
+const FILTER_CONFIG: { id: PanelId; icon: LucideIcon; tooltip: string }[] = [
   { id: 'search', icon: Search, tooltip: 'Search by keyword' },
   { id: 'topics', icon: ListFilter, tooltip: 'Study by topic' },
   { id: 'years', icon: CalendarSearch, tooltip: 'Study by year' },
@@ -56,10 +76,10 @@ const PANEL_CONFIG: { id: PanelId; icon: LucideIcon; tooltip: string }[] = [
 
 export function ActivityBar() {
   return (
-    <div className="flex w-12 flex-col bg-cream-200 border-r border-stone-200">
-      {/* Panel icons */}
+    <div className="flex w-12 flex-col bg-white border-r border-stone-200">
+      {/* Filter icons */}
       <div className="flex flex-col">
-        {PANEL_CONFIG.map((config) => (
+        {FILTER_CONFIG.map((config) => (
           <ActivityBarButton
             key={config.id}
             panelId={config.id}
@@ -68,6 +88,16 @@ export function ActivityBar() {
           />
         ))}
       </div>
+
+      {/* Divider */}
+      <div className="mx-3 my-2 h-px bg-stone-200" />
+
+      {/* Subject icon */}
+      <ActivityBarButton
+        panelId="subjects"
+        icon={BookOpen}
+        tooltip="Switch subject"
+      />
 
       {/* Spacer */}
       <div className="flex-1" />

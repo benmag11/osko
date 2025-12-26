@@ -36,12 +36,12 @@ export function SearchPanel() {
         onChange={(e) => setValue(e.target.value)}
         onKeyPress={handleKeyPress}
         placeholder="Try typing 'prove'"
-        className="h-8 text-sm flex-1"
+        className="h-9 text-sm flex-1 border-stone-200 focus-visible:ring-salmon-500/20"
       />
       <button
         type="button"
         onClick={handleAddKeyword}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-stone-300 bg-transparent transition-colors hover:border-salmon-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-salmon-500/30"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-stone-200 bg-white text-stone-400 transition-all duration-150 hover:border-salmon-400 hover:text-salmon-500 hover:bg-salmon-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-salmon-500/20"
         aria-label="Add search keyword"
       >
         <Plus className="h-4 w-4" />
