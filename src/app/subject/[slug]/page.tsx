@@ -7,12 +7,7 @@ import {
   searchQuestions
 } from '@/lib/supabase/queries'
 import { parseSearchParams } from '@/lib/utils/url-filters'
-import { ExamSidebar } from '@/components/layout/exam-sidebar'
-import {
-  SidebarProvider,
-  SidebarInset
-} from '@/components/ui/sidebar'
-import { FloatingSidebarTrigger } from '@/components/layout/floating-sidebar-trigger'
+import { VSCodeSidebarProvider, VSCodeSidebar } from '@/components/vscode-sidebar'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
 import { FilterProvider } from '@/components/providers/filter-provider'
@@ -66,23 +61,25 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
 
   return (
     <FilterProvider initialFilters={filters}>
-      <SidebarProvider defaultOpen>
+      <VSCodeSidebarProvider defaultPanel="topics">
         <MobileNavbar />
-        <ExamSidebar subject={subject} topics={topics} years={years} questionNumbers={questionNumbers} />
-        <FloatingSidebarTrigger />
-        <SidebarInset>
-          <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0">
-            <div className="px-8 py-8">
-              <div className="mx-auto w-full">
-                <FilteredQuestionsView
-                  topics={topics}
-                  initialData={initialData}
-                />
-              </div>
+        <VSCodeSidebar
+          subject={subject}
+          topics={topics}
+          years={years}
+          questionNumbers={questionNumbers}
+        />
+        <main className="min-h-screen bg-cream-50 pt-14 lg:pt-0 lg:ml-[328px]">
+          <div className="px-8 py-8">
+            <div className="mx-auto w-full">
+              <FilteredQuestionsView
+                topics={topics}
+                initialData={initialData}
+              />
             </div>
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
+          </div>
+        </main>
+      </VSCodeSidebarProvider>
     </FilterProvider>
   )
 }

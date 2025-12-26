@@ -5,10 +5,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useSidebar } from "@/components/ui/sidebar"
+import { useVSCodeSidebar } from "@/components/vscode-sidebar"
 
 export function MobileNavbar() {
-  const { setOpenMobile } = useSidebar()
+  const { setOpenMobile } = useVSCodeSidebar()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 block lg:hidden bg-cream-50 border-b border-stone-200">
