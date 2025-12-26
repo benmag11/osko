@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getUserSubjectsClient } from '@/lib/supabase/queries-client'
+import { getUserSubjectsClient } from '@/lib/supabase/client-queries'
 import { generateSlug } from '@/lib/utils/slug'
 import type { Subject } from '@/lib/types/database'
 import { CACHE_TIMES } from '@/lib/config/cache'

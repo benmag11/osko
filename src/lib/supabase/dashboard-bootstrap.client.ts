@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from './client'
-import { getUserSubjectsClient, getAllSubjectsClient } from './queries-client'
+import { getUserSubjectsClient, getAllSubjectsClient } from './client-queries'
 import { queryKeys } from '@/lib/queries/query-keys'
 import type { QueryClient } from '@tanstack/react-query'
 import type { UserProfile, Subject } from '@/lib/types/database'
