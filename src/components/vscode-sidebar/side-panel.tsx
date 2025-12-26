@@ -14,7 +14,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   topics: 'Study by Topic',
   years: 'Study by Year',
   questions: 'Study by Question',
-  subjects: 'Switch Subject',
+  subjects: 'Change Subject',
 }
 
 interface SidePanelProps {

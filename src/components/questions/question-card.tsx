@@ -118,7 +118,7 @@ export const QuestionCard = memo(function QuestionCard({
               onClick={() => setShowEditModal(true)}
               size="sm"
               variant="outline"
-              className={cn('gap-2', styles.adminButton)}
+              className={cn('gap-2 hover:bg-transparent hover:[&>svg]:text-stone-800', styles.adminButton)}
             >
               <Edit2 className={cn('h-4 w-4', styles.icon)} />
               Edit Metadata
@@ -129,7 +129,7 @@ export const QuestionCard = memo(function QuestionCard({
               onClick={() => setShowReportDialog(true)}
               size="sm"
               variant="outline"
-              className={cn('p-2', styles.iconButton)}
+              className={cn('p-2 hover:bg-transparent hover:[&>svg]:text-stone-800', styles.iconButton)}
               title="Report an issue with this question"
             >
               <Flag className={cn('h-4 w-4', styles.icon)} />

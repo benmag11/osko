@@ -122,7 +122,7 @@ export function MobileDrawer({
                   {topics.map((topic) => (
                     <label
                       key={topic.id}
-                      className={`flex cursor-pointer items-center gap-3 px-2 py-1.5 rounded-md hover:bg-cream-200/50 transition-colors ${
+                      className={`group flex cursor-pointer items-center gap-3 px-2 py-1 rounded-md hover:bg-cream-200/50 transition-colors ${
                         isPending ? 'opacity-70' : ''
                       }`}
                     >
@@ -130,9 +130,9 @@ export function MobileDrawer({
                         checked={filters.topicIds?.includes(topic.id) ?? false}
                         onCheckedChange={() => toggleTopic(topic.id)}
                         disabled={isPending}
-                        className="h-4 w-4"
+                        className="h-4 w-4 border-stone-400"
                       />
-                      <span className="text-sm text-warm-text-secondary">
+                      <span className="text-sm text-stone-600 transition-colors group-hover:text-stone-900">
                         {topic.name}
                       </span>
                     </label>
@@ -154,7 +154,7 @@ export function MobileDrawer({
                   {years.map((year) => (
                     <label
                       key={year}
-                      className={`flex cursor-pointer items-center gap-2 px-2 py-1.5 rounded-md hover:bg-cream-200/50 transition-colors ${
+                      className={`group flex cursor-pointer items-center gap-2 px-2 py-1 rounded-md hover:bg-cream-200/50 transition-colors ${
                         isPending ? 'opacity-70' : ''
                       }`}
                     >
@@ -162,9 +162,9 @@ export function MobileDrawer({
                         checked={filters.years?.includes(year) ?? false}
                         onCheckedChange={() => toggleYear(year)}
                         disabled={isPending}
-                        className="h-4 w-4"
+                        className="h-4 w-4 border-stone-400"
                       />
-                      <span className="text-sm text-warm-text-secondary">
+                      <span className="text-sm text-stone-600 transition-colors group-hover:text-stone-900">
                         {year}
                       </span>
                     </label>
@@ -186,7 +186,7 @@ export function MobileDrawer({
                   {questionNumbers.map((questionNumber) => (
                     <label
                       key={questionNumber}
-                      className={`flex cursor-pointer items-center gap-3 px-2 py-1.5 rounded-md hover:bg-cream-200/50 transition-colors ${
+                      className={`group flex cursor-pointer items-center gap-3 px-2 py-1 rounded-md hover:bg-cream-200/50 transition-colors ${
                         isPending ? 'opacity-70' : ''
                       }`}
                     >
@@ -194,9 +194,9 @@ export function MobileDrawer({
                         checked={filters.questionNumbers?.includes(questionNumber) ?? false}
                         onCheckedChange={() => toggleQuestionNumber(questionNumber)}
                         disabled={isPending}
-                        className="h-4 w-4"
+                        className="h-4 w-4 border-stone-400"
                       />
-                      <span className="text-sm text-warm-text-secondary">
+                      <span className="text-sm text-stone-600 transition-colors group-hover:text-stone-900">
                         Question {questionNumber}
                       </span>
                     </label>

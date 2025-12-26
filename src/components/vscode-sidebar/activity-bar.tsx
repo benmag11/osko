@@ -36,12 +36,12 @@ function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonPr
       className={cn(
         'relative flex h-11 w-12 items-center justify-center',
         'text-stone-500 transition-all duration-150',
-        // Hover styles only when NOT active
-        !isActive && 'hover:text-stone-600 hover:bg-stone-100',
-        // Active state with left indicator line (inset 2px from edge)
+        // Hover styles only when NOT active - just darken the icon, no background
+        !isActive && 'hover:text-stone-800',
+        // Active state with left indicator line (flush with edge) - no hover effect
         isActive && [
-          'text-salmon-500 bg-stone-50',
-          'before:absolute before:left-[2px] before:top-1/2 before:-translate-y-1/2',
+          'text-salmon-500',
+          'before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2',
           'before:h-5 before:w-[2px] before:rounded-full before:bg-salmon-500',
         ]
       )}
@@ -68,17 +68,53 @@ function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonPr
 }
 
 const FILTER_CONFIG: { id: PanelId; icon: LucideIcon; tooltip: string }[] = [
-  { id: 'search', icon: Search, tooltip: 'Search by keyword' },
   { id: 'topics', icon: ListFilter, tooltip: 'Study by topic' },
-  { id: 'years', icon: CalendarSearch, tooltip: 'Study by year' },
+  { id: 'search', icon: Search, tooltip: 'Search by keyword' },
   { id: 'questions', icon: ArrowDown01, tooltip: 'Study by question' },
+  { id: 'years', icon: CalendarSearch, tooltip: 'Study by year' },
 ]
 
-export function ActivityBar() {
+interface ActivityBarGroupProps {
+  children: React.ReactNode
+  /** If true, renders a divider below this group */
+  withDivider?: boolean
+  /** Whether the sidebar is collapsed */
+  isCollapsed?: boolean
+  /** Click handler for expanding when collapsed */
+  onExpandClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+}
+
+function ActivityBarGroup({ children, withDivider = false, isCollapsed, onExpandClick }: ActivityBarGroupProps) {
   return (
-    <div className="flex w-12 flex-col bg-white border-r border-stone-200">
-      {/* Filter icons */}
-      <div className="flex flex-col">
+    <>
+      <div className="flex flex-col py-1" onClick={isCollapsed ? onExpandClick : undefined}>
+        {children}
+      </div>
+      {withDivider && <div className="mx-3 my-2 h-px bg-stone-200" onClick={isCollapsed ? onExpandClick : undefined} />}
+    </>
+  )
+}
+
+export function ActivityBar() {
+  const { isCollapsed, toggleSidebar } = useVSCodeSidebar()
+
+  const handleExpandClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only expand if sidebar is collapsed and click is on empty space (not a button)
+    if (isCollapsed && e.target === e.currentTarget) {
+      toggleSidebar()
+    }
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex w-12 flex-col bg-white border-r border-stone-200',
+        isCollapsed && 'cursor-pointer'
+      )}
+      onClick={handleExpandClick}
+    >
+      {/* Filter icons group */}
+      <ActivityBarGroup withDivider isCollapsed={isCollapsed} onExpandClick={handleExpandClick}>
         {FILTER_CONFIG.map((config) => (
           <ActivityBarButton
             key={config.id}
@@ -87,20 +123,22 @@ export function ActivityBar() {
             tooltip={config.tooltip}
           />
         ))}
-      </div>
+      </ActivityBarGroup>
 
-      {/* Divider */}
-      <div className="mx-3 my-2 h-px bg-stone-200" />
+      {/* Subject group */}
+      <ActivityBarGroup isCollapsed={isCollapsed} onExpandClick={handleExpandClick}>
+        <ActivityBarButton
+          panelId="subjects"
+          icon={BookOpen}
+          tooltip="Switch subject"
+        />
+      </ActivityBarGroup>
 
-      {/* Subject icon */}
-      <ActivityBarButton
-        panelId="subjects"
-        icon={BookOpen}
-        tooltip="Switch subject"
+      {/* Spacer - clickable when collapsed */}
+      <div
+        className="flex-1"
+        onClick={isCollapsed ? toggleSidebar : undefined}
       />
-
-      {/* Spacer */}
-      <div className="flex-1" />
 
       {/* User menu at bottom */}
       <UserMenu />

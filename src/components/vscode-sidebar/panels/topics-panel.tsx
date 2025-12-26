@@ -24,7 +24,7 @@ export function TopicsPanel({ topics }: TopicsPanelProps) {
       {topics.map((topic) => (
         <label
           key={topic.id}
-          className={`flex cursor-pointer items-center gap-3 px-3 py-2 rounded-md transition-colors duration-150 hover:bg-stone-50 ${
+          className={`group flex cursor-pointer items-center gap-3 px-3 py-1.5 rounded-md transition-colors duration-150 hover:bg-stone-50 ${
             isPending ? 'opacity-60' : ''
           }`}
         >
@@ -32,9 +32,9 @@ export function TopicsPanel({ topics }: TopicsPanelProps) {
             checked={filters.topicIds?.includes(topic.id) ?? false}
             onCheckedChange={() => toggleTopic(topic.id)}
             disabled={isPending}
-            className="h-4 w-4 border-stone-200 data-[state=checked]:bg-salmon-500 data-[state=checked]:border-salmon-500"
+            className="h-4 w-4 border-stone-400 data-[state=checked]:bg-salmon-500 data-[state=checked]:border-salmon-500"
           />
-          <span className="text-sm text-stone-600">
+          <span className="text-sm text-stone-600 transition-colors group-hover:text-stone-900">
             {topic.name}
           </span>
         </label>

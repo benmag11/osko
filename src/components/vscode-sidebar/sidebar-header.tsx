@@ -4,32 +4,43 @@ import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PanelLeft, PanelLeftClose } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useVSCodeSidebar } from './sidebar-context'
+import type { Subject } from '@/lib/types/database'
 
-export function SidebarHeader() {
+interface SidebarHeaderProps {
+  subject: Subject
+}
+
+export function SidebarHeader({ subject }: SidebarHeaderProps) {
   const { isCollapsed, toggleSidebar } = useVSCodeSidebar()
-  const [isHovered, setIsHovered] = React.useState(false)
 
   return (
-    <div
-      className={cn(
-        'flex items-center h-12 border-b border-stone-200',
-        isCollapsed ? 'justify-center px-0' : 'justify-between px-3'
-      )}
-    >
-      {/* Logo - when collapsed, becomes toggle on hover */}
-      {isCollapsed ? (
-        <button
-          onClick={toggleSidebar}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="flex h-12 w-12 items-center justify-center transition-colors hover:bg-stone-50"
-          aria-label="Expand sidebar"
-        >
-          {isHovered ? (
-            <PanelLeft className="h-5 w-5 text-stone-500" />
-          ) : (
+    <div className="flex items-center h-12 border-b border-stone-200">
+      {/* Left section: 48px wide, matches activity bar width - logo always centered here */}
+      <div className="flex h-full w-12 shrink-0 items-center justify-center">
+        {isCollapsed ? (
+          <button
+            onClick={toggleSidebar}
+            className="group flex h-12 w-12 items-center justify-center transition-colors"
+            aria-label="Expand sidebar"
+          >
+            {/* Logo shown by default, hidden on hover */}
+            <Image
+              src="/logo-icon.svg"
+              alt="OSKO"
+              width={20}
+              height={20}
+              className="h-5 w-5 block group-hover:hidden"
+            />
+            {/* Expand icon hidden by default, shown on hover */}
+            <PanelLeft className="h-5 w-5 text-stone-800 hidden group-hover:block" />
+          </button>
+        ) : (
+          <Link
+            href="/dashboard/study"
+            className="flex h-12 w-12 cursor-pointer items-center justify-center transition-colors hover:bg-stone-50"
+            aria-label="OSKO - Go to dashboard"
+          >
             <Image
               src="/logo-icon.svg"
               alt="OSKO"
@@ -37,23 +48,18 @@ export function SidebarHeader() {
               height={20}
               className="h-5 w-5"
             />
-          )}
-        </button>
-      ) : (
-        <>
-          {/* Logo link - expanded state */}
+          </Link>
+        )}
+      </div>
+
+      {/* Right section: logo text and collapse button - only visible when expanded */}
+      {!isCollapsed && (
+        <div className="flex flex-1 items-center justify-between pr-3">
           <Link
             href="/dashboard/study"
-            className="inline-flex items-center gap-2 rounded-md py-1.5 px-1.5 transition-colors hover:bg-stone-50"
+            className="cursor-pointer"
             aria-label="OSKO - Go to dashboard"
           >
-            <Image
-              src="/logo-icon.svg"
-              alt=""
-              width={20}
-              height={20}
-              className="h-5 w-5 shrink-0"
-            />
             <Image
               src="/logo-text.svg"
               alt="OSKO"
@@ -62,16 +68,14 @@ export function SidebarHeader() {
               className="h-5 w-auto"
             />
           </Link>
-
-          {/* Toggle button - expanded state */}
           <button
             onClick={toggleSidebar}
-            className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-stone-50"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-stone-500 transition-colors hover:text-stone-800"
             aria-label="Collapse sidebar"
           >
-            <PanelLeftClose className="h-4 w-4 text-stone-400" />
+            <PanelLeftClose className="h-5 w-5" />
           </button>
-        </>
+        </div>
       )}
     </div>
   )
