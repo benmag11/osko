@@ -9,65 +9,87 @@ import { useQuestionNavigation } from '@/components/providers/question-navigatio
 export function JumpToQuestionPanel() {
   const {
     items,
-    totalCount,
     isLoading,
-    isFetching,
     error,
     refetch,
     activeQuestionId,
     activeIndex,
     isNavigating,
+    setIsReturning,
     handleQuestionSelect,
   } = useQuestionNavigation()
 
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const returningTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hasInitializedRef = useRef(false)
 
   // Reset item refs when dataset length changes
   useEffect(() => {
     itemRefs.current.length = items.length
   }, [items.length])
 
-  // Auto-scroll to keep active item visible
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (returningTimeoutRef.current) {
+        clearTimeout(returningTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Auto-scroll to keep active item visible, with "returning" detection
   useEffect(() => {
     if (activeIndex == null) return
     const button = itemRefs.current[activeIndex]
     if (!button) return
 
+    // Find the scroll container
+    const scrollContainer = button.closest('[data-scroll-container]') as HTMLElement | null
+
+    // Always scroll to the active item
     button.scrollIntoView({
       block: 'nearest',
       inline: 'nearest',
       behavior: 'smooth',
     })
-  }, [activeIndex])
+
+    // Skip "returning" indicator on initial mount
+    // This prevents showing "Returning to position" when first opening the panel
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true
+      return
+    }
+
+    // Only proceed with "returning" check if scroll container exists
+    if (!scrollContainer) return
+
+    // Check if button is already visible in the scroll container
+    const containerRect = scrollContainer.getBoundingClientRect()
+    const buttonRect = button.getBoundingClientRect()
+    const isVisible = buttonRect.top >= containerRect.top && buttonRect.bottom <= containerRect.bottom
+
+    // Only show "returning" if we need to scroll AND not currently navigating (jumping)
+    if (!isVisible && !isNavigating) {
+      // Clear any existing timeout
+      if (returningTimeoutRef.current) {
+        clearTimeout(returningTimeoutRef.current)
+      }
+
+      setIsReturning(true)
+
+      // Clear after scroll animation completes (~500ms)
+      returningTimeoutRef.current = setTimeout(() => {
+        setIsReturning(false)
+      }, 500)
+    }
+  }, [activeIndex, isNavigating, setIsReturning])
 
   const hasItems = items.length > 0
   const showLoadingState = isLoading && !hasItems
   const showEmptyState = !isLoading && !error && items.length === 0
-  const formattedTotalCount = totalCount > 0 ? totalCount.toLocaleString() : null
 
   return (
     <div className="flex flex-col">
-      {/* Status bar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-stone-100 sticky top-0 bg-white z-10">
-        {isNavigating ? (
-          <span className="flex items-center gap-1.5 text-xs text-salmon-500">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Jumping...
-          </span>
-        ) : isFetching && !showLoadingState ? (
-          <span className="flex items-center gap-1.5 text-xs text-stone-400">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Updating...
-          </span>
-        ) : formattedTotalCount ? (
-          <span className="text-xs text-stone-500">
-            {formattedTotalCount} questions
-          </span>
-        ) : (
-          <span className="text-xs text-stone-400">No questions</span>
-        )}
-      </div>
-
       {/* Loading state */}
       {showLoadingState && (
         <div className="flex items-center gap-2 px-3 py-6 text-sm text-stone-400">
@@ -113,10 +135,11 @@ export function JumpToQuestionPanel() {
                 onClick={() => handleQuestionSelect(item)}
                 className={cn(
                   'relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors duration-150',
+                  'border border-transparent cursor-pointer',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-salmon-400/60 focus-visible:ring-offset-1',
                   isActive
                     ? 'bg-salmon-500/10 text-salmon-600'
-                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                    : 'text-stone-600 hover:text-stone-900 hover:border-salmon-500'
                 )}
               >
                 {/* Circle indicator - z-10 to sit above line */}

@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { Search, ListFilter, CalendarSearch, ArrowDown01, ChevronsDown, BookOpen, type LucideIcon } from 'lucide-react'
+import Link from 'next/link'
+import { Search, ListFilter, CalendarSearch, ArrowDown01, ChevronsDown, BookOpen, ArrowBigLeft, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -87,11 +88,37 @@ interface ActivityBarGroupProps {
 function ActivityBarGroup({ children, withDivider = false, isCollapsed, onExpandClick }: ActivityBarGroupProps) {
   return (
     <>
-      <div className="flex flex-col py-1" onClick={isCollapsed ? onExpandClick : undefined}>
+      <div className="flex flex-col" onClick={isCollapsed ? onExpandClick : undefined}>
         {children}
       </div>
-      {withDivider && <div className="mx-3 my-2 h-px bg-stone-200" onClick={isCollapsed ? onExpandClick : undefined} />}
+      {withDivider && <div className="mx-3 my-0.5 h-px bg-stone-200" onClick={isCollapsed ? onExpandClick : undefined} />}
     </>
+  )
+}
+
+function BackToDashboardButton() {
+  const buttonElement = (
+    <Link
+      href="/dashboard/study"
+      className={cn(
+        'flex h-11 w-12 items-center justify-center',
+        'text-stone-500 transition-all duration-150',
+        'hover:text-stone-800 hover:bg-stone-100'
+      )}
+    >
+      <ArrowBigLeft className="h-5 w-5" />
+    </Link>
+  )
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {buttonElement}
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8}>
+        Back to Dashboard
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -148,6 +175,9 @@ export function ActivityBar() {
         className="flex-1"
         onClick={isCollapsed ? toggleSidebar : undefined}
       />
+
+      {/* Back to Dashboard button */}
+      <BackToDashboardButton />
 
       {/* User menu at bottom */}
       <UserMenu />

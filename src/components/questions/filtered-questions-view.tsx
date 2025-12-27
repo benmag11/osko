@@ -38,6 +38,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const {
     setActiveQuestionId,
     setIsNavigating,
+    setNavigationTarget,
     registerNavigationHandler,
   } = useQuestionNavigation()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -233,6 +234,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     const isTokenActive = () => activeNavigationTokenRef.current === navigationToken
 
     setIsNavigating(true)
+    setNavigationTarget({ id: item.id, title: item.title })
     setAutoFetchPauseCount((count) => count + 1)
     programmaticScrollRef.current = true
     programmaticNavigationOwnerRef.current = navigationToken
@@ -394,11 +396,12 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
       if (activeNavigationTokenRef.current === navigationToken) {
         activeNavigationTokenRef.current = null
         setIsNavigating(false)
+        setNavigationTarget(null)
       }
 
       setAutoFetchPauseCount((count) => Math.max(0, count - 1))
     }
-  }, [ensureQuestionInDom, findQuestionNode, setActiveQuestionId, setIsNavigating])
+  }, [ensureQuestionInDom, findQuestionNode, setActiveQuestionId, setIsNavigating, setNavigationTarget])
 
   // Register navigation handler with context so sidebar can trigger navigation
   useEffect(() => {

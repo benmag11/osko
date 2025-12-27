@@ -17,6 +17,11 @@ import {
 
 type NavigationHandler = (item: QuestionNavigationItem) => void | Promise<void>
 
+interface NavigationTarget {
+  id: string
+  title: string
+}
+
 interface QuestionNavigationContextValue {
   // Navigation items from the query
   items: QuestionNavigationItem[]
@@ -35,6 +40,14 @@ interface QuestionNavigationContextValue {
   // Navigation state
   isNavigating: boolean
   setIsNavigating: (isNavigating: boolean) => void
+
+  // Navigation target (for "Jumping to [title]" display)
+  navigationTarget: NavigationTarget | null
+  setNavigationTarget: (target: NavigationTarget | null) => void
+
+  // Returning state (when sidebar scrolls to bring active question into view)
+  isReturning: boolean
+  setIsReturning: (isReturning: boolean) => void
 
   // Handler registration (called by FilteredQuestionsView)
   registerNavigationHandler: (handler: NavigationHandler) => void
@@ -75,6 +88,12 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
   const [isNavigating, setIsNavigating] = useState(false)
 
+  // Navigation target state (for "Jumping to [title]" display)
+  const [navigationTarget, setNavigationTarget] = useState<NavigationTarget | null>(null)
+
+  // Returning state (controlled by jump-to-question-panel when sidebar scrolls)
+  const [isReturning, setIsReturning] = useState(false)
+
   // Compute active index from activeQuestionId
   const activeIndex = useMemo(() => {
     if (!activeQuestionId) return null
@@ -109,6 +128,10 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
     activeIndex,
     isNavigating,
     setIsNavigating,
+    navigationTarget,
+    setNavigationTarget,
+    isReturning,
+    setIsReturning,
     registerNavigationHandler,
     handleQuestionSelect,
   }), [
@@ -122,6 +145,8 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
     activeQuestionId,
     activeIndex,
     isNavigating,
+    navigationTarget,
+    isReturning,
     registerNavigationHandler,
     handleQuestionSelect,
   ])
