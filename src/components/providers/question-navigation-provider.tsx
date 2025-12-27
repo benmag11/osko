@@ -15,7 +15,13 @@ import {
   type QuestionNavigationItem,
 } from '@/lib/hooks/use-question-navigation-list'
 
+// Zoom constants
+const MAX_ZOOM = 1
+const MIN_ZOOM = 0.5
+const ZOOM_STEP = 0.1
+
 type NavigationHandler = (item: QuestionNavigationItem) => void | Promise<void>
+type ZoomHandler = () => void
 
 interface NavigationTarget {
   id: string
@@ -54,6 +60,18 @@ interface QuestionNavigationContextValue {
 
   // Handler for sidebar panel to call
   handleQuestionSelect: (item: QuestionNavigationItem) => void | Promise<void>
+
+  // Zoom state
+  zoom: number
+  canZoomIn: boolean
+  canZoomOut: boolean
+
+  // Zoom handler registration (called by FilteredQuestionsView for anchor preservation)
+  registerZoomHandler: (handler: ZoomHandler) => void
+
+  // Zoom handlers for sidebar to call
+  handleZoomIn: () => void
+  handleZoomOut: () => void
 }
 
 const QuestionNavigationContext = createContext<QuestionNavigationContextValue | null>(null)
@@ -94,11 +112,18 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
   // Returning state (controlled by jump-to-question-panel when sidebar scrolls)
   const [isReturning, setIsReturning] = useState(false)
 
+  // Zoom state
+  const [zoom, setZoom] = useState(MAX_ZOOM)
+
   // Compute active index from activeQuestionId
   const activeIndex = useMemo(() => {
     if (!activeQuestionId) return null
     return idToIndex.get(activeQuestionId) ?? null
   }, [activeQuestionId, idToIndex])
+
+  // Computed zoom constraints
+  const canZoomIn = zoom < MAX_ZOOM - 0.0001
+  const canZoomOut = zoom > MIN_ZOOM + 0.0001
 
   // Handler registration ref
   const navigationHandlerRef = useRef<NavigationHandler | null>(null)
@@ -114,6 +139,29 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
     // Fallback: just set the active question (won't scroll)
     setActiveQuestionId(item.id)
   }, [])
+
+  // Zoom handler registration ref (for anchor preservation in FilteredQuestionsView)
+  const zoomHandlerRef = useRef<ZoomHandler | null>(null)
+
+  const registerZoomHandler = useCallback((handler: ZoomHandler) => {
+    zoomHandlerRef.current = handler
+  }, [])
+
+  const handleZoomIn = useCallback(() => {
+    if (!canZoomIn) return
+    // Call the registered handler first (captures anchor)
+    zoomHandlerRef.current?.()
+    // Then update zoom
+    setZoom((current) => Math.round((current + ZOOM_STEP) * 100) / 100)
+  }, [canZoomIn])
+
+  const handleZoomOut = useCallback(() => {
+    if (!canZoomOut) return
+    // Call the registered handler first (captures anchor)
+    zoomHandlerRef.current?.()
+    // Then update zoom
+    setZoom((current) => Math.round((current - ZOOM_STEP) * 100) / 100)
+  }, [canZoomOut])
 
   const value = useMemo<QuestionNavigationContextValue>(() => ({
     items,
@@ -134,6 +182,12 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
     setIsReturning,
     registerNavigationHandler,
     handleQuestionSelect,
+    zoom,
+    canZoomIn,
+    canZoomOut,
+    registerZoomHandler,
+    handleZoomIn,
+    handleZoomOut,
   }), [
     items,
     totalCount,
@@ -149,6 +203,12 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
     isReturning,
     registerNavigationHandler,
     handleQuestionSelect,
+    zoom,
+    canZoomIn,
+    canZoomOut,
+    registerZoomHandler,
+    handleZoomIn,
+    handleZoomOut,
   ])
 
   return (

@@ -6,19 +6,14 @@ import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-disp
 import { QuestionCard } from './question-card'
 import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
-import { useScrollVisibility } from '@/lib/hooks/use-scroll-visibility'
 import { useFilters } from '@/components/providers/filter-provider'
 import { useQuestionNavigation } from '@/components/providers/question-navigation-provider'
 import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation-list'
-import { QuestionNavigationPanel } from './navigation/navigation-panel'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
 import { useAuth } from '@/components/providers/auth-provider'
 import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import '../questions/styles/zoom.css'
 
-const MAX_ZOOM = 1
-const MIN_ZOOM = 0.5
-const ZOOM_STEP = 0.1
 const BASE_MAX_WIDTH_PX = EXAM_VIEW_BASE_MAX_WIDTH_PX // Tailwind's max-w-4xl -> 56rem @ 16px
 
 type ViewportAnchor =
@@ -40,10 +35,11 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     setIsNavigating,
     setNavigationTarget,
     registerNavigationHandler,
+    zoom,
+    registerZoomHandler,
   } = useQuestionNavigation()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
-  const [zoom, setZoom] = useState(MAX_ZOOM)
   const programmaticScrollRef = useRef(false)
   const programmaticNavigationOwnerRef = useRef<number | null>(null)
   const hasNextPageRef = useRef(false)
@@ -51,14 +47,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const activeNavigationTokenRef = useRef<number | null>(null)
   const [autoFetchPauseCount, setAutoFetchPauseCount] = useState(0)
   const pauseAutoFetch = autoFetchPauseCount > 0
-
-  // Scroll visibility for zoom controls
-  const { isVisible: controlsVisible, targetRef: filtersRef } = useScrollVisibility({
-    threshold: 0,
-    rootMargin: '-50px 0px 0px 0px', // Trigger when filters section is 50px from leaving viewport
-    initialVisible: true,
-    debounceMs: 50
-  })
 
   const {
     questions,
@@ -414,46 +402,31 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     pendingAnchorRef.current = null
   }, [restoreAnchor, zoom, questions])
 
-  const adjustZoom = useCallback((direction: 1 | -1) => {
-    setZoom((current) => {
-      const next = clamp(current + direction * ZOOM_STEP, MIN_ZOOM, MAX_ZOOM)
-      if (next === current) {
-        return current
-      }
+  // Register zoom handler to capture anchor before zoom changes
+  useEffect(() => {
+    registerZoomHandler(() => {
       pendingAnchorRef.current = captureAnchor()
-      return Math.round(next * 100) / 100
     })
-  }, [captureAnchor])
+  }, [registerZoomHandler, captureAnchor])
 
-  const canZoomIn = zoom < MAX_ZOOM - 0.0001
-  const canZoomOut = zoom > MIN_ZOOM + 0.0001
   const maxWidth = `${(BASE_MAX_WIDTH_PX * zoom).toFixed(2)}px`
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
   const canReport = Boolean(user)
   const isAdmin = Boolean(profile?.is_admin)
 
   return (
-    <>
-      <QuestionNavigationPanel
-        canZoomIn={canZoomIn}
-        canZoomOut={canZoomOut}
-        onZoomIn={() => adjustZoom(1)}
-        onZoomOut={() => adjustZoom(-1)}
-        isScrolled={!controlsVisible}
-      />
-
-      <div
-        className="exam-zoom-root mx-auto flex w-full flex-col items-center"
-        style={{ '--exam-zoom': zoom } as CSSProperties}
-      >
-        <div ref={filtersRef} className="w-full" style={{ maxWidth: filterWidth }}>
-          <AppliedFiltersDisplay
-            topics={topics}
-            filters={filters}
-            totalCount={totalCount}
-            isLoading={isLoading}
-          />
-        </div>
+    <div
+      className="exam-zoom-root mx-auto flex w-full flex-col items-center"
+      style={{ '--exam-zoom': zoom } as CSSProperties}
+    >
+      <div className="w-full" style={{ maxWidth: filterWidth }}>
+        <AppliedFiltersDisplay
+          topics={topics}
+          filters={filters}
+          totalCount={totalCount}
+          isLoading={isLoading}
+        />
+      </div>
 
         <div
           ref={containerRef}
@@ -501,7 +474,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
             </>
           )}
         </div>
-      </div>
-    </>
+    </div>
   )
 }

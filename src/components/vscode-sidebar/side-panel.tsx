@@ -10,6 +10,7 @@ import { YearsPanel } from './panels/years-panel'
 import { QuestionsPanel } from './panels/questions-panel'
 import { JumpToQuestionPanel } from './panels/jump-to-question-panel'
 import { SubjectsPanel } from './panels/subjects-panel'
+import { SettingsPanel } from './panels/settings-panel'
 import type { Topic, Subject } from '@/lib/types/database'
 
 const PANEL_TITLES: Record<PanelId, string> = {
@@ -19,6 +20,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   questions: 'Study by Question',
   jump: 'Jump to Question',
   subjects: 'Change Subject',
+  settings: 'Settings',
 }
 
 interface SidePanelProps {
@@ -33,7 +35,7 @@ export function SidePanel({ subject, topics, years, questionNumbers }: SidePanel
   const isJumpPanel = activePanel === 'jump'
 
   return (
-    <div className="flex w-[280px] flex-col bg-white">
+    <div className="flex w-[280px] flex-col bg-white overflow-hidden">
       {/* Panel Header */}
       <div className="flex h-10 shrink-0 items-center px-4">
         <span className="text-xs font-semibold text-stone-400 uppercase tracking-wider">
@@ -71,10 +73,17 @@ export function SidePanel({ subject, topics, years, questionNumbers }: SidePanel
           </div>
         )}
         {activePanel === 'jump' && (
-          <JumpToQuestionPanel />
+          <div className="pb-3">
+            <JumpToQuestionPanel />
+          </div>
         )}
         {activePanel === 'subjects' && (
           <SubjectsPanel currentSubject={subject} />
+        )}
+        {activePanel === 'settings' && (
+          <div className="px-3 pb-3">
+            <SettingsPanel />
+          </div>
         )}
       </div>
     </div>

@@ -7,7 +7,7 @@ const PANEL_COOKIE_NAME = 'vscode_sidebar_panel'
 const COLLAPSE_COOKIE_NAME = 'vscode_sidebar_collapsed'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
-export type PanelId = 'search' | 'topics' | 'years' | 'questions' | 'jump' | 'subjects'
+export type PanelId = 'search' | 'topics' | 'years' | 'questions' | 'jump' | 'subjects' | 'settings'
 
 interface VSCodeSidebarContextValue {
   // Active panel state
@@ -59,7 +59,7 @@ export function VSCodeSidebarProvider({
     const panelCookie = cookies.find(c => c.trim().startsWith(`${PANEL_COOKIE_NAME}=`))
     if (panelCookie) {
       const value = panelCookie.split('=')[1]?.trim()
-      if (value && ['search', 'topics', 'years', 'questions', 'jump', 'subjects'].includes(value)) {
+      if (value && ['search', 'topics', 'years', 'questions', 'jump', 'subjects', 'settings'].includes(value)) {
         setActivePanelState(value as PanelId)
       }
     }

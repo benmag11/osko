@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -23,65 +23,140 @@ export function JumpToQuestionPanel() {
   const returningTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const hasInitializedRef = useRef(false)
 
+  // Track if user manually scrolled the sidebar causing the active item to leave view
+  const userScrolledAwayRef = useRef(false)
+
+  // Track if we're currently in a programmatic scroll (to ignore scroll events)
+  const isProgrammaticScrollRef = useRef(false)
+
+  // Track the scroll container element for event listener
+  const scrollContainerRef = useRef<HTMLElement | null>(null)
+
+  // Timeout for detecting when programmatic scroll ends
+  const scrollEndTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   // Reset item refs when dataset length changes
   useEffect(() => {
     itemRefs.current.length = items.length
   }, [items.length])
 
-  // Cleanup timeout on unmount
+  // Cleanup all timeouts on unmount
   useEffect(() => {
     return () => {
       if (returningTimeoutRef.current) {
         clearTimeout(returningTimeoutRef.current)
       }
+      if (scrollEndTimeoutRef.current) {
+        clearTimeout(scrollEndTimeoutRef.current)
+      }
     }
   }, [])
 
+  // Helper to check if the active button is visible in the scroll container
+  const isActiveButtonVisible = useCallback(() => {
+    if (activeIndex == null) return true
+    const button = itemRefs.current[activeIndex]
+    const scrollContainer = scrollContainerRef.current
+    if (!button || !scrollContainer) return true
+
+    const containerRect = scrollContainer.getBoundingClientRect()
+    const buttonRect = button.getBoundingClientRect()
+
+    return (
+      buttonRect.top >= containerRect.top &&
+      buttonRect.bottom <= containerRect.bottom
+    )
+  }, [activeIndex])
+
+  // Listen for user scrolls on the sidebar container
+  // When user scrolls and the active button leaves view, set the flag
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current
+    if (!scrollContainer) return
+
+    const handleScroll = () => {
+      // Ignore programmatic scrolls (from scrollIntoView calls)
+      if (isProgrammaticScrollRef.current) return
+
+      // User is manually scrolling - check if active item left the view
+      if (!isActiveButtonVisible()) {
+        userScrolledAwayRef.current = true
+      }
+    }
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll)
+    }
+  }, [isActiveButtonVisible])
+
   // Auto-scroll to keep active item visible, with "returning" detection
+  // Only shows "returning to position" when user manually scrolled the sidebar
+  // to hide the active item, then the active item changes
   useEffect(() => {
     if (activeIndex == null) return
     const button = itemRefs.current[activeIndex]
     if (!button) return
 
-    // Find the scroll container
+    // Find and cache the scroll container
     const scrollContainer = button.closest('[data-scroll-container]') as HTMLElement | null
+    scrollContainerRef.current = scrollContainer
 
-    // Always scroll to the active item
+    // On initial mount: scroll silently without showing "returning"
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true
+
+      // Mark as programmatic scroll to prevent user scroll detection during initial scroll
+      isProgrammaticScrollRef.current = true
+
+      button.scrollIntoView({
+        block: 'nearest',
+        inline: 'nearest',
+        behavior: 'smooth',
+      })
+
+      // Clear programmatic flag after scroll animation settles
+      scrollEndTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false
+      }, 600)
+
+      return
+    }
+
+    // Determine if we should show "returning to position"
+    // Only show if: user had scrolled away from active item AND not currently jumping to a question
+    const shouldShowReturning = userScrolledAwayRef.current && !isNavigating
+
+    if (shouldShowReturning) {
+      // Clear any existing timeout
+      if (returningTimeoutRef.current) {
+        clearTimeout(returningTimeoutRef.current)
+      }
+      setIsReturning(true)
+    }
+
+    // Mark as programmatic scroll to ignore this scroll in the user scroll listener
+    isProgrammaticScrollRef.current = true
+
     button.scrollIntoView({
       block: 'nearest',
       inline: 'nearest',
       behavior: 'smooth',
     })
 
-    // Skip "returning" indicator on initial mount
-    // This prevents showing "Returning to position" when first opening the panel
-    if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true
-      return
+    // After scroll animation completes: reset flags and hide indicator
+    if (scrollEndTimeoutRef.current) {
+      clearTimeout(scrollEndTimeoutRef.current)
     }
+    scrollEndTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScrollRef.current = false
+      userScrolledAwayRef.current = false // Reset: active item is now visible
 
-    // Only proceed with "returning" check if scroll container exists
-    if (!scrollContainer) return
-
-    // Check if button is already visible in the scroll container
-    const containerRect = scrollContainer.getBoundingClientRect()
-    const buttonRect = button.getBoundingClientRect()
-    const isVisible = buttonRect.top >= containerRect.top && buttonRect.bottom <= containerRect.bottom
-
-    // Only show "returning" if we need to scroll AND not currently navigating (jumping)
-    if (!isVisible && !isNavigating) {
-      // Clear any existing timeout
-      if (returningTimeoutRef.current) {
-        clearTimeout(returningTimeoutRef.current)
-      }
-
-      setIsReturning(true)
-
-      // Clear after scroll animation completes (~500ms)
-      returningTimeoutRef.current = setTimeout(() => {
+      if (shouldShowReturning) {
         setIsReturning(false)
-      }, 500)
-    }
+      }
+    }, 500)
   }, [activeIndex, isNavigating, setIsReturning])
 
   const hasItems = items.length > 0
@@ -118,9 +193,9 @@ export function JumpToQuestionPanel() {
       {/* Question list */}
       {hasItems && !showLoadingState && !error && (
         <div className="relative flex flex-col gap-0.5 px-1 py-1">
-          {/* Vertical connecting line */}
+          {/* Vertical connecting line - centered through dots at 19px (4px container padding + 10px button padding + 5px half dot) */}
           <div
-            className="absolute left-[1.125rem] top-3 bottom-3 w-px bg-stone-200"
+            className="absolute left-[19px] top-3 bottom-3 w-px bg-stone-200"
             aria-hidden="true"
           />
           {items.map((item, index) => {

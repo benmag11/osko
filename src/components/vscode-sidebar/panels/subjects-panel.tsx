@@ -57,17 +57,20 @@ export function SubjectsPanel({ currentSubject }: SubjectsPanelProps) {
                 key={subject.id}
                 onClick={() => handleSubjectClick(subject.slug)}
                 className={cn(
-                  'flex items-center gap-2.5 w-full px-3 py-2 rounded-md transition-colors text-left',
-                  isActive ? 'bg-stone-50' : 'hover:bg-stone-50/50'
+                  'flex items-center gap-2.5 w-full px-3 py-2 rounded-md transition-colors text-left cursor-pointer',
+                  isActive ? 'bg-stone-50' : 'hover:bg-stone-100'
                 )}
               >
                 {/* Subject icon */}
                 <div
                   className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-md shrink-0 transition-colors border',
+                    'flex h-7 w-7 items-center justify-center rounded-md shrink-0 transition-colors border-[1.5px]',
                     isActive
                       ? 'bg-gradient-to-br from-salmon-500 to-salmon-600 text-white border-salmon-600'
-                      : 'bg-stone-100 text-stone-500 border-stone-200'
+                      : cn(
+                          'bg-white border-stone-200',
+                          isHigher ? 'text-salmon-500' : 'text-sky-500'
+                        )
                   )}
                 >
                   <Icon className="h-4 w-4" />

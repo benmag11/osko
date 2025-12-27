@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { Search, ListFilter, CalendarSearch, ArrowDown01, ChevronsDown, BookOpen, ArrowBigLeft, type LucideIcon } from 'lucide-react'
+import { Search, ListFilter, CalendarSearch, ArrowDown01, ChevronsDown, BookOpen, ArrowBigLeft, Settings, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -152,12 +152,17 @@ export function ActivityBar() {
         ))}
       </ActivityBarGroup>
 
-      {/* Jump to question group */}
+      {/* Jump to question + Settings group */}
       <ActivityBarGroup withDivider isCollapsed={isCollapsed} onExpandClick={handleExpandClick}>
         <ActivityBarButton
           panelId="jump"
           icon={ChevronsDown}
           tooltip="Jump to question"
+        />
+        <ActivityBarButton
+          panelId="settings"
+          icon={Settings}
+          tooltip="Settings"
         />
       </ActivityBarGroup>
 
