@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useQuestionNavigation } from '@/components/providers/question-navigation-provider'
 
+/**
+ * The target position (0-indexed) for the active item in the visible list.
+ * A value of 3 means the active item appears as the 4th visible item from the top,
+ * keeping 3 items visible above it for context.
+ */
+const TARGET_VISIBLE_POSITION = 3
+
 export function JumpToQuestionPanel() {
   const {
     items,
@@ -68,6 +75,66 @@ export function JumpToQuestionPanel() {
     )
   }, [activeIndex])
 
+  /**
+   * Calculates the scroll position needed to place the active item at the target position.
+   * For items 0 through TARGET_VISIBLE_POSITION-1, returns 0 (scroll to top).
+   * For other items, calculates the position that places the active item at the target slot.
+   */
+  const calculateTargetScrollPosition = useCallback(
+    (index: number): number | null => {
+      const scrollContainer = scrollContainerRef.current
+      if (!scrollContainer) return null
+
+      // Items at positions 0, 1, 2 can't be at position 4 - scroll to top
+      if (index < TARGET_VISIBLE_POSITION) {
+        return 0
+      }
+
+      // Get the button that should be at the TOP of the visible area
+      // (this is the item TARGET_VISIBLE_POSITION positions before the active one)
+      const anchorIndex = index - TARGET_VISIBLE_POSITION
+      const anchorButton = itemRefs.current[anchorIndex]
+
+      if (!anchorButton) return null
+
+      // Calculate anchor button's position relative to scroll container
+      const containerRect = scrollContainer.getBoundingClientRect()
+      const buttonRect = anchorButton.getBoundingClientRect()
+
+      // Current scroll position
+      const currentScrollTop = scrollContainer.scrollTop
+
+      // Button's position relative to the container's top (accounting for current scroll)
+      const buttonTopRelativeToContainer =
+        buttonRect.top - containerRect.top + currentScrollTop
+
+      return Math.max(0, buttonTopRelativeToContainer)
+    },
+    []
+  )
+
+  /**
+   * Scrolls the container to place the active item at the target position.
+   * Returns true if scroll was initiated, false otherwise.
+   */
+  const scrollToActivePosition = useCallback(
+    (index: number, options: { behavior: ScrollBehavior }): boolean => {
+      const scrollContainer = scrollContainerRef.current
+      if (!scrollContainer) return false
+
+      const targetScrollTop = calculateTargetScrollPosition(index)
+      if (targetScrollTop === null) return false
+
+      scrollContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: options.behavior,
+      })
+
+      return true
+    },
+    [calculateTargetScrollPosition]
+  )
+
   // Listen for user scrolls on the sidebar container
   // When user scrolls and the active button leaves view, set the flag
   useEffect(() => {
@@ -110,11 +177,8 @@ export function JumpToQuestionPanel() {
       // Mark as programmatic scroll to prevent user scroll detection during initial scroll
       isProgrammaticScrollRef.current = true
 
-      button.scrollIntoView({
-        block: 'nearest',
-        inline: 'nearest',
-        behavior: 'smooth',
-      })
+      // Scroll to position active item at the target slot (4th position)
+      scrollToActivePosition(activeIndex, { behavior: 'smooth' })
 
       // Clear programmatic flag after scroll animation settles
       scrollEndTimeoutRef.current = setTimeout(() => {
@@ -139,11 +203,8 @@ export function JumpToQuestionPanel() {
     // Mark as programmatic scroll to ignore this scroll in the user scroll listener
     isProgrammaticScrollRef.current = true
 
-    button.scrollIntoView({
-      block: 'nearest',
-      inline: 'nearest',
-      behavior: 'smooth',
-    })
+    // Scroll to position active item at the target slot (4th position)
+    scrollToActivePosition(activeIndex, { behavior: 'smooth' })
 
     // After scroll animation completes: reset flags and hide indicator
     if (scrollEndTimeoutRef.current) {
@@ -157,7 +218,7 @@ export function JumpToQuestionPanel() {
         setIsReturning(false)
       }
     }, 500)
-  }, [activeIndex, isNavigating, setIsReturning])
+  }, [activeIndex, isNavigating, setIsReturning, scrollToActivePosition])
 
   const hasItems = items.length > 0
   const showLoadingState = isLoading && !hasItems
