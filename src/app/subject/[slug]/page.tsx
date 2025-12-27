@@ -11,6 +11,7 @@ import { VSCodeSidebarProvider, VSCodeSidebar, SidebarAwareMain } from '@/compon
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
 import { FilterProvider } from '@/components/providers/filter-provider'
+import { QuestionNavigationProvider } from '@/components/providers/question-navigation-provider'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -61,25 +62,27 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
 
   return (
     <FilterProvider initialFilters={filters}>
-      <VSCodeSidebarProvider defaultPanel="topics">
-        <MobileNavbar />
-        <VSCodeSidebar
-          subject={subject}
-          topics={topics}
-          years={years}
-          questionNumbers={questionNumbers}
-        />
-        <SidebarAwareMain>
-          <div className="px-8 py-8">
-            <div className="mx-auto w-full">
-              <FilteredQuestionsView
-                topics={topics}
-                initialData={initialData}
-              />
+      <QuestionNavigationProvider>
+        <VSCodeSidebarProvider defaultPanel="topics">
+          <MobileNavbar />
+          <VSCodeSidebar
+            subject={subject}
+            topics={topics}
+            years={years}
+            questionNumbers={questionNumbers}
+          />
+          <SidebarAwareMain>
+            <div className="px-8 py-8">
+              <div className="mx-auto w-full">
+                <FilteredQuestionsView
+                  topics={topics}
+                  initialData={initialData}
+                />
+              </div>
             </div>
-          </div>
-        </SidebarAwareMain>
-      </VSCodeSidebarProvider>
+          </SidebarAwareMain>
+        </VSCodeSidebarProvider>
+      </QuestionNavigationProvider>
     </FilterProvider>
   )
 }

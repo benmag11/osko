@@ -21,7 +21,7 @@ export function SidebarHeader({ subject }: SidebarHeaderProps) {
         {isCollapsed ? (
           <button
             onClick={toggleSidebar}
-            className="group flex h-12 w-12 items-center justify-center transition-colors"
+            className="cursor-e-resize group flex h-12 w-12 items-center justify-center transition-colors"
             aria-label="Expand sidebar"
           >
             {/* Logo shown by default, hidden on hover */}
@@ -70,7 +70,7 @@ export function SidebarHeader({ subject }: SidebarHeaderProps) {
           </Link>
           <button
             onClick={toggleSidebar}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-stone-500 transition-colors hover:text-stone-800"
+            className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-md text-stone-500 transition-colors hover:text-stone-800"
             aria-label="Collapse sidebar"
           >
             <PanelLeftClose className="h-5 w-5" />

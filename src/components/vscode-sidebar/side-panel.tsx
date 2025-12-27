@@ -6,6 +6,7 @@ import { SearchPanel } from './panels/search-panel'
 import { TopicsPanel } from './panels/topics-panel'
 import { YearsPanel } from './panels/years-panel'
 import { QuestionsPanel } from './panels/questions-panel'
+import { JumpToQuestionPanel } from './panels/jump-to-question-panel'
 import { SubjectsPanel } from './panels/subjects-panel'
 import type { Topic, Subject } from '@/lib/types/database'
 
@@ -14,6 +15,7 @@ const PANEL_TITLES: Record<PanelId, string> = {
   topics: 'Study by Topic',
   years: 'Study by Year',
   questions: 'Study by Question',
+  jump: 'Jump to Question',
   subjects: 'Change Subject',
 }
 
@@ -57,6 +59,9 @@ export function SidePanel({ subject, topics, years, questionNumbers }: SidePanel
           <div className="px-1 pb-3">
             <QuestionsPanel questionNumbers={questionNumbers} />
           </div>
+        )}
+        {activePanel === 'jump' && (
+          <JumpToQuestionPanel />
         )}
         {activePanel === 'subjects' && (
           <SubjectsPanel currentSubject={subject} />

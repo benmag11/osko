@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import { useScrollVisibility } from '@/lib/hooks/use-scroll-visibility'
 import { useFilters } from '@/components/providers/filter-provider'
-import { useQuestionNavigationList } from '@/lib/hooks/use-question-navigation-list'
+import { useQuestionNavigation } from '@/components/providers/question-navigation-provider'
 import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation-list'
 import { QuestionNavigationPanel } from './navigation/navigation-panel'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
@@ -35,11 +35,14 @@ interface FilteredQuestionsViewProps {
 export function FilteredQuestionsView({ topics, initialData }: FilteredQuestionsViewProps) {
   const { filters } = useFilters()
   const { user, profile } = useAuth()
+  const {
+    setActiveQuestionId,
+    setIsNavigating,
+    registerNavigationHandler,
+  } = useQuestionNavigation()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
   const [zoom, setZoom] = useState(MAX_ZOOM)
-  const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null)
-  const [isNavigating, setIsNavigating] = useState(false)
   const programmaticScrollRef = useRef(false)
   const programmaticNavigationOwnerRef = useRef<number | null>(null)
   const hasNextPageRef = useRef(false)
@@ -70,16 +73,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     initialData,
     pauseAutoFetch,
   })
-
-  const {
-    items: navigationItems,
-    totalCount: navigationTotalCount,
-    isLoading: isNavigationLoading,
-    isFetching: isNavigationFetching,
-    error: navigationError,
-    refetch: refetchNavigation,
-    idToIndex: navigationIndexMap,
-  } = useQuestionNavigationList(filters)
 
   useEffect(() => {
     hasNextPageRef.current = Boolean(hasNextPage)
@@ -141,7 +134,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     if (anchor?.type === 'question') {
       setActiveQuestionId(anchor.id)
     }
-  }, [captureAnchor])
+  }, [captureAnchor, setActiveQuestionId])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -405,7 +398,12 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
 
       setAutoFetchPauseCount((count) => Math.max(0, count - 1))
     }
-  }, [ensureQuestionInDom, findQuestionNode])
+  }, [ensureQuestionInDom, findQuestionNode, setActiveQuestionId, setIsNavigating])
+
+  // Register navigation handler with context so sidebar can trigger navigation
+  useEffect(() => {
+    registerNavigationHandler(handleQuestionSelect)
+  }, [registerNavigationHandler, handleQuestionSelect])
 
   useLayoutEffect(() => {
     if (!pendingAnchorRef.current) return
@@ -428,7 +426,6 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const canZoomOut = zoom > MIN_ZOOM + 0.0001
   const maxWidth = `${(BASE_MAX_WIDTH_PX * zoom).toFixed(2)}px`
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
-  const activeIndex = activeQuestionId ? navigationIndexMap.get(activeQuestionId) ?? null : null
   const canReport = Boolean(user)
   const isAdmin = Boolean(profile?.is_admin)
 
@@ -439,17 +436,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
         canZoomOut={canZoomOut}
         onZoomIn={() => adjustZoom(1)}
         onZoomOut={() => adjustZoom(-1)}
-        items={navigationItems}
-        activeQuestionId={activeQuestionId}
-        activeIndex={activeIndex}
         isScrolled={!controlsVisible}
-        isLoading={isNavigationLoading}
-        isFetching={isNavigationFetching}
-        isNavigating={isNavigating}
-        totalCount={navigationTotalCount}
-        error={navigationError}
-        onRetry={() => refetchNavigation()}
-        onSelectQuestion={handleQuestionSelect}
       />
 
       <div

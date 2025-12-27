@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Search, ListFilter, CalendarSearch, ArrowDown01, BookOpen, type LucideIcon } from 'lucide-react'
+import { Search, ListFilter, CalendarSearch, ArrowDown01, ChevronsDown, BookOpen, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -34,7 +34,7 @@ function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonPr
     <button
       onClick={handleClick}
       className={cn(
-        'relative flex h-11 w-12 items-center justify-center',
+        'cursor-pointer relative flex h-11 w-12 items-center justify-center',
         'text-stone-500 transition-all duration-150',
         // Hover styles only when NOT active - just darken the icon, no background
         !isActive && 'hover:text-stone-800',
@@ -109,7 +109,7 @@ export function ActivityBar() {
     <div
       className={cn(
         'flex w-12 flex-col bg-white border-r border-stone-200',
-        isCollapsed && 'cursor-pointer'
+        isCollapsed && 'cursor-e-resize'
       )}
       onClick={handleExpandClick}
     >
@@ -123,6 +123,15 @@ export function ActivityBar() {
             tooltip={config.tooltip}
           />
         ))}
+      </ActivityBarGroup>
+
+      {/* Jump to question group */}
+      <ActivityBarGroup withDivider isCollapsed={isCollapsed} onExpandClick={handleExpandClick}>
+        <ActivityBarButton
+          panelId="jump"
+          icon={ChevronsDown}
+          tooltip="Jump to question"
+        />
       </ActivityBarGroup>
 
       {/* Subject group */}
