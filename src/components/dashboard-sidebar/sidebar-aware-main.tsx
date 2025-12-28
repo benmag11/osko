@@ -25,7 +25,7 @@ export function SidebarAwareMain({ children, className }: SidebarAwareMainProps)
   return (
     <main
       className={cn(
-        'min-h-screen bg-cream-50 pt-14 lg:pt-8',
+        'min-h-screen bg-cream-50 pt-14 lg:pt-10',
         'transition-[margin-left] duration-200 ease-out',
         // Desktop margin based on collapse state
         // Collapsed: 48px (w-12), Expanded: 200px (12.5rem)

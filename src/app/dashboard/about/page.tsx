@@ -1,65 +1,58 @@
 import { DashboardPage } from '@/components/layout/dashboard-page'
-import { SubjectStatusTable } from './components/subject-status-table'
-import { FutureFeaturesTimeline } from './components/future-features-timeline'
+import { SubjectList } from './components/subject-list'
+import { FeatureChecklist } from './components/feature-checklist'
 
 export default function AboutPage() {
   return (
-    <DashboardPage maxWidth="max-w-6xl">
-      {/* Main Header */}
-      <div className="mb-12">
-        <h1 className="text-7xl font-serif font-normal text-warm-text-secondary mb-4">
-          Some Information About Osko.
+    <DashboardPage maxWidth="max-w-4xl">
+      {/* Hero Section */}
+      <header className="pt-8 pb-16 md:pt-12 md:pb-20">
+        <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-warm-text-primary leading-tight tracking-tight">
+          I spent 6th year complaining about Studyclix.
+          <br />
+          <span className="text-sky-600">So I built something better.</span>
         </h1>
-      </div>
+      </header>
 
       {/* Divider */}
-      <hr className="border-stone-200 mb-12" />
-      
-      {/* Available Subjects Section */}
-      <section className="mb-12">
-        <div className="text-center mb-6">
-          <h2 className="text-5xl font-sans font-semibold text-stone-800 mb-6">
-            Available Subjects
-          </h2>
-          <div className="prose prose-stone max-w-3xl mx-auto">
-            <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-              Adding subjects takes a lot of time. All (popular) subjects 
-              fully uploaded by <b><i>October 10th</i></b>.
-            </p>
-          </div>
+      <div className="w-16 h-px bg-stone-300 mb-16" />
+
+      {/* Story Section */}
+      <article className="mb-20">
+        <div className="space-y-8">
+          <p className="font-serif text-[1.375rem] md:text-[1.5rem] text-warm-text-secondary leading-[1.9]">
+            I spent all of 6th year complaining that Studyclix was fairly shite for the 90 euro
+            everyone paid for it, so I decided to put my time where my mouth was and built this.
+          </p>
+          <p className="font-serif text-[1.375rem] md:text-[1.5em] text-warm-text-secondary leading-[1.9]">
+            I hope someone finds some usefulness in the literal hundreds of hours I have spent
+            making this website. It will only get better, and I won&apos;t sell out.
+          </p>
         </div>
-        <SubjectStatusTable />
-      </section>
+      </article>
 
-      {/* Divider */}
-      <hr className="border-stone-200 mb-12" />
-      
-      {/* Future Features Timeline */}
-      <FutureFeaturesTimeline />
-      
-      {/* Divider */}
-      <hr className="border-stone-200 mb-12" />
-      
-      {/* Why I Built This Section */}
-      <section className="mb-12">
-        <h2 className="text-4xl font-sans font-semibold text-stone-800 mb-6">
-          Why this website exists?
+      {/* Subjects Section */}
+      <section className="mb-20">
+        <h2 className="font-serif text-3xl md:text-4xl text-warm-text-primary mb-10">
+          Available Subjects
         </h2>
-        <div className="prose prose-stone max-w-none">
-          <p className="text-warm-text-secondary leading-relaxed font-serif text-xl">
-            I spent all of 6th year complaining that Studyclix was fairly shite for the 90 euro everyone paid for it, so decided to put my time where my mouth was and built this.
-          </p>
-      
-          <p className="text-warm-text-secondary leading-relaxed font-serif text-xl mt-4">
-            I hope someone finds some usefulness in the literal hundreds of hours I have spent making this website, it will only get better, and I won&apos;t sell out (for a while anyways).
-          </p>
-        </div>
+        <SubjectList />
       </section>
 
-      {/* Divider */}
-      <hr className="border-stone-200 mb-12" />
-      
+      {/* Features Section */}
+      <section className="mb-16">
+        <h2 className="font-serif text-3xl md:text-4xl text-warm-text-primary mb-10">
+          What&apos;s Next
+        </h2>
+        <FeatureChecklist />
+      </section>
 
+      {/* Footer Note */}
+      <footer className="pt-8 pb-4 border-t border-stone-200">
+        <p className="font-sans text-sm text-warm-text-muted">
+          Built with late nights and too much coffee.
+        </p>
+      </footer>
     </DashboardPage>
   )
 }
