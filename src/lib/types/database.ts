@@ -197,6 +197,7 @@ export interface QuestionCursor {
   exam_type: 'normal' | 'deferred' | 'supplemental'
   question_number: number | null
   question_parts: string[]
+  additional_info: string | null  // Included in sort key for alphabetical ordering
 }
 
 export interface PaginatedResponse {

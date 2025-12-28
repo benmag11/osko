@@ -23,7 +23,7 @@ export function QuestionsPanel({ questionNumbers }: QuestionsPanelProps) {
       {questionNumbers.map((questionNumber) => (
         <label
           key={questionNumber}
-          className={`group flex cursor-pointer items-center gap-2.5 px-3 py-1.5 rounded-md transition-colors duration-150 hover:bg-stone-50 ${
+          className={`group flex cursor-pointer items-center gap-2.5 px-3 py-1.5 rounded-md transition-colors duration-150 hover:bg-stone-50/50 ${
             isPending ? 'opacity-60' : ''
           }`}
         >
@@ -31,9 +31,9 @@ export function QuestionsPanel({ questionNumbers }: QuestionsPanelProps) {
             checked={filters.questionNumbers?.includes(questionNumber) ?? false}
             onCheckedChange={() => toggleQuestionNumber(questionNumber)}
             disabled={isPending}
-            className="h-4 w-4 border-stone-700 data-[state=checked]:bg-salmon-500 data-[state=checked]:border-salmon-500"
+            className="h-4 w-4 border-stone-500 data-[state=checked]:bg-salmon-500 data-[state=checked]:border-salmon-500"
           />
-          <span className="text-sm text-stone-800 transition-colors group-hover:text-stone-900">
+          <span className="text-sm text-stone-700 transition-colors group-hover:text-stone-900">
             Question {questionNumber}
           </span>
         </label>

@@ -36,7 +36,7 @@ function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonPr
       onClick={handleClick}
       className={cn(
         'cursor-pointer relative flex h-11 w-12 items-center justify-center',
-        'text-stone-500 transition-all duration-150',
+        'text-stone-600 transition-all duration-150',
         // Hover styles only when NOT active - just darken the icon, no background
         !isActive && 'hover:text-stone-800',
         // Active state with left indicator line (flush with edge) - no hover effect
@@ -102,7 +102,7 @@ function BackToDashboardButton() {
       href="/dashboard/study"
       className={cn(
         'flex h-11 w-12 items-center justify-center',
-        'text-stone-500 transition-all duration-150',
+        'text-stone-600 transition-all duration-150',
         'hover:text-stone-800 hover:bg-stone-100'
       )}
     >

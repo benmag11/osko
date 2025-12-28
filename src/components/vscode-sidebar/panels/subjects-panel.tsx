@@ -67,7 +67,7 @@ export function SubjectsPanel({ currentSubject }: SubjectsPanelProps) {
                     'flex h-7 w-7 items-center justify-center rounded-md shrink-0 transition-colors border-[1.5px]',
                     isActive
                       ? 'bg-gradient-to-br from-salmon-500 to-salmon-600 border-salmon-600'
-                      : 'bg-white border-stone-300'
+                      : 'bg-white border-stone-400'
                   )}
                 >
                   <Icon className={cn(

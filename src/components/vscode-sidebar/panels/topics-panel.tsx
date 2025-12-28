@@ -139,7 +139,7 @@ function TopicCheckbox({
         disabled={disabled}
         className="h-4 w-4 border-stone-500 data-[state=checked]:bg-salmon-500 data-[state=checked]:border-salmon-500"
       />
-      <span className="text-sm text-stone-800 transition-colors group-hover:text-stone-900">
+      <span className="text-sm text-stone-700 transition-colors group-hover:text-stone-900">
         {topic.name}
       </span>
     </label>
