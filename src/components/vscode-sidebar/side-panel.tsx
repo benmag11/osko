@@ -11,6 +11,7 @@ import { QuestionsPanel } from './panels/questions-panel'
 import { JumpToQuestionPanel } from './panels/jump-to-question-panel'
 import { SubjectsPanel } from './panels/subjects-panel'
 import { SettingsPanel } from './panels/settings-panel'
+import { useGroupedTopics } from '@/lib/hooks/use-grouped-topics'
 import type { Topic, Subject } from '@/lib/types/database'
 
 const PANEL_TITLES: Record<PanelId, string> = {
@@ -33,6 +34,9 @@ interface SidePanelProps {
 export function SidePanel({ subject, topics, years, questionNumbers }: SidePanelProps) {
   const { activePanel } = useVSCodeSidebar()
   const isJumpPanel = activePanel === 'jump'
+
+  // Fetch grouped topics for collapsible sidebar
+  const { groupedTopics } = useGroupedTopics(subject.id)
 
   return (
     <div className="flex w-[280px] flex-col bg-white overflow-hidden">
@@ -59,7 +63,7 @@ export function SidePanel({ subject, topics, years, questionNumbers }: SidePanel
         )}
         {activePanel === 'topics' && (
           <div className="px-1 pb-3">
-            <TopicsPanel topics={topics} />
+            <TopicsPanel groupedTopics={groupedTopics} topics={topics} />
           </div>
         )}
         {activePanel === 'years' && (

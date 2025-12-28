@@ -11,6 +11,11 @@ export interface Database {
         Insert: Omit<Topic, 'id' | 'created_at'>
         Update: Partial<Omit<Topic, 'id'>>
       }
+      topic_groups: {
+        Row: TopicGroup
+        Insert: Omit<TopicGroup, 'id' | 'created_at'>
+        Update: Partial<Omit<TopicGroup, 'id'>>
+      }
       questions: {
         Row: Question
         Insert: Omit<Question, 'id' | 'created_at' | 'updated_at'>
@@ -102,11 +107,27 @@ export interface Subject {
   created_at: string
 }
 
-export interface Topic {
+export interface TopicGroup {
   id: string
   name: string
   subject_id: string
   created_at: string
+}
+
+export interface Topic {
+  id: string
+  name: string
+  subject_id: string
+  group_id: string | null
+  created_at: string
+}
+
+export interface GroupedTopics {
+  ungrouped: Topic[]
+  groups: Array<{
+    group: TopicGroup
+    topics: Topic[]
+  }>
 }
 
 // Type for word coordinate information

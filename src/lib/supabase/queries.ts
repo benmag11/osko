@@ -3,13 +3,14 @@
 import { createServerSupabaseClient } from './server'
 import { QueryError } from '@/lib/errors'
 import { buildSearchQueryParams } from './query-builders'
-import type { 
-  Subject, 
-  Topic, 
-  Filters, 
+import type {
+  Subject,
+  Topic,
+  TopicGroup,
+  Filters,
   PaginatedResponse,
   UserSubjectWithSubject,
-  QuestionCursor 
+  QuestionCursor
 } from '@/lib/types/database'
 
 // Error handling wrapper with retry logic
@@ -116,13 +117,13 @@ export async function getSubjectBySlug(slug: string): Promise<Subject | null> {
 export async function getTopics(subjectId: string): Promise<Topic[]> {
   return withRetry(async () => {
     const supabase = await createServerSupabaseClient()
-    
+
     const { data, error } = await supabase
       .from('topics')
       .select('*')
       .eq('subject_id', subjectId)
       .order('name', { ascending: true })
-      
+
     if (error) {
       console.error('Error fetching topics:', error)
       throw new QueryError(
@@ -131,11 +132,38 @@ export async function getTopics(subjectId: string): Promise<Topic[]> {
         error
       )
     }
-    
+
     return data as Topic[]
   }).catch(error => {
     // Return empty array as fallback
     console.error('Failed to fetch topics after retries:', error)
+    return []
+  })
+}
+
+export async function getTopicGroups(subjectId: string): Promise<TopicGroup[]> {
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+
+    const { data, error } = await supabase
+      .from('topic_groups')
+      .select('*')
+      .eq('subject_id', subjectId)
+      .order('name', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching topic groups:', error)
+      throw new QueryError(
+        'Failed to fetch topic groups',
+        'TOPIC_GROUPS_FETCH_ERROR',
+        error
+      )
+    }
+
+    return data as TopicGroup[]
+  }).catch(error => {
+    // Return empty array as fallback
+    console.error('Failed to fetch topic groups after retries:', error)
     return []
   })
 }

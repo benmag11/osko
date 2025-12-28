@@ -101,11 +101,14 @@ export function SubjectDropdown({
                 >
                   <div className={cn(
                     "flex h-6 w-6 items-center justify-center rounded-md transition-colors",
-                    isActive ? 
-                      "bg-gradient-to-br from-salmon-500 to-salmon-600 text-cream-50" : 
+                    isActive ?
+                      "bg-gradient-to-br from-salmon-500 to-salmon-600" :
                       "bg-cream-200"
                   )}>
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className={cn(
+                      "h-3.5 w-3.5",
+                      isActive ? "text-cream-50" : "text-warm-text-secondary"
+                    )} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">

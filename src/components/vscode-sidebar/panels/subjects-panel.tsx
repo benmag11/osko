@@ -66,14 +66,14 @@ export function SubjectsPanel({ currentSubject }: SubjectsPanelProps) {
                   className={cn(
                     'flex h-7 w-7 items-center justify-center rounded-md shrink-0 transition-colors border-[1.5px]',
                     isActive
-                      ? 'bg-gradient-to-br from-salmon-500 to-salmon-600 text-white border-salmon-600'
-                      : cn(
-                          'bg-white border-stone-200',
-                          isHigher ? 'text-salmon-500' : 'text-sky-500'
-                        )
+                      ? 'bg-gradient-to-br from-salmon-500 to-salmon-600 border-salmon-600'
+                      : 'bg-white border-stone-300'
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className={cn(
+                    "h-4 w-4",
+                    isActive ? "text-white" : "text-stone-600"
+                  )} />
                 </div>
 
                 {/* Subject name and level - single line */}
