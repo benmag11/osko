@@ -55,7 +55,7 @@ export function VSCodeSidebar({
         )}
       >
         {/* Header with Logo and Toggle */}
-        <SidebarHeader subject={subject} />
+        <SidebarHeader />
 
         {/* Main Content: Activity Bar + Side Panel */}
         <div className="flex flex-1 min-h-0">

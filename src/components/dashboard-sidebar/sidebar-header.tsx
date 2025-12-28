@@ -4,14 +4,14 @@ import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PanelLeft, PanelLeftClose } from 'lucide-react'
-import { useVSCodeSidebar } from './sidebar-context'
+import { useDashboardSidebar } from './sidebar-context'
 
 export function SidebarHeader() {
-  const { isCollapsed, toggleSidebar } = useVSCodeSidebar()
+  const { isCollapsed, toggleSidebar } = useDashboardSidebar()
 
   return (
     <div className="flex items-center h-12 border-b border-stone-200">
-      {/* Left section: 48px wide, matches activity bar width - logo always centered here */}
+      {/* Left section: 48px wide - logo always centered here */}
       <div className="flex h-full w-12 shrink-0 items-center justify-center">
         {isCollapsed ? (
           <button
