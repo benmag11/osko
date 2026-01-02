@@ -15,7 +15,7 @@ interface SidebarAwareMainProps {
  *
  * Dashboard sidebar widths:
  * - Collapsed: 48px (w-12)
- * - Expanded: 200px (12.5rem)
+ * - Expanded: 180px (11.25rem)
  */
 export function SidebarAwareMain({ children, className }: SidebarAwareMainProps) {
   const { isCollapsed, isMobile } = useDashboardSidebar()
@@ -28,8 +28,8 @@ export function SidebarAwareMain({ children, className }: SidebarAwareMainProps)
         'min-h-screen bg-cream-50 pt-14 lg:pt-10',
         'transition-[margin-left] duration-200 ease-out',
         // Desktop margin based on collapse state
-        // Collapsed: 48px (w-12), Expanded: 200px (12.5rem)
-        isMobile === false && isCollapsed ? 'lg:ml-12' : 'lg:ml-[200px]',
+        // Collapsed: 48px (w-12), Expanded: 180px (11.25rem)
+        isMobile === false && isCollapsed ? 'lg:ml-12' : 'lg:ml-[180px]',
         className
       )}
     >

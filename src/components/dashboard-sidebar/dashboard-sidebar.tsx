@@ -31,7 +31,7 @@ export function DashboardSidebar() {
         className={cn(
           'fixed inset-y-0 left-0 z-30 hidden lg:flex flex-col bg-white border-r border-stone-200',
           'transition-[width] duration-200 ease-out',
-          isCollapsed ? 'w-12' : 'w-[200px]'
+          isCollapsed ? 'w-12' : 'w-[180px]'
         )}
       >
         <SidebarHeader />

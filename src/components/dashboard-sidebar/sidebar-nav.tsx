@@ -112,7 +112,7 @@ export function SidebarNav() {
           {groupIndex > 0 && (
             <div className="mx-3 my-2 border-t border-stone-200" />
           )}
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
             {group.items.map((item) => {
               const isActive = pathname === item.url
               const Icon = item.icon
@@ -138,10 +138,8 @@ export function SidebarNav() {
                   onPointerLeave={cancelPrefetch}
                   onFocus={() => schedulePrefetch(item.url)}
                   className={cn(
-                    'flex items-center h-11 transition-colors duration-150',
-                    isCollapsed
-                      ? 'w-12 justify-center'
-                      : 'mx-2 px-3 rounded-md gap-3',
+                    'flex items-center h-9 transition-colors duration-150',
+                    isCollapsed ? 'w-12' : 'mr-2 rounded-r-md',
                     isActive
                       ? 'text-salmon-600 bg-salmon-50'
                       : 'text-stone-600 hover:text-stone-800 hover:bg-stone-100'
@@ -149,11 +147,13 @@ export function SidebarNav() {
                 >
                   {/* Active indicator bar (only when collapsed) */}
                   {isCollapsed && isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-salmon-500 rounded-r" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-salmon-500 rounded-r" />
                   )}
-                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="flex w-12 shrink-0 items-center justify-center">
+                    <Icon className="h-4 w-4" />
+                  </span>
                   {!isCollapsed && (
-                    <span className="text-[15px]">{item.title}</span>
+                    <span className="text-sm">{item.title}</span>
                   )}
                 </Link>
               )

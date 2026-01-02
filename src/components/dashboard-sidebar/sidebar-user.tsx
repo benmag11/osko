@@ -44,9 +44,9 @@ export function SidebarUser() {
 
   // Collapsed state: Avatar only with tooltip
   const collapsedTrigger = (
-    <button className="flex h-11 w-12 items-center justify-center transition-colors duration-150 hover:bg-stone-100">
-      <Avatar className="h-7 w-7 rounded-lg">
-        <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs">
+    <button className="flex h-9 w-12 items-center justify-center transition-colors duration-150 hover:bg-stone-100">
+      <Avatar className="h-6 w-6 rounded-lg">
+        <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-[10px]">
           {initials}
         </AvatarFallback>
       </Avatar>
@@ -55,17 +55,19 @@ export function SidebarUser() {
 
   // Expanded state: Full user info with avatar, name, email, chevron
   const expandedTrigger = (
-    <button className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors duration-150 hover:bg-stone-100 rounded-md mx-2 mb-2">
-      <Avatar className="h-8 w-8 rounded-lg shrink-0">
-        <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
-        <span className="truncate font-medium text-stone-800">{displayName}</span>
-        <span className="truncate text-xs text-stone-500">{email}</span>
+    <button className="flex w-full items-center text-left transition-colors duration-150 hover:bg-stone-100 rounded-r-md mr-2 mb-1">
+      <span className="flex w-12 shrink-0 items-center justify-center">
+        <Avatar className="h-6 w-6 rounded-lg">
+          <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-[10px]">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+      </span>
+      <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden py-1.5">
+        <span className="truncate font-medium text-stone-800 text-xs">{displayName}</span>
+        <span className="truncate text-[10px] text-stone-500">{email}</span>
       </div>
-      <ChevronsUpDown className="h-4 w-4 text-stone-400 shrink-0" />
+      <ChevronsUpDown className="h-3.5 w-3.5 text-stone-400 shrink-0 mr-2" />
     </button>
   )
 
