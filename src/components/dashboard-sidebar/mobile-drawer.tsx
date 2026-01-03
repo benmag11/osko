@@ -97,9 +97,9 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
             <Image
               src="/logo-icon.svg"
               alt=""
-              width={20}
-              height={20}
-              className="h-5 w-5"
+              width={25}
+              height={25}
+              className="h-[25px] w-[25px]"
             />
             <Image
               src="/logo-text.svg"

@@ -23,9 +23,9 @@ export function SidebarHeader() {
             <Image
               src="/logo-icon.svg"
               alt="OSKO"
-              width={20}
-              height={20}
-              className="h-5 w-5 block group-hover:hidden"
+              width={25}
+              height={25}
+              className="h-[25px] w-[25px] block group-hover:hidden"
             />
             {/* Expand icon hidden by default, shown on hover */}
             <PanelLeft className="h-5 w-5 text-stone-800 hidden group-hover:block" />
@@ -39,9 +39,9 @@ export function SidebarHeader() {
             <Image
               src="/logo-icon.svg"
               alt="OSKO"
-              width={20}
-              height={20}
-              className="h-5 w-5"
+              width={25}
+              height={25}
+              className="h-[25px] w-[25px]"
             />
           </Link>
         )}
