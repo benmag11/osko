@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   BookOpen,
-  Info,
   BarChart3,
   Settings,
   Flag,
@@ -49,7 +48,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: 'Reports', url: '/dashboard/reports', icon: Flag, adminOnly: true },
       { title: 'Settings', url: '/dashboard/settings', icon: Settings },
-      { title: 'About', url: '/dashboard/about', icon: Info },
     ]
   }
 ]
