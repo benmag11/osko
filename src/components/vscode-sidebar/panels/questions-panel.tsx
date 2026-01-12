@@ -5,15 +5,16 @@ import { useFilters } from '@/components/providers/filter-provider'
 
 interface QuestionsPanelProps {
   questionNumbers: number[]
+  subjectName: string
 }
 
-export function QuestionsPanel({ questionNumbers }: QuestionsPanelProps) {
+export function QuestionsPanel({ questionNumbers, subjectName }: QuestionsPanelProps) {
   const { filters, toggleQuestionNumber, isPending } = useFilters()
 
   if (questionNumbers.length === 0) {
     return (
       <p className="text-sm text-stone-400 py-4 px-3 text-center">
-        No question numbers available for this subject.
+        Unfortunately the exam structure for {subjectName} does not contain question numbers.
       </p>
     )
   }

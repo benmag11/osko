@@ -73,7 +73,7 @@ export function SidePanel({ subject, topics, years, questionNumbers }: SidePanel
         )}
         {activePanel === 'questions' && (
           <div className="px-1 pb-3">
-            <QuestionsPanel questionNumbers={questionNumbers} />
+            <QuestionsPanel questionNumbers={questionNumbers} subjectName={subject.name} />
           </div>
         )}
         {activePanel === 'jump' && (

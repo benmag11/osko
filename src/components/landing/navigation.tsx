@@ -10,9 +10,10 @@ export function LandingNavigation() {
           <Image
             src="/logo-full.svg"
             alt="Osko"
-            width={76}
-            height={20}
+            width={134}
+            height={36}
             priority
+            className="h-9 w-auto"
           />
         </Link>
         

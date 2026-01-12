@@ -52,7 +52,7 @@ export function SidebarHeader() {
         <div className="flex flex-1 items-center justify-between pr-3">
           <Link
             href="/dashboard/study"
-            className="cursor-pointer"
+            className="-ml-0.5 cursor-pointer"
             aria-label="OSKO - Go to dashboard"
           >
             <Image
@@ -60,7 +60,7 @@ export function SidebarHeader() {
               alt="OSKO"
               width={50}
               height={20}
-              className="h-5 w-auto"
+              className="h-4 w-auto"
             />
           </Link>
           <button
