@@ -2,7 +2,7 @@
 
 import { useState, useCallback, memo, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
-import Image from 'next/image'
+import { TrackedImage } from './tracked-image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
@@ -141,7 +141,7 @@ export const QuestionCard = memo(function QuestionCard({
       <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.15)]">
         <div className="relative w-full bg-cream-50">
           {hasValidQuestionImage ? (
-            <Image
+            <TrackedImage
               src={question.question_image_url!}
               alt={`Question ${question.question_number ?? 'image'}`}
               width={questionImageWidth}
@@ -150,6 +150,8 @@ export const QuestionCard = memo(function QuestionCard({
               priority={isPriority}
               fetchPriority={isPriority ? 'high' : 'auto'}
               sizes={questionImageSizes}
+              imageType="question"
+              questionId={question.id}
             />
           ) : (
             <div className="flex items-center justify-center h-48 bg-stone-100">
@@ -188,13 +190,16 @@ export const QuestionCard = memo(function QuestionCard({
           
           {showMarkingScheme && hasValidMarkingScheme && (
             <div className="px-4 pb-4">
-              <Image
+              <TrackedImage
                 src={question.marking_scheme_image_url!}
                 alt={`Marking scheme for question ${question.question_number ?? ''}`}
                 width={markingSchemeWidth}
                 height={markingSchemeHeight}
                 className="w-full h-auto rounded-lg"
                 sizes={markingSchemeSizes}
+                imageType="marking_scheme"
+                questionId={question.id}
+                wasPrefetched={inView}
               />
             </div>
           )}
