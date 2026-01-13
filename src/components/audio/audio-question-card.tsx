@@ -14,6 +14,7 @@ import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from '@/components/questions/constants'
 import { getTransformedImageUrl } from '@/lib/supabase/image-loader'
 import styles from '@/components/questions/styles/question-card.module.css'
 import { TranscriptModal } from './transcript-modal'
+import { AudioPlayer } from './audio-player'
 
 interface AudioQuestionCardProps {
   question: AudioQuestion
@@ -170,12 +171,12 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
     >
       <div className={cn('flex items-center justify-between', styles.header)}>
         <div className="flex items-center gap-2">
-          <h3 className={cn('font-serif font-semibold text-warm-text-primary', styles.title)}>
-            {title}
-          </h3>
           {hasAudio && (
             <Headphones className="h-4 w-4 text-salmon-500 shrink-0" />
           )}
+          <h3 className={cn('font-serif font-semibold text-warm-text-primary', styles.title)}>
+            {title}
+          </h3>
         </div>
         <div className={cn('flex items-center', styles.actions)}>
           {canReport && (
@@ -192,7 +193,16 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.17)]">
+      {/* Audio Player - visible directly on card */}
+      {hasAudio && (
+        <AudioPlayer
+          audioUrl={question.audio_url!}
+          questionId={question.id}
+          className="mt-3"
+        />
+      )}
+
+      <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.17)] mt-2">
         <div className="relative w-full bg-cream-50">
           {hasValidQuestionImage ? (
             <TrackedImage
@@ -215,26 +225,11 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
         </div>
 
         <div className="bg-[#F5F4ED] rounded-b-xl border-t border-stone-300">
-          {/* Actions row with transcript and marking scheme buttons */}
+          {/* Actions row with marking scheme and transcript buttons */}
           <div
             className={cn('flex justify-center gap-3 flex-wrap', styles.markingToggleContainer)}
             onMouseEnter={handleToggleMouseEnter}
           >
-            {/* Show Transcript Button */}
-            {hasAudio && hasTranscript && (
-              <Button
-                onClick={() => setShowTranscriptModal(true)}
-                variant="outline"
-                className={cn(
-                  'border-salmon-400 bg-salmon-50 text-salmon-700 hover:bg-salmon-100 hover:border-salmon-500 hover:text-salmon-800 font-sans',
-                  styles.markingToggleButton
-                )}
-              >
-                <Headphones className={cn('h-4 w-4', styles.icon)} />
-                Show Transcript
-              </Button>
-            )}
-
             {/* Marking Scheme Toggle */}
             {hasValidMarkingScheme ? (
               <Button
@@ -260,6 +255,21 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
             ) : !hasAudio ? (
               <p className="text-sm font-sans text-warm-text-muted">No marking scheme available</p>
             ) : null}
+
+            {/* Show Transcript Button */}
+            {hasAudio && hasTranscript && (
+              <Button
+                onClick={() => setShowTranscriptModal(true)}
+                variant="outline"
+                className={cn(
+                  'border-salmon-400 bg-white text-salmon-600 hover:bg-salmon-50 hover:border-salmon-500 hover:text-salmon-700 font-sans',
+                  styles.markingToggleButton
+                )}
+              >
+                <Headphones className={cn('h-4 w-4', styles.icon)} />
+                Show Transcript
+              </Button>
+            )}
           </div>
 
           {showMarkingScheme && markingSchemeUrl && (

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef, type RefObject } from 'react'
-import type { TranscriptItem, TranscriptWord } from '@/lib/types/database'
+import { useState, useEffect, useCallback, useRef, type RefObject } from 'react'
 
 const STORAGE_KEY = 'addy-audio-preferences'
 
@@ -47,99 +46,12 @@ function savePreferences(prefs: AudioPreferences): void {
   }
 }
 
-/**
- * Represents a word with its global index across all sentences
- */
-interface IndexedWord {
-  word: TranscriptWord
-  globalIndex: number
-  sentenceIndex: number
-  wordIndexInSentence: number
-}
-
-/**
- * Binary search to find the word at a given time
- * Returns the index of the word whose time range contains the given time
- */
-function findWordAtTime(words: IndexedWord[], time: number): number | null {
-  if (words.length === 0) return null
-
-  let left = 0
-  let right = words.length - 1
-
-  // Check if time is before first word
-  if (time < words[0].word.start) return null
-
-  // Check if time is after last word
-  if (time > words[words.length - 1].word.end) return null
-
-  // Binary search
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2)
-    const word = words[mid].word
-
-    if (time >= word.start && time <= word.end) {
-      return mid
-    }
-
-    if (time < word.start) {
-      right = mid - 1
-    } else {
-      left = mid + 1
-    }
-  }
-
-  // Find the closest word if we're between words (in a gap)
-  // Return the previous word if we're in a gap
-  if (left > 0 && left < words.length) {
-    const prevWord = words[left - 1].word
-    const nextWord = words[left].word
-    if (time > prevWord.end && time < nextWord.start) {
-      return left - 1 // Return previous word during gaps
-    }
-  }
-
-  return null
-}
-
-/**
- * Build a flat index of all words with their global positions
- */
-function buildWordIndex(transcript: TranscriptItem[]): IndexedWord[] {
-  const indexedWords: IndexedWord[] = []
-  let globalIndex = 0
-  let sentenceIndex = 0
-
-  for (const item of transcript) {
-    if (item.type === 'sentence') {
-      for (let wordIndex = 0; wordIndex < item.words.length; wordIndex++) {
-        indexedWords.push({
-          word: item.words[wordIndex],
-          globalIndex,
-          sentenceIndex,
-          wordIndexInSentence: wordIndex,
-        })
-        globalIndex++
-      }
-      sentenceIndex++
-    }
-  }
-
-  return indexedWords
-}
-
-export interface TranscriptSyncState {
-  /** Currently active word global index */
-  activeWordIndex: number | null
-  /** Currently active sentence index (among sentences only, not headers) */
-  activeSentenceIndex: number | null
-  /** Active word index within the current sentence */
-  activeWordIndexInSentence: number | null
-  /** Current playback time in seconds */
-  currentTime: number
+export interface AudioPlayerState {
   /** Whether audio is currently playing */
   isPlaying: boolean
-  /** Total duration of the audio */
+  /** Current playback time in seconds */
+  currentTime: number
+  /** Total duration of the audio in seconds */
   duration: number
   /** Current volume (0-1) */
   volume: number
@@ -151,14 +63,14 @@ export interface TranscriptSyncState {
   isLoading: boolean
   /** Whether audio has loaded enough to play */
   canPlay: boolean
-  /** Seek to a specific time */
-  seekTo: (time: number) => void
+  /** Play the audio */
+  play: () => void
+  /** Pause the audio */
+  pause: () => void
   /** Toggle play/pause */
   togglePlayPause: () => void
-  /** Play audio */
-  play: () => void
-  /** Pause audio */
-  pause: () => void
+  /** Seek to a specific time in seconds */
+  seekTo: (time: number) => void
   /** Skip forward or backward by seconds (negative for backward) */
   skip: (seconds: number) => void
   /** Set volume (0-1) */
@@ -170,25 +82,31 @@ export interface TranscriptSyncState {
 }
 
 /**
- * Hook for synchronizing audio playback with transcript highlighting
+ * Hook for managing audio playback with volume, speed, and persistent preferences
  *
- * @param transcript - Array of transcript items (headers and sentences)
+ * Extends basic playback controls with:
+ * - Volume control with mute toggle
+ * - Playback speed control (0.5x - 2x)
+ * - Persistent preferences via localStorage
+ * - Loading state tracking
+ * - RAF-based smooth time tracking
+ *
  * @param audioRef - Ref to the audio element
- * @returns Sync state including active word indices and playback controls
+ * @returns Audio player state and controls
  *
  * @example
- * const { activeWordIndex, activeSentenceIndex, togglePlayPause } = useTranscriptSync(transcript, audioRef)
+ * const audioRef = useRef<HTMLAudioElement>(null)
+ * const { isPlaying, togglePlayPause, setPlaybackRate } = useAudioPlayer(audioRef)
  */
-export function useTranscriptSync(
-  transcript: TranscriptItem[],
+export function useAudioPlayer(
   audioRef: RefObject<HTMLAudioElement | null>
-): TranscriptSyncState {
+): AudioPlayerState {
   // Load initial preferences from localStorage
   const [preferences] = useState(loadPreferences)
 
   // Playback state
-  const [currentTime, setCurrentTime] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [canPlay, setCanPlay] = useState(false)
@@ -198,37 +116,7 @@ export function useTranscriptSync(
   const [playbackRate, setPlaybackRateState] = useState(preferences.playbackRate)
   const [isMuted, setIsMuted] = useState(false)
 
-  // Build word index once when transcript changes
-  const wordIndex = useMemo(() => buildWordIndex(transcript), [transcript])
-
-  // Find active word based on current time
-  const activePosition = useMemo(() => {
-    if (wordIndex.length === 0) {
-      return {
-        activeWordIndex: null,
-        activeSentenceIndex: null,
-        activeWordIndexInSentence: null,
-      }
-    }
-
-    const index = findWordAtTime(wordIndex, currentTime)
-    if (index === null) {
-      return {
-        activeWordIndex: null,
-        activeSentenceIndex: null,
-        activeWordIndexInSentence: null,
-      }
-    }
-
-    const indexed = wordIndex[index]
-    return {
-      activeWordIndex: indexed.globalIndex,
-      activeSentenceIndex: indexed.sentenceIndex,
-      activeWordIndexInSentence: indexed.wordIndexInSentence,
-    }
-  }, [wordIndex, currentTime])
-
-  // Track animation frame ID for cleanup
+  // Refs for RAF loop
   const rafIdRef = useRef<number | null>(null)
   const isPlayingRef = useRef(false)
 
@@ -241,7 +129,7 @@ export function useTranscriptSync(
     audio.playbackRate = playbackRate
   }, [audioRef, volume, playbackRate])
 
-  // requestAnimationFrame loop for smooth time tracking
+  // RAF loop for smooth time tracking (every frame for perfectly smooth slider)
   const startTimeTracking = useCallback(() => {
     const audio = audioRef.current
     if (!audio) return
@@ -249,6 +137,7 @@ export function useTranscriptSync(
     const tick = () => {
       if (!isPlayingRef.current) return
 
+      // Update every frame for smooth slider movement
       setCurrentTime(audio.currentTime)
       rafIdRef.current = requestAnimationFrame(tick)
     }
@@ -278,7 +167,6 @@ export function useTranscriptSync(
       isPlayingRef.current = false
       setIsPlaying(false)
       stopTimeTracking()
-      // Sync final time on pause
       setCurrentTime(audio.currentTime)
     }
 
@@ -289,7 +177,6 @@ export function useTranscriptSync(
     }
 
     const handleSeeked = () => {
-      // Update time immediately after seeking
       setCurrentTime(audio.currentTime)
     }
 
@@ -363,10 +250,13 @@ export function useTranscriptSync(
     }
   }, [audioRef, startTimeTracking, stopTimeTracking])
 
-  const seekTo = useCallback((time: number) => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.currentTime = Math.max(0, Math.min(time, audio.duration || 0))
+  // Playback controls
+  const play = useCallback(() => {
+    audioRef.current?.play()
+  }, [audioRef])
+
+  const pause = useCallback(() => {
+    audioRef.current?.pause()
   }, [audioRef])
 
   const togglePlayPause = useCallback(() => {
@@ -379,16 +269,10 @@ export function useTranscriptSync(
     }
   }, [audioRef])
 
-  const play = useCallback(() => {
+  const seekTo = useCallback((time: number) => {
     const audio = audioRef.current
     if (!audio) return
-    audio.play()
-  }, [audioRef])
-
-  const pause = useCallback(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.pause()
+    audio.currentTime = Math.max(0, Math.min(time, audio.duration || 0))
   }, [audioRef])
 
   const skip = useCallback((seconds: number) => {
@@ -441,21 +325,18 @@ export function useTranscriptSync(
   }, [audioRef, volume])
 
   return {
-    activeWordIndex: activePosition.activeWordIndex,
-    activeSentenceIndex: activePosition.activeSentenceIndex,
-    activeWordIndexInSentence: activePosition.activeWordIndexInSentence,
-    currentTime,
     isPlaying,
+    currentTime,
     duration,
     volume,
     playbackRate,
     isMuted,
     isLoading,
     canPlay,
-    seekTo,
-    togglePlayPause,
     play,
     pause,
+    togglePlayPause,
+    seekTo,
     skip,
     setVolume,
     setPlaybackRate,

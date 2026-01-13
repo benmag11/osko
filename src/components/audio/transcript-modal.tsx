@@ -67,8 +67,8 @@ export function TranscriptModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 py-4 border-b border-stone-200 shrink-0">
+      <DialogContent className="max-w-4xl sm:max-w-4xl w-[95vw] h-[95vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 py-4 shrink-0">
           <DialogTitle className="font-serif text-lg">
             Transcript: {title}
           </DialogTitle>

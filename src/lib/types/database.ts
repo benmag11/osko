@@ -365,12 +365,13 @@ export interface TranscriptHeader {
 }
 
 /**
- * Sentence with words and translation
+ * Sentence with words, translation, and optional speaker
  */
 export interface TranscriptSentence {
   type: 'sentence'
   words: TranscriptWord[]
   translation: string
+  speaker?: string  // Optional speaker name for conversations (e.g., "Pádraig", "Eithne")
 }
 
 /**
