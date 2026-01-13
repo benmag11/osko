@@ -96,6 +96,39 @@ export interface Database {
           count: number
         }
       }
+      // Audio question functions
+      audio_search_questions_paginated: {
+        Args: {
+          p_subject_id: string
+          p_search_terms?: string[] | null
+          p_years?: number[] | null
+          p_topic_ids?: string[] | null
+          p_exam_types?: string[] | null
+          p_cursor?: QuestionCursor | null
+          p_limit?: number
+        }
+        Returns: AudioPaginatedResponse
+      }
+      audio_get_question_navigation_list: {
+        Args: {
+          p_subject_id: string
+          p_search_terms?: string[] | null
+          p_years?: number[] | null
+          p_topic_ids?: string[] | null
+          p_exam_types?: string[] | null
+        }
+        Returns: AudioNavigationListResponse
+      }
+      audio_get_available_years: {
+        Args: {
+          p_subject_id: string
+        }
+        Returns: number[]
+      }
+      get_subjects_with_audio_questions: {
+        Args: Record<string, never>
+        Returns: Subject[]
+      }
     }
   }
 }
@@ -292,4 +325,119 @@ export interface CreateReportPayload {
 export interface UpdateReportPayload {
   status?: 'pending' | 'resolved' | 'dismissed'
   admin_notes?: string
+}
+
+// =============================================================================
+// Audio Question Types
+// =============================================================================
+
+/**
+ * Transcript word with timing information for audio synchronization
+ */
+export interface TranscriptWord {
+  text: string
+  start: number  // Start time in seconds
+  end: number    // End time in seconds
+}
+
+/**
+ * Header section in transcript (e.g., "Fógra 1")
+ */
+export interface TranscriptHeader {
+  type: 'header'
+  text: string
+}
+
+/**
+ * Sentence with words and translation
+ */
+export interface TranscriptSentence {
+  type: 'sentence'
+  words: TranscriptWord[]
+  translation: string
+}
+
+/**
+ * Union type for transcript items (headers or sentences)
+ */
+export type TranscriptItem = TranscriptHeader | TranscriptSentence
+
+/**
+ * Audio topic (separate from normal topics)
+ */
+export interface AudioTopic {
+  id: string
+  name: string
+  subject_id: string
+  created_at: string
+}
+
+/**
+ * Audio question with audio and transcript URLs
+ */
+export interface AudioQuestion {
+  id: string
+  subject_id: string
+  year: number
+  paper_number: number | null
+  question_number: number | null
+  question_parts: string[] | null
+  exam_type: 'normal' | 'deferred' | 'supplemental'
+  additional_info: string | null
+  question_image_url: string | null
+  question_image_width: number | null
+  question_image_height: number | null
+  marking_scheme_image_url: string | null
+  marking_scheme_image_width: number | null
+  marking_scheme_image_height: number | null
+  audio_url: string | null
+  map_json_url: string | null
+  full_text: string | null
+  created_at: string
+  updated_at: string
+  topics?: Array<{
+    id: string
+    name: string
+  }>
+}
+
+/**
+ * Minimal fields for audio question navigation (sidebar list)
+ */
+export interface AudioQuestionNavigationFields {
+  id: string
+  year: number
+  paper_number: number | null
+  question_number: number | null
+  question_parts: string[] | null
+  exam_type: 'normal' | 'deferred' | 'supplemental'
+  additional_info: string | null
+}
+
+/**
+ * Filters for audio questions (no questionNumbers)
+ */
+export interface AudioFilters {
+  subjectId: string
+  searchTerms?: string[]
+  years?: number[]
+  topicIds?: string[]
+  examTypes?: string[]
+}
+
+/**
+ * Paginated response for audio questions
+ */
+export interface AudioPaginatedResponse {
+  questions: AudioQuestion[]
+  next_cursor: QuestionCursor | null
+  total_count: number
+}
+
+/**
+ * Navigation list response for audio questions
+ */
+export interface AudioNavigationListResponse {
+  items: AudioQuestionNavigationFields[]
+  total_count: number
 }

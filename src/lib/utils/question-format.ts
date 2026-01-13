@@ -10,13 +10,24 @@ export type QuestionTitleLike = Pick<
     'additional_info'
 >
 
+// Looser type that also accepts audio questions with nullable question_parts
+export interface QuestionTitleInput {
+  year: number
+  paper_number: number | null
+  question_number: number | null
+  question_parts: string[] | null
+  exam_type: 'normal' | 'deferred' | 'supplemental'
+  additional_info: string | null
+}
+
 /**
  * Build the display title used for question cards and navigation entries.
  * Mirrors the formatting logic previously embedded in QuestionCard.
  */
-export function formatQuestionTitle(question: QuestionTitleLike): string {
-  const formattedParts = question.question_parts.length > 0
-    ? question.question_parts.map((part) => `(${part})`).join(', ')
+export function formatQuestionTitle(question: QuestionTitleLike | QuestionTitleInput): string {
+  const parts = question.question_parts ?? []
+  const formattedParts = parts.length > 0
+    ? parts.map((part) => `(${part})`).join(', ')
     : ''
 
   let title = `${question.year}`

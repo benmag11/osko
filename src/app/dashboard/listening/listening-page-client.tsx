@@ -3,18 +3,20 @@
 import { DashboardPage } from '@/components/layout/dashboard-page'
 import { SubjectCardGrid, type SubjectWithSlug } from '@/components/shared/subject-card-grid'
 
-interface StudyPageClientProps {
+interface ListeningPageClientProps {
   userName: string
   subjects: SubjectWithSlug[]
 }
 
-export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
+export function ListeningPageClient({ userName, subjects }: ListeningPageClientProps) {
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good morning'
     if (hour < 18) return 'Good afternoon'
     return 'Good evening'
   }
+
+  const hasSubjects = subjects.length > 0
 
   return (
     <DashboardPage maxWidth="max-w-6xl">
@@ -26,10 +28,21 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
 
       <div className="space-y-6">
         <h2 className="text-2xl font-sans font-normal text-warm-text-muted">
-          What are you studying today?
+          What are you listening to today?
         </h2>
 
-        <SubjectCardGrid subjects={subjects} baseUrl="/subject" />
+        {hasSubjects ? (
+          <SubjectCardGrid subjects={subjects} baseUrl="/audio" />
+        ) : (
+          <div className="text-center py-12 bg-stone-50 rounded-lg border border-stone-200">
+            <p className="text-warm-text-muted">
+              No audio content is available for your selected subjects yet.
+            </p>
+            <p className="text-sm text-warm-text-muted mt-2">
+              Audio questions will appear here when they become available.
+            </p>
+          </div>
+        )}
       </div>
     </DashboardPage>
   )

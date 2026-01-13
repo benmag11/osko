@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   BookOpen,
+  Headphones,
   BarChart3,
   Settings,
   Flag,
@@ -37,6 +38,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     items: [
       { title: 'Study', url: '/dashboard/study', icon: BookOpen },
+      { title: 'Listening', url: '/dashboard/listening', icon: Headphones },
       { title: 'Statistics', url: '/dashboard/statistics', icon: BarChart3 },
     ]
   },
