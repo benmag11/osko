@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
 import { useInView } from 'react-intersection-observer'
 import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
+import { getTransformedImageUrl } from '@/lib/supabase/image-loader'
 import styles from './styles/question-card.module.css'
 
 interface QuestionCardProps {
@@ -65,7 +66,7 @@ export const QuestionCard = memo(function QuestionCard({
   const markingSchemeSizes = `(max-width: 640px) 100vw, ${Math.max(1, maxDisplayWidth - 32)}px`
   const { ref: cardRef, inView } = useInView({
     threshold: 0,
-    rootMargin: '200px',
+    rootMargin: '600px', // Increased for earlier prefetching during scroll
     triggerOnce: false,
   })
   const markingSchemePrefetchRef = useRef<HTMLLinkElement | null>(null)
@@ -84,10 +85,15 @@ export const QuestionCard = memo(function QuestionCard({
       return
     }
 
+    // Use transformed URL for prefetch - request at reasonable size for display
+    // This ensures we prefetch the optimized version, not the full-size original
+    const prefetchWidth = Math.min(markingSchemeWidth, 1024)
+    const transformedUrl = getTransformedImageUrl(url, prefetchWidth, 75)
+
     const link = document.createElement('link')
     link.rel = 'prefetch'
     link.as = 'image'
-    link.href = url
+    link.href = transformedUrl
     link.setAttribute('fetchpriority', 'low')
 
     document.head.appendChild(link)
@@ -99,7 +105,7 @@ export const QuestionCard = memo(function QuestionCard({
         markingSchemePrefetchRef.current = null
       }
     }
-  }, [inView, question.marking_scheme_image_url])
+  }, [inView, question.marking_scheme_image_url, markingSchemeWidth])
 
   return (
     <div
