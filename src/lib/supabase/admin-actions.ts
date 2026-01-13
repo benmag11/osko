@@ -19,8 +19,8 @@ export async function updateQuestionMetadata(
   try {
     // Get current question data for audit log
     const { data: currentQuestion } = await supabase
-      .from('questions')
-      .select('*, question_topics(topic_id)')
+      .from('normal_questions')
+      .select('*, normal_question_topics(topic_id)')
       .eq('id', questionId)
       .single()
     
@@ -47,7 +47,7 @@ export async function updateQuestionMetadata(
     if (updates.additional_info !== undefined) updateData.additional_info = updates.additional_info
     
     const { error: updateError } = await supabase
-      .from('questions')
+      .from('normal_questions')
       .update(updateData)
       .eq('id', questionId)
     
@@ -57,21 +57,21 @@ export async function updateQuestionMetadata(
     if (updates.topic_ids !== undefined) {
       // Remove all existing topics
       await supabase
-        .from('question_topics')
+        .from('normal_question_topics')
         .delete()
         .eq('question_id', questionId)
-      
+
       // Add new topics
       if (updates.topic_ids.length > 0) {
         const { error: insertError } = await supabase
-          .from('question_topics')
+          .from('normal_question_topics')
           .insert(
             updates.topic_ids.map(topicId => ({
               question_id: questionId,
               topic_id: topicId
             }))
           )
-        
+
         if (insertError) throw insertError
       }
     }

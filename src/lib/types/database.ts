@@ -6,22 +6,22 @@ export interface Database {
         Insert: Omit<Subject, 'id' | 'created_at'>
         Update: Partial<Omit<Subject, 'id'>>
       }
-      topics: {
+      normal_topics: {
         Row: Topic
         Insert: Omit<Topic, 'id' | 'created_at'>
         Update: Partial<Omit<Topic, 'id'>>
       }
-      topic_groups: {
+      normal_topic_groups: {
         Row: TopicGroup
         Insert: Omit<TopicGroup, 'id' | 'created_at'>
         Update: Partial<Omit<TopicGroup, 'id'>>
       }
-      questions: {
+      normal_questions: {
         Row: Question
         Insert: Omit<Question, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Question, 'id'>>
       }
-      question_topics: {
+      normal_question_topics: {
         Row: QuestionTopic
         Insert: QuestionTopic
         Update: Partial<QuestionTopic>
@@ -38,7 +38,7 @@ export interface Database {
       }
     }
     Functions: {
-      search_questions_paginated: {
+      normal_search_questions_paginated: {
         Args: {
           p_subject_id: string
           p_search_terms?: string[] | null
@@ -51,7 +51,7 @@ export interface Database {
         }
         Returns: PaginatedResponse
       }
-      get_question_navigation_list: {
+      normal_get_question_navigation_list: {
         Args: {
           p_subject_id: string
           p_search_terms?: string[] | null
@@ -62,7 +62,7 @@ export interface Database {
         }
         Returns: NavigationListResponse
       }
-      get_available_years: {
+      normal_get_available_years: {
         Args: {
           p_subject_id: string
         }
@@ -80,7 +80,7 @@ export interface Database {
           subject: Subject
         }>
       }
-      get_available_question_numbers: {
+      normal_get_available_question_numbers: {
         Args: {
           p_subject_id: string
         }

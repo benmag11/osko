@@ -119,7 +119,7 @@ export async function getTopics(subjectId: string): Promise<Topic[]> {
     const supabase = await createServerSupabaseClient()
 
     const { data, error } = await supabase
-      .from('topics')
+      .from('normal_topics')
       .select('*')
       .eq('subject_id', subjectId)
       .order('name', { ascending: true })
@@ -146,7 +146,7 @@ export async function getTopicGroups(subjectId: string): Promise<TopicGroup[]> {
     const supabase = await createServerSupabaseClient()
 
     const { data, error } = await supabase
-      .from('topic_groups')
+      .from('normal_topic_groups')
       .select('*')
       .eq('subject_id', subjectId)
       .order('name', { ascending: true })
@@ -173,7 +173,7 @@ export async function getAvailableYears(subjectId: string): Promise<number[]> {
     const supabase = await createServerSupabaseClient()
     
     const { data, error } = await supabase
-      .rpc('get_available_years', {
+      .rpc('normal_get_available_years', {
         p_subject_id: subjectId
       })
       
@@ -198,7 +198,7 @@ export async function getAvailableQuestionNumbers(subjectId: string): Promise<nu
     const supabase = await createServerSupabaseClient()
     
     const { data, error } = await supabase
-      .rpc('get_available_question_numbers', {
+      .rpc('normal_get_available_question_numbers', {
         p_subject_id: subjectId
       })
       
@@ -252,7 +252,7 @@ export async function searchQuestions(
     
     // Race between the RPC call and the abort signal
     const data = await Promise.race([
-      supabase.rpc('search_questions_paginated', queryParams),
+      supabase.rpc('normal_search_questions_paginated', queryParams),
       abortPromise
     ])
     

@@ -129,7 +129,7 @@ export async function getReports(
     .from('question_reports')
     .select(`
       *,
-      question:questions!inner(
+      question:normal_questions!inner(
         id,
         year,
         paper_number,
@@ -138,8 +138,8 @@ export async function getReports(
         exam_type,
         subject_id,
         subject:subjects(id, name, level),
-        topics:question_topics(
-          topic:topics(id, name)
+        topics:normal_question_topics(
+          topic:normal_topics(id, name)
         )
       )
     `)

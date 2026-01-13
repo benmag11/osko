@@ -38,7 +38,7 @@ export const QuestionCard = memo(function QuestionCard({
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
   const topics = availableTopics ?? []
-  
+
   // Check if URLs are valid
   const hasValidQuestionImage = question.question_image_url &&
     question.question_image_url !== 'placeholder' &&
@@ -54,8 +54,7 @@ export const QuestionCard = memo(function QuestionCard({
   const questionImageWidth = question.question_image_width ?? 2480
   const questionImageHeight = question.question_image_height ?? 1500
   const markingSchemeWidth = question.marking_scheme_image_width ?? 2480
-  const markingSchemeHeight = question.marking_scheme_image_height ?? 1500
-  
+
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
   }, [])
@@ -63,49 +62,90 @@ export const QuestionCard = memo(function QuestionCard({
   const rawDisplayWidth = displayWidth ?? (EXAM_VIEW_BASE_MAX_WIDTH_PX * (zoom ?? 1))
   const maxDisplayWidth = Math.max(1, Math.round(rawDisplayWidth))
   const questionImageSizes = `(max-width: 640px) 100vw, ${maxDisplayWidth}px`
-  const markingSchemeSizes = `(max-width: 640px) 100vw, ${Math.max(1, maxDisplayWidth - 32)}px`
-  const { ref: cardRef, inView } = useInView({
+
+  // Two-tier visibility system: visible (force-fetch) and far (background prefetch)
+  const { ref: visibleRef, inView: isVisible } = useInView({
     threshold: 0,
-    rootMargin: '600px', // Increased for earlier prefetching during scroll
-    triggerOnce: false,
+    rootMargin: '200px',
   })
-  const markingSchemePrefetchRef = useRef<HTMLLinkElement | null>(null)
+  const { ref: farRef, inView: isFar } = useInView({
+    threshold: 0,
+    rootMargin: '1200px',
+  })
 
+  // Combine refs for the card element
+  const cardRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      visibleRef(node)
+      farRef(node)
+    },
+    [visibleRef, farRef]
+  )
+
+  // Track if we've already force-fetched this image
+  const hasForceFetchedRef = useRef(false)
+  const prefetchLinkRef = useRef<HTMLLinkElement | null>(null)
+
+  // Store the pre-computed marking scheme URL (same URL for prefetch AND display = cache hit)
+  const [markingSchemeUrl, setMarkingSchemeUrl] = useState<string | null>(null)
+
+  // Calculate optimal image width based on display size and device pixel ratio
+  const getOptimalWidth = useCallback(() => {
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+    return Math.min(markingSchemeWidth, Math.round(maxDisplayWidth * Math.min(dpr, 2)))
+  }, [markingSchemeWidth, maxDisplayWidth])
+
+  // Compute the marking scheme URL once (used for both prefetch and display)
   useEffect(() => {
-    if (!inView) {
+    if (hasValidMarkingScheme && !markingSchemeUrl) {
+      const url = question.marking_scheme_image_url!
+      setMarkingSchemeUrl(getTransformedImageUrl(url, getOptimalWidth(), 75))
+    }
+  }, [hasValidMarkingScheme, markingSchemeUrl, question.marking_scheme_image_url, getOptimalWidth])
+
+  // Force-fetch marking scheme when card becomes visible (guarantees immediate load)
+  useEffect(() => {
+    if (!isVisible || !markingSchemeUrl || showMarkingScheme || hasForceFetchedRef.current) {
       return
     }
 
-    const url = question.marking_scheme_image_url
-    if (!url || url === 'placeholder' || (!url.startsWith('http') && !url.startsWith('/'))) {
+    // new Image() forces the browser to fetch immediately (not a hint, a command)
+    const img = new window.Image()
+    img.src = markingSchemeUrl
+    hasForceFetchedRef.current = true
+  }, [isVisible, markingSchemeUrl, showMarkingScheme])
+
+  // Background prefetch for far cards (low priority hint for cards not yet visible)
+  useEffect(() => {
+    if (!isFar || isVisible || !markingSchemeUrl || prefetchLinkRef.current) {
       return
     }
-
-    if (markingSchemePrefetchRef.current) {
-      return
-    }
-
-    // Use transformed URL for prefetch - request at reasonable size for display
-    // This ensures we prefetch the optimized version, not the full-size original
-    const prefetchWidth = Math.min(markingSchemeWidth, 1024)
-    const transformedUrl = getTransformedImageUrl(url, prefetchWidth, 75)
 
     const link = document.createElement('link')
     link.rel = 'prefetch'
     link.as = 'image'
-    link.href = transformedUrl
+    link.href = markingSchemeUrl
     link.setAttribute('fetchpriority', 'low')
 
     document.head.appendChild(link)
-    markingSchemePrefetchRef.current = link
+    prefetchLinkRef.current = link
 
     return () => {
-      if (markingSchemePrefetchRef.current === link) {
+      if (prefetchLinkRef.current === link) {
         link.remove()
-        markingSchemePrefetchRef.current = null
+        prefetchLinkRef.current = null
       }
     }
-  }, [inView, question.marking_scheme_image_url, markingSchemeWidth])
+  }, [isFar, isVisible, markingSchemeUrl])
+
+  // Hover handler: force-fetch if not already done (backup for edge cases)
+  const handleToggleMouseEnter = useCallback(() => {
+    if (!markingSchemeUrl || showMarkingScheme || hasForceFetchedRef.current) return
+
+    const img = new window.Image()
+    img.src = markingSchemeUrl
+    hasForceFetchedRef.current = true
+  }, [markingSchemeUrl, showMarkingScheme])
 
   return (
     <div
@@ -144,7 +184,7 @@ export const QuestionCard = memo(function QuestionCard({
         </div>
       </div>
       
-      <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.15)]">
+      <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.17)]">
         <div className="relative w-full bg-cream-50">
           {hasValidQuestionImage ? (
             <TrackedImage
@@ -167,7 +207,10 @@ export const QuestionCard = memo(function QuestionCard({
         </div>
         
         <div className="bg-[#F5F4ED] rounded-b-xl border-t border-stone-300">
-          <div className={cn('flex justify-center', styles.markingToggleContainer)}>
+          <div
+            className={cn('flex justify-center', styles.markingToggleContainer)}
+            onMouseEnter={handleToggleMouseEnter}
+          >
             {hasValidMarkingScheme ? (
               <Button
                 onClick={toggleMarkingScheme}
@@ -193,19 +236,15 @@ export const QuestionCard = memo(function QuestionCard({
               <p className="text-sm font-sans text-warm-text-muted">No marking scheme available</p>
             )}
           </div>
-          
-          {showMarkingScheme && hasValidMarkingScheme && (
+
+          {showMarkingScheme && markingSchemeUrl && (
             <div className="px-4 pb-4">
-              <TrackedImage
-                src={question.marking_scheme_image_url!}
+              {/* Native <img> with exact same URL as prefetch = guaranteed cache hit = instant */}
+              <img
+                src={markingSchemeUrl}
                 alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                width={markingSchemeWidth}
-                height={markingSchemeHeight}
                 className="w-full h-auto rounded-lg"
-                sizes={markingSchemeSizes}
-                imageType="marking_scheme"
-                questionId={question.id}
-                wasPrefetched={inView}
+                loading="eager"
               />
             </div>
           )}

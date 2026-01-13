@@ -97,7 +97,7 @@ export async function searchQuestionsClient(
     
     // Race between the RPC call and the abort signal
     const { data, error } = await Promise.race([
-      supabase.rpc('search_questions_paginated', queryParams),
+      supabase.rpc('normal_search_questions_paginated', queryParams),
       abortPromise
     ])
     
@@ -151,7 +151,7 @@ export async function getNavigationListClient(
     const queryParams = buildNavigationQueryParams(filters)
 
     const { data, error } = await Promise.race([
-      supabase.rpc('get_question_navigation_list', queryParams),
+      supabase.rpc('normal_get_question_navigation_list', queryParams),
       abortPromise,
     ])
 
