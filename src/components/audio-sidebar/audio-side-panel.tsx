@@ -4,9 +4,9 @@ import * as React from 'react'
 import { Loader2 } from 'lucide-react'
 import { useAudioSidebar, type AudioPanelId } from './sidebar-context'
 import { useAudioNavigation } from '@/components/providers/audio-navigation-provider'
-import { SearchPanel } from '@/components/vscode-sidebar/panels/search-panel'
-import { TopicsPanel } from '@/components/vscode-sidebar/panels/topics-panel'
-import { YearsPanel } from '@/components/vscode-sidebar/panels/years-panel'
+import { SearchPanel } from '@/components/normal-sidebar/panels/search-panel'
+import { TopicsPanel } from '@/components/normal-sidebar/panels/topics-panel'
+import { YearsPanel } from '@/components/normal-sidebar/panels/years-panel'
 import { AudioJumpToQuestionPanel } from './panels/audio-jump-to-question-panel'
 import { AudioSubjectsPanel } from './panels/audio-subjects-panel'
 import { AudioSettingsPanel } from './panels/audio-settings-panel'
@@ -15,8 +15,8 @@ import type { AudioTopic, Subject, Topic } from '@/lib/types/database'
 
 const PANEL_TITLES: Record<AudioPanelId, string> = {
   search: 'Search by Keyword',
-  topics: 'Filter by Topic',
-  years: 'Filter by Year',
+  topics: 'Study by Topic',
+  years: 'Study by Year',
   jump: 'Jump to Question',
   subjects: 'Change Subject',
   settings: 'Settings',

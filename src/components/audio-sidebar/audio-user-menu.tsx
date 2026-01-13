@@ -26,7 +26,7 @@ import { useAudioSidebar } from './sidebar-context'
 
 /**
  * User menu for audio sidebar
- * Uses AudioSidebar context instead of VSCodeSidebar
+ * Uses AudioSidebar context instead of NormalSidebar
  */
 export function AudioUserMenu() {
   const { isMobile, isCollapsed } = useAudioSidebar()

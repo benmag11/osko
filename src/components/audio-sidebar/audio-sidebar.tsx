@@ -17,9 +17,9 @@ interface AudioSidebarProps {
 }
 
 /**
- * Audio sidebar component - VS Code style sidebar for audio viewer
+ * Audio sidebar component for audio/listening viewer
  *
- * Key differences from VSCodeSidebar:
+ * Key differences from NormalSidebar:
  * - No question numbers filtering (audio questions don't have this)
  * - Links to /dashboard/listening instead of /dashboard/study
  * - Uses audio-specific panels (AudioSubjectsPanel)
@@ -50,7 +50,7 @@ export function AudioSidebar({
     return null
   }
 
-  // Desktop: Render VS Code style sidebar
+  // Desktop: Render audio sidebar
   return (
     <TooltipProvider delayDuration={0}>
       <aside

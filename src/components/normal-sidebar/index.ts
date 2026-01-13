@@ -1,3 +1,3 @@
-export { VSCodeSidebarProvider, useVSCodeSidebar, type PanelId } from './sidebar-context'
-export { VSCodeSidebar } from './vscode-sidebar'
-export { SidebarAwareMain } from './sidebar-aware-main'
+export { NormalSidebarProvider, useNormalSidebar, type NormalPanelId } from './sidebar-context'
+export { NormalSidebar } from './normal-sidebar'
+export { NormalSidebarAwareMain } from './normal-sidebar-aware-main'

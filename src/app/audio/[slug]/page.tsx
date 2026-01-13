@@ -24,7 +24,7 @@ interface PageProps {
  * Audio viewer page
  *
  * Similar to the subject page but:
- * - Uses AudioSidebar instead of VSCodeSidebar
+ * - Uses AudioSidebar instead of NormalSidebar
  * - Shows audio questions with transcript buttons
  * - No question number filtering
  */

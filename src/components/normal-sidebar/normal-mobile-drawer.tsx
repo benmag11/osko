@@ -17,7 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { SubjectSelector } from './subject-selector'
+import { NormalSubjectSelector } from './normal-subject-selector'
 import { useFilters } from '@/components/providers/filter-provider'
 import { useAuth } from '@/components/providers/auth-provider'
 import { formatName, formatInitials } from '@/lib/utils/format-name'
@@ -27,7 +27,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { Subject, Topic } from '@/lib/types/database'
 
-interface MobileDrawerProps {
+interface NormalMobileDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   subject: Subject
@@ -36,14 +36,14 @@ interface MobileDrawerProps {
   questionNumbers: number[]
 }
 
-export function MobileDrawer({
+export function NormalMobileDrawer({
   open,
   onOpenChange,
   subject,
   topics,
   years,
   questionNumbers,
-}: MobileDrawerProps) {
+}: NormalMobileDrawerProps) {
   const { filters, addSearchTerm, toggleTopic, toggleYear, toggleQuestionNumber, isPending } = useFilters()
   const { user, profile } = useAuth()
   const queryClient = useQueryClient()
@@ -74,7 +74,7 @@ export function MobileDrawer({
 
         {/* Subject Selector at top */}
         <div className="border-b border-stone-200">
-          <SubjectSelector subject={subject} />
+          <NormalSubjectSelector subject={subject} />
         </div>
 
         {/* Filters */}

@@ -9,17 +9,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useVSCodeSidebar, type PanelId } from './sidebar-context'
-import { UserMenu } from './user-menu'
+import { useNormalSidebar, type NormalPanelId } from './sidebar-context'
+import { NormalUserMenu } from './normal-user-menu'
 
 interface ActivityBarButtonProps {
-  panelId: PanelId
+  panelId: NormalPanelId
   icon: LucideIcon
   tooltip: string
 }
 
 function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonProps) {
-  const { activePanel, setActivePanel, isCollapsed, setIsCollapsed } = useVSCodeSidebar()
+  const { activePanel, setActivePanel, isCollapsed, setIsCollapsed } = useNormalSidebar()
   // Only show as active when sidebar is expanded
   const isActive = activePanel === panelId && !isCollapsed
 
@@ -68,7 +68,7 @@ function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonPr
   return buttonElement
 }
 
-const FILTER_CONFIG: { id: PanelId; icon: LucideIcon; tooltip: string }[] = [
+const FILTER_CONFIG: { id: NormalPanelId; icon: LucideIcon; tooltip: string }[] = [
   { id: 'topics', icon: ListFilter, tooltip: 'Study by topic' },
   { id: 'search', icon: Search, tooltip: 'Search by keyword' },
   { id: 'questions', icon: ArrowDown01, tooltip: 'Study by question' },
@@ -122,8 +122,8 @@ function BackToDashboardButton() {
   )
 }
 
-export function ActivityBar() {
-  const { isCollapsed, toggleSidebar } = useVSCodeSidebar()
+export function NormalActivityBar() {
+  const { isCollapsed, toggleSidebar } = useNormalSidebar()
 
   const handleExpandClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only expand if sidebar is collapsed and click is on empty space (not a button)
@@ -185,7 +185,7 @@ export function ActivityBar() {
       <BackToDashboardButton />
 
       {/* User menu at bottom */}
-      <UserMenu />
+      <NormalUserMenu />
     </div>
   )
 }

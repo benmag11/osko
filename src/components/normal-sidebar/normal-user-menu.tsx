@@ -22,10 +22,10 @@ import { useAuth } from '@/components/providers/auth-provider'
 import { formatName, formatInitials } from '@/lib/utils/format-name'
 import { clientSignOut } from '@/lib/auth/client-auth'
 import { useQueryClient } from '@tanstack/react-query'
-import { useVSCodeSidebar } from './sidebar-context'
+import { useNormalSidebar } from './sidebar-context'
 
-export function UserMenu() {
-  const { isMobile, isCollapsed } = useVSCodeSidebar()
+export function NormalUserMenu() {
+  const { isMobile, isCollapsed } = useNormalSidebar()
   const { user, profile } = useAuth()
   const queryClient = useQueryClient()
 

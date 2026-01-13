@@ -36,6 +36,22 @@ export interface Database {
         Insert: Omit<UserSubject, 'id' | 'created_at'>
         Update: Partial<Omit<UserSubject, 'id' | 'user_id'>>
       }
+      // Audio tables
+      audio_topics: {
+        Row: AudioTopic
+        Insert: Omit<AudioTopic, 'id' | 'created_at'>
+        Update: Partial<Omit<AudioTopic, 'id'>>
+      }
+      audio_questions: {
+        Row: AudioQuestion
+        Insert: Omit<AudioQuestion, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<AudioQuestion, 'id'>>
+      }
+      audio_question_topics: {
+        Row: AudioQuestionTopic
+        Insert: AudioQuestionTopic
+        Update: Partial<AudioQuestionTopic>
+      }
     }
     Functions: {
       normal_search_questions_paginated: {
@@ -369,6 +385,15 @@ export interface AudioTopic {
   id: string
   name: string
   subject_id: string
+  created_at: string
+}
+
+/**
+ * Junction table linking audio questions to audio topics
+ */
+export interface AudioQuestionTopic {
+  audio_question_id: string
+  audio_topic_id: string
   created_at: string
 }
 

@@ -70,9 +70,9 @@ function ActivityBarButton({ panelId, icon: Icon, tooltip }: ActivityBarButtonPr
 
 // Audio filter config - NO 'questions' (ArrowDown01) icon
 const AUDIO_FILTER_CONFIG: { id: AudioPanelId; icon: LucideIcon; tooltip: string }[] = [
-  { id: 'topics', icon: ListFilter, tooltip: 'Filter by topic' },
+  { id: 'topics', icon: ListFilter, tooltip: 'Study by topic' },
   { id: 'search', icon: Search, tooltip: 'Search by keyword' },
-  { id: 'years', icon: CalendarSearch, tooltip: 'Filter by year' },
+  { id: 'years', icon: CalendarSearch, tooltip: 'Study by year' },
 ]
 
 interface ActivityBarGroupProps {

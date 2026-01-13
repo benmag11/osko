@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { Loader2 } from 'lucide-react'
-import { useVSCodeSidebar, type PanelId } from './sidebar-context'
+import { useNormalSidebar, type NormalPanelId } from './sidebar-context'
 import { useQuestionNavigation } from '@/components/providers/question-navigation-provider'
 import { SearchPanel } from './panels/search-panel'
 import { TopicsPanel } from './panels/topics-panel'
@@ -14,7 +14,7 @@ import { SettingsPanel } from './panels/settings-panel'
 import { useGroupedTopics } from '@/lib/hooks/use-grouped-topics'
 import type { Topic, Subject } from '@/lib/types/database'
 
-const PANEL_TITLES: Record<PanelId, string> = {
+const PANEL_TITLES: Record<NormalPanelId, string> = {
   search: 'Search by Keyword',
   topics: 'Study by Topic',
   years: 'Study by Year',
@@ -24,15 +24,15 @@ const PANEL_TITLES: Record<PanelId, string> = {
   settings: 'Settings',
 }
 
-interface SidePanelProps {
+interface NormalSidePanelProps {
   subject: Subject
   topics: Topic[]
   years: number[]
   questionNumbers: number[]
 }
 
-export function SidePanel({ subject, topics, years, questionNumbers }: SidePanelProps) {
-  const { activePanel } = useVSCodeSidebar()
+export function NormalSidePanel({ subject, topics, years, questionNumbers }: NormalSidePanelProps) {
+  const { activePanel } = useNormalSidebar()
   const isJumpPanel = activePanel === 'jump'
 
   // Fetch grouped topics for collapsible sidebar

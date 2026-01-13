@@ -3,16 +3,16 @@
 import * as React from 'react'
 import { useIsMobile } from '@/lib/hooks/use-mobile'
 
-const PANEL_COOKIE_NAME = 'vscode_sidebar_panel'
-const COLLAPSE_COOKIE_NAME = 'vscode_sidebar_collapsed'
+const PANEL_COOKIE_NAME = 'normal_sidebar_panel'
+const COLLAPSE_COOKIE_NAME = 'normal_sidebar_collapsed'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
-export type PanelId = 'search' | 'topics' | 'years' | 'questions' | 'jump' | 'subjects' | 'settings'
+export type NormalPanelId = 'search' | 'topics' | 'years' | 'questions' | 'jump' | 'subjects' | 'settings'
 
-interface VSCodeSidebarContextValue {
+interface NormalSidebarContextValue {
   // Active panel state
-  activePanel: PanelId
-  setActivePanel: (panel: PanelId) => void
+  activePanel: NormalPanelId
+  setActivePanel: (panel: NormalPanelId) => void
 
   // Collapse state
   isCollapsed: boolean
@@ -25,29 +25,29 @@ interface VSCodeSidebarContextValue {
   setOpenMobile: (open: boolean) => void
 }
 
-const VSCodeSidebarContext = React.createContext<VSCodeSidebarContextValue | null>(null)
+const NormalSidebarContext = React.createContext<NormalSidebarContextValue | null>(null)
 
-export function useVSCodeSidebar() {
-  const context = React.useContext(VSCodeSidebarContext)
+export function useNormalSidebar() {
+  const context = React.useContext(NormalSidebarContext)
   if (!context) {
-    throw new Error('useVSCodeSidebar must be used within VSCodeSidebarProvider')
+    throw new Error('useNormalSidebar must be used within NormalSidebarProvider')
   }
   return context
 }
 
-interface VSCodeSidebarProviderProps {
+interface NormalSidebarProviderProps {
   children: React.ReactNode
-  defaultPanel?: PanelId
+  defaultPanel?: NormalPanelId
   defaultCollapsed?: boolean
 }
 
-export function VSCodeSidebarProvider({
+export function NormalSidebarProvider({
   children,
   defaultPanel = 'topics',
   defaultCollapsed = false
-}: VSCodeSidebarProviderProps) {
+}: NormalSidebarProviderProps) {
   const isMobile = useIsMobile()
-  const [activePanel, setActivePanelState] = React.useState<PanelId>(defaultPanel)
+  const [activePanel, setActivePanelState] = React.useState<NormalPanelId>(defaultPanel)
   const [isCollapsed, setIsCollapsedState] = React.useState(defaultCollapsed)
   const [openMobile, setOpenMobile] = React.useState(false)
 
@@ -60,7 +60,7 @@ export function VSCodeSidebarProvider({
     if (panelCookie) {
       const value = panelCookie.split('=')[1]?.trim()
       if (value && ['search', 'topics', 'years', 'questions', 'jump', 'subjects', 'settings'].includes(value)) {
-        setActivePanelState(value as PanelId)
+        setActivePanelState(value as NormalPanelId)
       }
     }
 
@@ -72,7 +72,7 @@ export function VSCodeSidebarProvider({
     }
   }, [])
 
-  const setActivePanel = React.useCallback((panel: PanelId) => {
+  const setActivePanel = React.useCallback((panel: NormalPanelId) => {
     setActivePanelState(panel)
     document.cookie = `${PANEL_COOKIE_NAME}=${panel}; path=/; max-age=${COOKIE_MAX_AGE}`
   }, [])
@@ -107,8 +107,8 @@ export function VSCodeSidebarProvider({
   }), [activePanel, setActivePanel, isCollapsed, setIsCollapsed, toggleSidebar, isMobile, openMobile])
 
   return (
-    <VSCodeSidebarContext.Provider value={value}>
+    <NormalSidebarContext.Provider value={value}>
       {children}
-    </VSCodeSidebarContext.Provider>
+    </NormalSidebarContext.Provider>
   )
 }

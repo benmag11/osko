@@ -2,9 +2,9 @@
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { useVSCodeSidebar } from './sidebar-context'
+import { useNormalSidebar } from './sidebar-context'
 
-interface SidebarAwareMainProps {
+interface NormalSidebarAwareMainProps {
   children: React.ReactNode
   className?: string
 }
@@ -13,8 +13,8 @@ interface SidebarAwareMainProps {
  * A wrapper for main content that responds to sidebar collapse state.
  * Applies dynamic margin-left on desktop to account for sidebar width.
  */
-export function SidebarAwareMain({ children, className }: SidebarAwareMainProps) {
-  const { isCollapsed, isMobile } = useVSCodeSidebar()
+export function NormalSidebarAwareMain({ children, className }: NormalSidebarAwareMainProps) {
+  const { isCollapsed, isMobile } = useNormalSidebar()
 
   // During SSR/hydration, use expanded margin as default
   // Mobile uses pt-14 for the navbar, no left margin

@@ -11,7 +11,10 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - **State**: TanStack Query for server state, React Context for auth
 - **Monitoring**: Vercel Analytics & Speed Insights
 
+- 'normal' refers to standard exam questions so 'normal sidebar' is for the sidebar one the page that shows these questions. 
+
 ### Backend
+- **supabase mcp**: Always use supabase mcp for researching and exploring backend. Project id is ayzduhnlqbzlhrumyzue.
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth (email verification)
 - **Storage**: Supabase Storage (question/marking scheme images)

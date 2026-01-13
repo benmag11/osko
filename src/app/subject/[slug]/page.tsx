@@ -7,7 +7,7 @@ import {
   searchQuestions
 } from '@/lib/supabase/queries'
 import { parseSearchParams } from '@/lib/utils/url-filters'
-import { VSCodeSidebarProvider, VSCodeSidebar, SidebarAwareMain } from '@/components/vscode-sidebar'
+import { NormalSidebarProvider, NormalSidebar, NormalSidebarAwareMain } from '@/components/normal-sidebar'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
 import { FilterProvider } from '@/components/providers/filter-provider'
@@ -63,15 +63,15 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
   return (
     <FilterProvider initialFilters={filters}>
       <QuestionNavigationProvider>
-        <VSCodeSidebarProvider defaultPanel="topics">
+        <NormalSidebarProvider defaultPanel="topics">
           <MobileNavbar />
-          <VSCodeSidebar
+          <NormalSidebar
             subject={subject}
             topics={topics}
             years={years}
             questionNumbers={questionNumbers}
           />
-          <SidebarAwareMain>
+          <NormalSidebarAwareMain>
             <div className="px-8 py-8">
               <div className="mx-auto w-full">
                 <FilteredQuestionsView
@@ -80,8 +80,8 @@ export default async function SubjectPage({ params, searchParams }: PageProps) {
                 />
               </div>
             </div>
-          </SidebarAwareMain>
-        </VSCodeSidebarProvider>
+          </NormalSidebarAwareMain>
+        </NormalSidebarProvider>
       </QuestionNavigationProvider>
     </FilterProvider>
   )

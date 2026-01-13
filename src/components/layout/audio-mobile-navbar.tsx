@@ -9,7 +9,7 @@ import { useAudioSidebar } from "@/components/audio-sidebar"
 
 /**
  * Mobile navbar for audio viewer pages
- * Uses AudioSidebar context instead of VSCodeSidebar
+ * Uses AudioSidebar context instead of NormalSidebar
  */
 export function AudioMobileNavbar() {
   const { setOpenMobile } = useAudioSidebar()

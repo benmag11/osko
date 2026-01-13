@@ -3,32 +3,32 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { useVSCodeSidebar } from './sidebar-context'
-import { SidebarHeader } from './sidebar-header'
-import { ActivityBar } from './activity-bar'
-import { SidePanel } from './side-panel'
-import { MobileDrawer } from './mobile-drawer'
+import { useNormalSidebar } from './sidebar-context'
+import { NormalSidebarHeader } from './normal-sidebar-header'
+import { NormalActivityBar } from './normal-activity-bar'
+import { NormalSidePanel } from './normal-side-panel'
+import { NormalMobileDrawer } from './normal-mobile-drawer'
 import type { Subject, Topic } from '@/lib/types/database'
 
-interface VSCodeSidebarProps {
+interface NormalSidebarProps {
   subject: Subject
   topics: Topic[]
   years: number[]
   questionNumbers: number[]
 }
 
-export function VSCodeSidebar({
+export function NormalSidebar({
   subject,
   topics,
   years,
   questionNumbers,
-}: VSCodeSidebarProps) {
-  const { isMobile, isCollapsed, openMobile, setOpenMobile } = useVSCodeSidebar()
+}: NormalSidebarProps) {
+  const { isMobile, isCollapsed, openMobile, setOpenMobile } = useNormalSidebar()
 
   // Mobile: Render Sheet-based drawer
   if (isMobile === true) {
     return (
-      <MobileDrawer
+      <NormalMobileDrawer
         open={openMobile}
         onOpenChange={setOpenMobile}
         subject={subject}
@@ -44,7 +44,7 @@ export function VSCodeSidebar({
     return null
   }
 
-  // Desktop: Render VS Code style sidebar
+  // Desktop: Render normal sidebar
   return (
     <TooltipProvider delayDuration={0}>
       <aside
@@ -55,16 +55,16 @@ export function VSCodeSidebar({
         )}
       >
         {/* Header with Logo and Toggle */}
-        <SidebarHeader />
+        <NormalSidebarHeader />
 
         {/* Main Content: Activity Bar + Side Panel */}
         <div className="flex flex-1 min-h-0">
           {/* Activity Bar - always visible */}
-          <ActivityBar />
+          <NormalActivityBar />
 
           {/* Side Panel - hidden when collapsed */}
           {!isCollapsed && (
-            <SidePanel
+            <NormalSidePanel
               subject={subject}
               topics={topics}
               years={years}

@@ -9,15 +9,15 @@ import { SubjectDropdown } from '@/components/layout/subject-dropdown'
 import { useUserSubjects } from '@/lib/hooks/use-user-subjects'
 import { useUserProfile } from '@/lib/hooks/use-user-profile'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
-import { useVSCodeSidebar } from './sidebar-context'
+import { useNormalSidebar } from './sidebar-context'
 import type { Subject } from '@/lib/types/database'
 
-interface SubjectSelectorProps {
+interface NormalSubjectSelectorProps {
   subject: Subject
 }
 
-export function SubjectSelector({ subject }: SubjectSelectorProps) {
-  const { isMobile } = useVSCodeSidebar()
+export function NormalSubjectSelector({ subject }: NormalSubjectSelectorProps) {
+  const { isMobile } = useNormalSidebar()
   const { user } = useUserProfile()
   const { subjects, isLoading } = useUserSubjects(user?.id)
 
