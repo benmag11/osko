@@ -8,7 +8,7 @@ import {
   searchAudioQuestions,
 } from '@/lib/supabase/audio-queries'
 import { parseSearchParams } from '@/lib/utils/url-filters'
-import { AudioSidebarProvider, AudioSidebar, AudioSidebarAwareMain } from '@/components/audio-sidebar'
+import { AudioSidebarProvider, AudioSidebar, AudioSidebarAwareMain } from '@/components/sidebar'
 import { AudioMobileNavbar } from '@/components/layout/audio-mobile-navbar'
 import { FilteredAudioView } from '@/components/audio/filtered-audio-view'
 import { FilterProvider } from '@/components/providers/filter-provider'

@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAudioSidebar } from "@/components/audio-sidebar"
+import { useAudioSidebar } from "@/components/sidebar"
 
 /**
  * Mobile navbar for audio viewer pages

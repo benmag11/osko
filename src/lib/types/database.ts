@@ -467,3 +467,36 @@ export interface AudioNavigationListResponse {
   items: AudioQuestionNavigationFields[]
   total_count: number
 }
+
+/**
+ * Payload for updating audio question metadata
+ */
+export interface AudioQuestionUpdatePayload {
+  year?: number
+  paper_number?: number | null
+  question_number?: number | null
+  question_parts?: string[]
+  exam_type?: 'normal' | 'deferred' | 'supplemental'
+  additional_info?: string | null
+  topic_ids?: string[]
+}
+
+/**
+ * Type for audio audit log changes based on the action type
+ */
+export type AudioAuditLogChanges =
+  | { before: Partial<AudioQuestion>; after: AudioQuestionUpdatePayload } // for 'update' action
+  | { deletedData: AudioQuestion } // for 'delete' action
+  | { topicId: string; topicName: string } // for 'topic_add' or 'topic_remove' actions
+
+/**
+ * Audit log entry for audio question changes
+ */
+export interface AudioQuestionAuditLog {
+  id: string
+  question_id: string
+  user_id: string | null
+  action: 'update' | 'delete' | 'topic_add' | 'topic_remove'
+  changes: AudioAuditLogChanges
+  created_at: string
+}

@@ -6,6 +6,7 @@ import { TrackedImage } from '@/components/questions/tracked-image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag, Headphones } from 'lucide-react'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
+import { AudioQuestionEditModal } from '@/components/admin/audio-question-edit-modal'
 import type { AudioQuestion, AudioTopic, Question } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
@@ -46,6 +47,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showTranscriptModal, setShowTranscriptModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   // Check if URLs are valid
   const hasValidQuestionImage = question.question_image_url &&
@@ -179,6 +181,17 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
           </h3>
         </div>
         <div className={cn('flex items-center', styles.actions)}>
+          {isAdmin && (
+            <Button
+              onClick={() => setShowEditModal(true)}
+              size="sm"
+              variant="outline"
+              className={cn('p-2 hover:bg-transparent hover:[&>svg]:text-stone-800', styles.adminButton)}
+              title="Edit question metadata"
+            >
+              <Edit2 className={cn('h-4 w-4', styles.icon)} />
+            </Button>
+          )}
           {canReport && (
             <Button
               onClick={() => setShowReportDialog(true)}
@@ -300,6 +313,15 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
           question={questionForReport}
           open={showReportDialog}
           onOpenChange={setShowReportDialog}
+        />
+      )}
+
+      {isAdmin && showEditModal && (
+        <AudioQuestionEditModal
+          question={question}
+          topics={availableTopics || []}
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
         />
       )}
     </div>

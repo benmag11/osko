@@ -7,7 +7,7 @@ import {
   searchQuestions
 } from '@/lib/supabase/queries'
 import { parseSearchParams } from '@/lib/utils/url-filters'
-import { NormalSidebarProvider, NormalSidebar, NormalSidebarAwareMain } from '@/components/normal-sidebar'
+import { NormalSidebarProvider, NormalSidebar, NormalSidebarAwareMain } from '@/components/sidebar'
 import { MobileNavbar } from '@/components/layout/mobile-navbar'
 import { FilteredQuestionsView } from '@/components/questions/filtered-questions-view'
 import { FilterProvider } from '@/components/providers/filter-provider'

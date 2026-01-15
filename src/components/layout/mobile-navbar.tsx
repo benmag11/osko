@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useNormalSidebar } from "@/components/normal-sidebar"
+import { useNormalSidebar } from "@/components/sidebar"
 
 export function MobileNavbar() {
   const { setOpenMobile } = useNormalSidebar()
