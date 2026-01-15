@@ -19,6 +19,7 @@ import {
 const MAX_ZOOM = 1
 const MIN_ZOOM = 0.5
 const ZOOM_STEP = 0.1
+const DEFAULT_ZOOM = MAX_ZOOM - 2 * ZOOM_STEP // Start at 0.8 (two steps down from max)
 
 type NavigationHandler = (item: QuestionNavigationItem) => void | Promise<void>
 type ZoomHandler = () => void
@@ -113,7 +114,7 @@ export function QuestionNavigationProvider({ children }: QuestionNavigationProvi
   const [isReturning, setIsReturning] = useState(false)
 
   // Zoom state
-  const [zoom, setZoom] = useState(MAX_ZOOM)
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM)
 
   // Compute active index from activeQuestionId
   const activeIndex = useMemo(() => {

@@ -48,4 +48,4 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - Image optimization with Next.js Image component + custom loader
 - Type-safe Supabase client (SSR-aware with cookies)
 - React Query for prefetching and caching
-- No dev server auto-start (manual `npm run dev`)
+- Never start the dev server yourself. I will perform all verification manually

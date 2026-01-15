@@ -132,12 +132,12 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
   let sentenceCounter = 0
 
   return (
-    <div className="flex flex-col h-full bg-cream-50">
+    <div className="flex flex-col h-full bg-stone-100">
       {/* Audio element (hidden) */}
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
       {/* Audio Player Controls - matching main screen player */}
-      <div className="shrink-0 bg-gradient-to-b from-cream-100 to-cream-50 px-4 py-3">
+      <div className="shrink-0 bg-gradient-to-b from-white to-stone-100 px-4 py-3 border-b border-stone-200">
         <div className="max-w-3xl mx-auto">
           <AudioPlayerControls
           isPlaying={isPlaying}
@@ -158,22 +158,22 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
       </div>
 
       {/* Translations toggle - below player */}
-      <div className="shrink-0 px-4 py-2 border-b border-stone-200">
+      <div className="shrink-0 px-4 py-2.5 bg-white border-b border-stone-200">
         <div className="max-w-3xl mx-auto">
           <button
             onClick={() => setShowTranslations(!showTranslations)}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium',
-              'border border-stone-300 bg-white text-stone-600 transition-all duration-200',
-              'hover:bg-stone-50'
+              'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-sans',
+              'text-stone-500 transition-all duration-200',
+              'hover:bg-stone-50 hover:text-stone-600'
             )}
           >
             <Languages className="h-3.5 w-3.5" />
             <span>Translations</span>
             <span
               className={cn(
-                'text-xs font-semibold',
-                showTranslations ? 'text-salmon-600' : 'text-stone-400'
+                'font-medium',
+                showTranslations ? 'text-stone-700' : 'text-stone-400'
               )}
             >
               {showTranslations ? 'ON' : 'OFF'}
@@ -183,20 +183,17 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
       </div>
 
       {/* Transcript display area */}
-      <div className="flex-1 overflow-y-auto bg-white">
-        <div className="max-w-3xl mx-auto px-6 py-8">
+      <div className="flex-1 overflow-y-auto bg-stone-100 p-4 sm:p-6">
+        <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] px-6 sm:px-8 py-6">
           {showTranslations ? (
             // ========== SENTENCE VIEW (Translations ON) ==========
-            <div className="space-y-4">
+            <div className="space-y-3">
               {transcript.map((item, itemIndex) => {
                 if (item.type === 'header') {
                   return (
-                    <h3
-                      key={`header-${itemIndex}`}
-                      className="font-serif text-xl font-semibold text-stone-800 mt-8 first:mt-0"
-                    >
+                    <p key={`header-${itemIndex}`} className="mt-8 first:mt-0 mb-3 text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
                       {item.text}
-                    </h3>
+                    </p>
                   )
                 }
 
@@ -210,21 +207,21 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
                     key={`sentence-${itemIndex}`}
                     ref={isSentenceActive ? activeSentenceRef : null}
                     className={cn(
-                      'p-4 rounded-xl transition-all duration-300',
+                      'p-3 rounded-lg transition-all duration-200',
                       isSentenceActive
-                        ? 'bg-salmon-50/70 shadow-sm ring-1 ring-salmon-200/50'
-                        : 'bg-transparent hover:bg-stone-100/50'
+                        ? 'bg-salmon-50/60 ring-1 ring-salmon-200/40'
+                        : 'bg-transparent hover:bg-stone-50'
                     )}
                   >
                     {/* Speaker label */}
                     {item.speaker && (
-                      <span className="font-serif font-medium italic text-salmon-600 text-sm mb-2 block">
+                      <span className="font-sans font-medium text-salmon-600 text-xs mb-1 block">
                         {item.speaker}:
                       </span>
                     )}
 
                     {/* Irish text with word-level interaction */}
-                    <p className="font-serif text-lg leading-relaxed text-stone-600 mb-2">
+                    <p className="font-sans text-base leading-snug text-stone-700 mb-1.5">
                       {item.words.map((word, wordIndex) => {
                         const isWordActive =
                           isSentenceActive && activeWordIndexInSentence === wordIndex
@@ -249,7 +246,7 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
 
                     {/* Translation */}
                     {item.translation && (
-                      <p className="text-base text-stone-500 italic leading-relaxed">
+                      <p className="text-sm font-sans text-stone-500 italic leading-tight">
                         {item.translation}
                       </p>
                     )}
@@ -259,31 +256,28 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
             </div>
           ) : (
             // ========== PARAGRAPH VIEW (Translations OFF) ==========
-            <div className="space-y-6">
+            <div className="space-y-5">
               {groupedItems.map((group, groupIndex) => {
                 if (group.type === 'header') {
                   return (
-                    <h3
-                      key={`header-${groupIndex}`}
-                      className="font-serif text-xl font-semibold text-stone-800 mt-8 first:mt-0"
-                    >
+                    <p key={`header-${groupIndex}`} className="mt-8 first:mt-0 mb-3 text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
                       {group.text}
-                    </h3>
+                    </p>
                   )
                 }
 
                 // Paragraph group
                 return (
-                  <div key={`para-${groupIndex}`} className="mb-6">
+                  <div key={`para-${groupIndex}`} className="mb-4">
                     {/* Speaker label for paragraph */}
                     {group.speaker && (
-                      <span className="font-serif font-medium italic text-salmon-600 text-sm mb-2 block">
+                      <span className="font-sans font-medium text-salmon-600 text-xs mb-1 block">
                         {group.speaker}:
                       </span>
                     )}
 
                     {/* Flowing paragraph text */}
-                    <p className="font-serif text-lg leading-relaxed text-stone-600">
+                    <p className="font-sans text-base leading-normal text-stone-700">
                       {group.sentences.map(({ item, sentenceIndex: sentIdx }, sentenceIdx) => {
                         const isSentenceActive = activeSentenceIndex === sentIdx
 
