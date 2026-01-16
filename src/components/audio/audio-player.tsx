@@ -13,6 +13,7 @@ interface AudioPlayerProps {
   audioUrl: string | undefined
   questionId?: string
   className?: string
+  variant?: 'default' | 'embedded'
 }
 
 function formatTime(seconds: number): string {
@@ -29,6 +30,7 @@ export const AudioPlayer = memo(function AudioPlayer({
   audioUrl,
   questionId,
   className,
+  variant = 'default',
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -72,7 +74,10 @@ export const AudioPlayer = memo(function AudioPlayer({
     <div
       ref={containerRef}
       className={cn(
-        'rounded-lg bg-cream-100 border border-stone-200/80 px-3 py-2',
+        'px-3 py-2',
+        variant === 'embedded'
+          ? ''
+          : 'rounded-lg bg-cream-100 border border-stone-200/80',
         className
       )}
       data-question-id={questionId}

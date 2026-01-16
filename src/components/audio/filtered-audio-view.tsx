@@ -6,6 +6,7 @@ import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-disp
 import { AudioQuestionCard } from './audio-question-card'
 import { Separator } from '@/components/ui/separator'
 import { useAudioQuestionsQuery } from '@/lib/hooks/use-audio-questions-query'
+import { useZoomKeyboardShortcuts } from '@/lib/hooks/use-zoom-keyboard-shortcuts'
 import { useFilters } from '@/components/providers/filter-provider'
 import { useAudioNavigation } from '@/components/providers/audio-navigation-provider'
 import type { AudioQuestionNavigationItem } from '@/lib/hooks/use-audio-navigation-list'
@@ -45,7 +46,18 @@ export function FilteredAudioView({ topics, initialData }: FilteredAudioViewProp
     registerNavigationHandler,
     zoom,
     registerZoomHandler,
+    handleZoomIn,
+    handleZoomOut,
+    canZoomIn,
+    canZoomOut,
   } = useAudioNavigation()
+
+  useZoomKeyboardShortcuts({
+    onZoomIn: handleZoomIn,
+    onZoomOut: handleZoomOut,
+    canZoomIn,
+    canZoomOut,
+  })
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
   const programmaticScrollRef = useRef(false)

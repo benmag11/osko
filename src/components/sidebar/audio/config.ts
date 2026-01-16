@@ -1,4 +1,4 @@
-import { Search, ListFilter, CalendarSearch, Headphones } from 'lucide-react'
+import { Search, ListFilter, CalendarSearch, BookOpen } from 'lucide-react'
 import type { SidebarConfig } from '../core/types'
 
 /**
@@ -24,7 +24,7 @@ export const audioSidebarConfig: SidebarConfig<AudioPanelId> = {
   },
 
   dashboardLink: '/dashboard/listening',
-  dashboardLabel: 'Back to Listening',
+  dashboardLabel: 'Back to Dashboard',
 
   filterButtons: [
     { id: 'topics', icon: ListFilter, tooltip: 'Study by topic' },
@@ -32,7 +32,7 @@ export const audioSidebarConfig: SidebarConfig<AudioPanelId> = {
     { id: 'years', icon: CalendarSearch, tooltip: 'Study by year' },
   ],
 
-  subjectIcon: Headphones,
+  subjectIcon: BookOpen,
 
   validPanels: ['search', 'topics', 'years', 'jump', 'subjects', 'settings'] as const,
 

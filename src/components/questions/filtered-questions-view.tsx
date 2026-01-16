@@ -6,6 +6,7 @@ import { AppliedFiltersDisplay } from '@/components/filters/applied-filters-disp
 import { QuestionCard } from './question-card'
 import { Separator } from '@/components/ui/separator'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
+import { useZoomKeyboardShortcuts } from '@/lib/hooks/use-zoom-keyboard-shortcuts'
 import { useFilters } from '@/components/providers/filter-provider'
 import { useQuestionNavigation } from '@/components/providers/question-navigation-provider'
 import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation-list'
@@ -37,7 +38,18 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
     registerNavigationHandler,
     zoom,
     registerZoomHandler,
+    handleZoomIn,
+    handleZoomOut,
+    canZoomIn,
+    canZoomOut,
   } = useQuestionNavigation()
+
+  useZoomKeyboardShortcuts({
+    onZoomIn: handleZoomIn,
+    onZoomOut: handleZoomOut,
+    canZoomIn,
+    canZoomOut,
+  })
   const containerRef = useRef<HTMLDivElement | null>(null)
   const pendingAnchorRef = useRef<ViewportAnchor | null>(null)
   const programmaticScrollRef = useRef(false)

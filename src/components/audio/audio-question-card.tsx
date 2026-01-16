@@ -4,7 +4,7 @@ import { useState, useCallback, memo, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { TrackedImage } from '@/components/questions/tracked-image'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp, Edit2, Flag, Headphones } from 'lucide-react'
+import { ChevronDown, ChevronUp, Edit2, FileText, Flag, Headphones } from 'lucide-react'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
 import { AudioQuestionEditModal } from '@/components/admin/audio-question-edit-modal'
 import type { AudioQuestion, AudioTopic, Question } from '@/lib/types/database'
@@ -206,17 +206,19 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
         </div>
       </div>
 
-      {/* Audio Player - visible directly on card */}
-      {hasAudio && (
-        <AudioPlayer
-          audioUrl={question.audio_url!}
-          questionId={question.id}
-          className="mt-3"
-        />
-      )}
-
       <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.17)] mt-2">
-        <div className="relative w-full bg-cream-50">
+        {/* Audio Player - embedded at top of paper container */}
+        {hasAudio && (
+          <div className="bg-[#F5F4ED] rounded-t-xl border-b border-stone-300 px-3 py-2.5">
+            <AudioPlayer
+              audioUrl={question.audio_url!}
+              questionId={question.id}
+              variant="embedded"
+            />
+          </div>
+        )}
+
+        <div className={cn("relative w-full bg-cream-50", !hasAudio && "rounded-t-xl")}>
           {hasValidQuestionImage ? (
             <TrackedImage
               src={question.question_image_url!}
@@ -279,7 +281,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
                   styles.markingToggleButton
                 )}
               >
-                <Headphones className={cn('h-4 w-4', styles.icon)} />
+                <FileText className={cn('h-4 w-4', styles.icon)} />
                 Show Transcript
               </Button>
             )}
