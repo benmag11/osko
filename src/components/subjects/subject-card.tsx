@@ -24,7 +24,12 @@ export function SubjectCard({
   const Icon = getSubjectIcon(subjectName)
   
   return (
-    <Card className="bg-white border-stone-400 hover:bg-cream-50 hover:border-stone-500 transition-colors">
+    <Card className={cn(
+      "border-stone-400 hover:border-stone-500 transition-colors",
+      selectedLevel
+        ? "bg-white hover:bg-cream-50"
+        : "bg-stone-50 hover:bg-stone-100"
+    )}>
       <CardContent className="px-4 py-1 space-y-2">
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-warm-text-muted flex-shrink-0" />

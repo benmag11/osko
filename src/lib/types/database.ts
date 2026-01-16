@@ -93,8 +93,20 @@ export interface Database {
           user_id: string
           subject_id: string
           created_at: string | null
+          grade: string | null
           subject: Subject
         }>
+      }
+      update_user_subject_grade: {
+        Args: {
+          p_user_id: string
+          p_subject_id: string
+          p_grade: string | null
+        }
+        Returns: {
+          success: boolean
+          error?: string
+        }
       }
       normal_get_available_question_numbers: {
         Args: {
@@ -270,10 +282,16 @@ export interface UserProfile {
   updated_at: string | null
 }
 
+// CAO Points Grade Types
+export type HigherGrade = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'H7' | 'H8'
+export type OrdinaryGrade = 'O1' | 'O2' | 'O3' | 'O4' | 'O5' | 'O6' | 'O7' | 'O8'
+export type Grade = HigherGrade | OrdinaryGrade
+
 export interface UserSubject {
   id: string
   user_id: string
   subject_id: string
+  grade: string | null
   created_at: string | null
 }
 

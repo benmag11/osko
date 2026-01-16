@@ -327,6 +327,7 @@ export async function getUserSubjects(userId: string): Promise<UserSubjectWithSu
       user_id: string
       subject_id: string
       created_at: string | null
+      grade: string | null
       subject: Subject
     }
     return (data || []).map((item: RPCResponse) => ({
@@ -334,6 +335,7 @@ export async function getUserSubjects(userId: string): Promise<UserSubjectWithSu
       user_id: item.user_id,
       subject_id: item.subject_id,
       created_at: item.created_at,
+      grade: item.grade,
       subject: item.subject
     }))
   }).catch(error => {

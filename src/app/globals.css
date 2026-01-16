@@ -50,6 +50,11 @@
   --color-cream-200: #FFFDF8;
   --color-cream-300: #FFF9F0;
 
+  /* Warm gray-cream for borders and accents */
+  --color-warm-cream-100: #F5F4ED;
+  --color-warm-cream-200: #EEEDE5;
+  --color-warm-cream-300: #E5E4DC;
+
   /* Warm accent colors */
   --color-salmon-400: #E59C84;
   --color-salmon-500: #D97757;

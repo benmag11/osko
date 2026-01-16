@@ -46,7 +46,7 @@ export function ListeningPageClient({ userName, subjects }: ListeningPageClientP
 
       <div className="space-y-6">
         <h2 className="text-2xl font-sans font-normal text-warm-text-muted">
-          Your subjects
+          Your language subjects
         </h2>
 
         {hasSubjects ? (

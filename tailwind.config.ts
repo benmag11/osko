@@ -67,6 +67,12 @@ const config: Config = {
           200: "#FFFDF8",
           300: "#FFF9F0",
         },
+        // Warm gray-cream for borders and accents
+        "warm-cream": {
+          100: "#F5F4ED", // Light - table borders
+          200: "#EEEDE5", // Medium - experimentation banner
+          300: "#E5E4DC", // Darker - accent bars/trims
+        },
         // Warm accent colors
         "salmon": {
           300: "#dda896",

@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import {
   BookOpen,
   BarChart3,
+  Calculator,
   Settings,
   Flag,
   LogOut,
@@ -41,6 +42,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     items: [
       { title: 'Study', url: '/dashboard/study', icon: BookOpen },
+      { title: 'Points', url: '/dashboard/points', icon: Calculator },
       { title: 'Statistics', url: '/dashboard/statistics', icon: BarChart3 },
     ]
   },
