@@ -17,6 +17,12 @@ interface SubjectSelectorProps {
   showSelectedPanel?: boolean
   className?: string
   actions?: React.ReactNode
+  /**
+   * Layout variant:
+   * - 'contained': Fixed heights with internal scroll (for onboarding full-page context)
+   * - 'inline': Natural height without internal scroll (for embedded contexts like settings)
+   */
+  variant?: 'contained' | 'inline'
 }
 
 interface GroupedSubject {
@@ -25,14 +31,15 @@ interface GroupedSubject {
   ordinary?: Subject
 }
 
-export function SubjectSelector({ 
+export function SubjectSelector({
   subjects,
   initialSelectedIds = [],
   onSelectionChange,
   isDisabled = false,
   showSelectedPanel = true,
   className,
-  actions
+  actions,
+  variant = 'contained'
 }: SubjectSelectorProps) {
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<string>>(
     new Set(initialSelectedIds)
@@ -130,8 +137,9 @@ export function SubjectSelector({
         {showSelectedPanel && (
           <div className="order-1 lg:order-2 lg:col-span-1">
             <Card className={cn(
-              "lg:sticky lg:top-4 border-stone-400 gap-4",
-              actions && "lg:h-[596px]" // Optimized height for better proportion
+              "border-stone-400 gap-4",
+              variant === 'contained' && "lg:sticky lg:top-4",
+              variant === 'contained' && actions && "lg:h-[596px]"
             )}>
               <CardHeader className="pb-0">
                 <CardTitle className="text-lg">
@@ -139,8 +147,10 @@ export function SubjectSelector({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {/* ScrollArea only on desktop, natural flow on mobile */}
-                <div className="lg:h-[404px] lg:overflow-y-auto lg:pr-4">
+                {/* ScrollArea only on desktop in contained mode, natural flow otherwise */}
+                <div className={cn(
+                  variant === 'contained' && "lg:h-[404px] lg:overflow-y-auto lg:pr-4"
+                )}>
                   {selectedSubjectsWithDetails.length === 0 ? (
                     <p className="text-sm text-[#9e9e9e] text-center py-8">
                       No subjects selected yet
@@ -205,7 +215,9 @@ export function SubjectSelector({
           </div>
 
           {/* Subject Cards Grid - 2 columns as requested */}
-          <div className="lg:h-[560px] lg:overflow-y-auto lg:pr-4">
+          <div className={cn(
+            variant === 'contained' && "lg:h-[560px] lg:overflow-y-auto lg:pr-4"
+          )}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {filteredSubjects.map((group) => (
                 <SubjectCard

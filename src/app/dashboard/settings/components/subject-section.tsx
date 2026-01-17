@@ -179,6 +179,7 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
               onSelectionChange={handleSelectionChange}
               isDisabled={isPending}
               showSelectedPanel={true}
+              variant="inline"
               actions={
                 <>
                   <Button
@@ -202,7 +203,7 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
                     onClick={handleCancel}
                     disabled={isPending}
                     variant="outline"
-                    className="w-full"
+                    className="w-full hover:bg-white"
                   >
                     <X className="mr-2 h-4 w-4" />
                     Cancel

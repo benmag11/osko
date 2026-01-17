@@ -25,10 +25,8 @@ export function SubjectCard({
   
   return (
     <Card className={cn(
-      "border-stone-400 hover:border-stone-500 transition-colors",
-      selectedLevel
-        ? "bg-white hover:bg-cream-50"
-        : "bg-stone-50 hover:bg-stone-100"
+      "border-stone-400 transition-colors",
+      selectedLevel ? "bg-white" : "bg-gray-100"
     )}>
       <CardContent className="px-4 py-1 space-y-2">
         <div className="flex items-center gap-2">
