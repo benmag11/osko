@@ -28,7 +28,7 @@ const sourceSans = Source_Sans_3({
 })
 
 export const metadata: Metadata = {
-  title: 'Exam Paper Viewer - addy',
+  title: 'Uncooked',
   description: 'Browse and study past exam papers',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
 }
