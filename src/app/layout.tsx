@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Source_Serif_4, Source_Sans_3 } from 'next/font/google'
+import { Source_Serif_4, Source_Sans_3, Crimson_Pro } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers/providers'
 import { Toaster } from 'sonner'
@@ -24,6 +24,13 @@ const sourceSans = Source_Sans_3({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
+  display: 'swap',
+})
+
+const crimsonPro = Crimson_Pro({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-display',
   display: 'swap',
 })
 
@@ -77,7 +84,7 @@ export default async function RootLayout({
   const dehydratedState = dehydrate(queryClient)
   
   return (
-    <html lang="en" className={`${sourceSerif.variable} ${sourceSans.variable}`}>
+    <html lang="en" className={`${sourceSerif.variable} ${sourceSans.variable} ${crimsonPro.variable}`}>
       <body className="font-sans">
         <Providers initialSession={session} initialQueryState={dehydratedState}>
           {children}
