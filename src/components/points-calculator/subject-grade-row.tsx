@@ -35,8 +35,8 @@ export function SubjectGradeRow({
       className={cn(
         'flex items-center justify-between pl-5 pr-3 py-2 transition-colors border-l-[3px]',
         isInBest6
-          ? 'bg-white border-l-stone-400'
-          : 'bg-stone-100/50 border-l-transparent'
+          ? 'bg-white border-l-stone-600'
+          : 'bg-stone-200/60 border-l-transparent'
       )}
     >
       {/* Subject info */}
@@ -47,8 +47,8 @@ export function SubjectGradeRow({
             onClick={onLevelToggle}
             className={cn(
               'text-sm font-semibold px-1.5 py-0.5 rounded transition-all',
-              'hover:bg-stone-100 active:scale-95 cursor-pointer',
-              'underline decoration-double decoration-stone-500 underline-offset-2 hover:decoration-stone-600',
+              'hover:bg-stone-200 active:scale-95 cursor-pointer',
+              'underline decoration-double decoration-stone-600 underline-offset-2 hover:decoration-stone-700',
               level === 'Higher' ? 'text-salmon-500' : 'text-sky-500'
             )}
             title={`Switch to ${level === 'Higher' ? 'Ordinary' : 'Higher'}`}
@@ -72,7 +72,7 @@ export function SubjectGradeRow({
         <span
           className={cn(
             'truncate font-medium',
-            isInBest6 ? 'text-stone-900' : 'text-stone-400'
+            isInBest6 ? 'text-stone-900' : 'text-stone-600'
           )}
         >
           {subjectName}
@@ -88,7 +88,7 @@ export function SubjectGradeRow({
           <span
             className={cn(
               'text-base font-semibold tabular-nums',
-              isInBest6 ? 'text-stone-900' : 'text-stone-300'
+              isInBest6 ? 'text-stone-900' : 'text-stone-500'
             )}
           >
             {totalPoints}

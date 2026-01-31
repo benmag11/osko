@@ -8,6 +8,7 @@ import { calculatePoints, getNextGrade, getEffectiveGrade, convertGradeLevel } f
 import type { UserSubjectWithSubject, Grade } from '@/lib/types/database'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { Settings } from 'lucide-react'
 
 interface PointsCalculatorClientProps {
   userId: string
@@ -128,19 +129,19 @@ export function PointsCalculatorClient({
       <div className="flex flex-col lg:flex-row lg:gap-6 gap-4">
         {/* Subject grades list - left side */}
         <div className="flex-1">
-          <div className="rounded-sm border border-[#EEEDE5] bg-white overflow-hidden">
+          <div className="rounded-sm border border-stone-400 bg-white overflow-hidden">
             {/* Experimentation banner */}
             {isExperimenting && (
-              <div className="px-3 py-2 bg-[#EEEDE5] border-b border-dashed border-stone-300 flex items-center justify-between">
+              <div className="px-3 py-2 bg-stone-300 border-b border-dashed border-stone-500 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-stone-600 text-sm font-medium">Level experimentation</span>
+                  <span className="text-stone-800 text-sm font-medium">Level experimentation</span>
                 </div>
-                <span className="text-xs text-stone-500 italic">
+                <span className="text-xs text-stone-700 italic">
                   ...your original subjects will be restored on page refresh.
                 </span>
               </div>
             )}
-            <div className="divide-y divide-stone-200">
+            <div className="divide-y divide-stone-400">
               {subjects.map(userSubject => {
                 const breakdown = pointsResult.breakdown.find(
                   b => b.subjectId === userSubject.subject_id
@@ -179,25 +180,26 @@ export function PointsCalculatorClient({
                 setSubjects(initialSubjects)
               }
             }}
-            className="mt-3 text-sm text-stone-500 hover:text-stone-700 transition-colors flex items-center gap-1.5"
+            className="group mt-3 text-sm text-stone-700 hover:text-stone-900 cursor-pointer transition-colors flex items-center gap-1.5"
           >
             {isExperimenting ? (
               <>
                 <span>×</span>
-                <span>Exit experimentation</span>
+                <span className="group-hover:underline underline-offset-2">Exit experimentation</span>
               </>
             ) : (
               <>
                 <span>↔</span>
-                <span>Experiment with my level choices (Higher or Ordinary)</span>
+                <span className="group-hover:underline underline-offset-2">Experiment with my level choices (Higher or Ordinary)</span>
               </>
             )}
           </button>
           <Link
             href="/dashboard/settings"
-            className="mt-2 text-sm text-salmon-500 hover:text-salmon-600 transition-colors"
+            className="group mt-2 text-sm text-salmon-500 hover:text-salmon-600 transition-colors flex items-center gap-1.5"
           >
-            Change my subjects
+            <Settings className="size-3.5" />
+            <span className="group-hover:underline underline-offset-2">Change my subjects</span>
           </Link>
         </div>
 

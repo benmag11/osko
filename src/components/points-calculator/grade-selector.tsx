@@ -29,8 +29,8 @@ export function GradeSelector({
         className={cn(
           'flex h-6 w-6 items-center justify-center rounded transition-colors',
           canGoUp && !disabled
-            ? 'text-stone-600 hover:bg-stone-100 hover:text-stone-800'
-            : 'text-stone-300 cursor-not-allowed'
+            ? 'text-stone-800 hover:bg-stone-300 hover:text-stone-950'
+            : 'text-stone-500 cursor-not-allowed'
         )}
         aria-label="Improve grade"
       >
@@ -50,8 +50,8 @@ export function GradeSelector({
         className={cn(
           'flex h-6 w-6 items-center justify-center rounded transition-colors',
           canGoDown && !disabled
-            ? 'text-stone-600 hover:bg-stone-100 hover:text-stone-800'
-            : 'text-stone-300 cursor-not-allowed'
+            ? 'text-stone-800 hover:bg-stone-300 hover:text-stone-950'
+            : 'text-stone-500 cursor-not-allowed'
         )}
         aria-label="Decrease grade"
       >
