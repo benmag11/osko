@@ -52,24 +52,6 @@ const features = [
   },
 ]
 
-const steps = [
-  {
-    number: '01',
-    title: 'Choose your subjects',
-    description: 'Select the subjects you\'re studying from the full Leaving Cert curriculum.',
-  },
-  {
-    number: '02',
-    title: 'Browse & search',
-    description: 'Find questions by topic, year, or keyword. Filter to focus on what matters.',
-  },
-  {
-    number: '03',
-    title: 'Study with answers',
-    description: 'Every question comes with its official marking scheme. Learn from the source.',
-  },
-]
-
 export default function HomePage() {
   const [showBorder, setShowBorder] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -125,7 +107,7 @@ export default function HomePage() {
                 href="/auth/signup"
                 className="btn-salmon text-sm font-medium px-4 py-2 rounded-lg"
               >
-                Get Started
+                Sign Up
               </Link>
             </div>
           </div>
@@ -139,48 +121,68 @@ export default function HomePage() {
           <div ref={sentinelRef} className="absolute top-0 left-0 h-px w-px" aria-hidden="true" />
 
           <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
-            >
-              {/* Section label */}
-              <p className="small-caps text-[#57534E] text-sm mb-4">
-                Leaving Certificate Study Platform
-              </p>
+            {/* Two-column hero layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              {/* Left column: Text content */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                {/* Section label */}
+                <p className="small-caps text-[#57534E] text-sm mb-4">
+                  Leaving Certificate Study Platform
+                </p>
 
-              {/* Main headline - Crimson Pro */}
-              <h1 className="font-display text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.1] font-medium text-[#1C1917] mb-6">
-                Every past paper.
-                <br />
-                Every marking scheme.
-                <br />
-                One place.
-              </h1>
+                {/* Main headline - Crimson Pro */}
+                <h1 className="font-display text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.1] font-medium text-[#1C1917] mb-6">
+                  Every past paper.
+                  <br />
+                  Every marking scheme.
+                  <br />
+                  One place.
+                </h1>
 
-              {/* Subheadline */}
-              <p className="text-lg md:text-xl text-[#57534E] mb-8 max-w-xl leading-relaxed">
-                The complete Leaving Certificate study archive — searchable, organised, and completely free.
-              </p>
+                {/* Subheadline */}
+                <p className="text-lg md:text-xl text-[#57534E] mb-8 max-w-xl leading-relaxed">
+                  The complete Leaving Certificate study archive — searchable, organised, and completely free.
+                </p>
 
-              {/* CTA buttons */}
-              <div className="flex flex-wrap items-center gap-4 mb-6">
-                <Link
-                  href="/auth/signup"
-                  className="btn-salmon text-base font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2"
-                >
-                  Start studying free
-                  <span aria-hidden="true">→</span>
-                </Link>
-                <Link
-                  href="/auth/signin"
-                  className="text-link text-base font-medium sm:hidden"
-                >
-                  Sign in
-                </Link>
-              </div>
-            </motion.div>
+                {/* CTA buttons */}
+                <div className="flex flex-wrap items-center gap-4 mb-6">
+                  <Link
+                    href="/auth/signup"
+                    className="btn-salmon text-base font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2"
+                  >
+                    Get Uncooked
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                  <Link
+                    href="/auth/signin"
+                    className="text-link text-base font-medium sm:hidden"
+                  >
+                    Sign in
+                  </Link>
+                </div>
+              </motion.div>
+
+              {/* Right column: Hero image */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="order-last lg:order-none flex justify-center"
+              >
+                <Image
+                  src="/hero-image.png"
+                  alt="Uncooked mascot - penguin with mountains"
+                  width={500}
+                  height={500}
+                  priority
+                  className="w-3/4 md:w-2/3 lg:w-full max-w-lg"
+                />
+              </motion.div>
+            </div>
 
             {/* Decorative ruled line */}
             <motion.div
@@ -260,77 +262,6 @@ export default function HomePage() {
                   </motion.div>
                 ))}
               </div>
-            </section>
-
-            {/* Decorative ruled line */}
-            <div className="ruled-line" />
-
-            {/* ============================================
-                HOW IT WORKS SECTION
-                ============================================ */}
-            <section className="py-16 md:py-20">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-100px' }}
-                transition={{ duration: 0.6 }}
-              >
-                <p className="small-caps text-[#57534E] text-sm mb-3">How it works</p>
-                <h2 className="font-display text-2xl md:text-3xl font-medium text-[#1C1917] mb-10">
-                  Start studying in minutes
-                </h2>
-              </motion.div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
-                {steps.map((step, index) => (
-                  <motion.div
-                    key={step.number}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-50px' }}
-                    transition={{ duration: 0.5, delay: index * 0.15 }}
-                  >
-                    <p className="step-number text-3xl mb-3">{step.number}</p>
-                    <h3 className="font-display text-lg font-medium text-[#1C1917] mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-sm text-[#57534E] leading-relaxed">
-                      {step.description}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
-
-            {/* ============================================
-                PRODUCT SCREENSHOT SECTION
-                ============================================ */}
-            <section className="py-16 md:py-20">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-100px' }}
-                transition={{ duration: 0.7 }}
-                className="browser-mockup"
-              >
-                {/* Browser Header */}
-                <div className="browser-mockup-header">
-                  <div className="browser-mockup-button browser-mockup-button--close" />
-                  <div className="browser-mockup-button browser-mockup-button--minimize" />
-                  <div className="browser-mockup-button browser-mockup-button--maximize" />
-                </div>
-                {/* Screenshot - cropped to hide built-in traffic lights */}
-                <div className="overflow-hidden">
-                  <Image
-                    src="/website-screenshot.png"
-                    alt="Uncooked exam platform interface showing past papers and marking schemes"
-                    width={1920}
-                    height={1080}
-                    className="w-full h-auto -mt-[38px]"
-                    priority
-                  />
-                </div>
-              </motion.div>
             </section>
 
             {/* Decorative ruled line */}

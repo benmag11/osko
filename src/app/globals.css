@@ -334,13 +334,7 @@ input:-webkit-autofill:active {
 /* Decorative ruled line - academic page divider */
 .ruled-line {
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--color-charcoal) 15%,
-    var(--color-charcoal) 85%,
-    transparent 100%
-  );
+  background: var(--color-charcoal);
   opacity: 0.15;
 }
 
