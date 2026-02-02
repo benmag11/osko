@@ -206,9 +206,9 @@ export function PointsCalculatorClient({
         {/* Points summary - right side */}
         <div className="lg:w-56 lg:shrink-0">
           <PointsSummary
-            totalSubjects={subjects.length}
-            allSubjectsTotal={pointsResult.allSubjectsTotal}
             best6Total={pointsResult.best6Total}
+            showBest6={subjects.length > 6}
+            grades={pointsResult.breakdown.map(b => b.grade)}
           />
         </div>
       </div>

@@ -1,17 +1,33 @@
 'use client'
 
+import { useMemo } from 'react'
+import type { Grade } from '@/lib/types/database'
+
+const GRADE_ORDER: Grade[] = [
+  'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8',
+  'O1', 'O2', 'O3', 'O4', 'O5', 'O6', 'O7', 'O8',
+]
+
 interface PointsSummaryProps {
-  totalSubjects: number
-  allSubjectsTotal: number
   best6Total: number
+  showBest6: boolean
+  grades: Grade[]
 }
 
 export function PointsSummary({
-  totalSubjects,
-  allSubjectsTotal,
   best6Total,
+  showBest6,
+  grades,
 }: PointsSummaryProps) {
-  const showBest6 = totalSubjects > 6
+  const gradeCounts = useMemo(() => {
+    const counts = new Map<Grade, number>()
+    for (const grade of grades) {
+      counts.set(grade, (counts.get(grade) ?? 0) + 1)
+    }
+    return GRADE_ORDER
+      .filter(g => (counts.get(g) ?? 0) > 0)
+      .map(g => ({ grade: g, count: counts.get(g)! }))
+  }, [grades])
 
   return (
     <div className="rounded-sm border border-stone-400 bg-white overflow-hidden">
@@ -25,17 +41,19 @@ export function PointsSummary({
           className="mt-1 text-4xl font-bold text-salmon-500 tabular-nums"
           style={{ textShadow: '0 0 20px rgba(217,119,87,0.2)' }}
         >
-          {showBest6 ? best6Total : allSubjectsTotal}
+          {best6Total}
         </p>
 
-        {showBest6 && (
+        {gradeCounts.length > 0 && (
           <div className="mt-3 pt-3 border-t border-stone-400">
-            <p className="text-sm text-stone-700">
-              All {totalSubjects} subjects
-            </p>
-            <p className="mt-0.5 text-lg font-medium text-stone-800 tabular-nums">
-              {allSubjectsTotal}
-            </p>
+            <p className="text-sm font-medium text-stone-700">Grade Counts</p>
+            <div className="mt-1.5 flex flex-col gap-0.5">
+              {gradeCounts.map(({ grade, count }) => (
+                <span key={grade} className="text-sm text-stone-600">
+                  {grade}: <span className="font-semibold text-stone-900">{count}</span>
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -36,6 +36,17 @@ export interface Database {
         Insert: Omit<UserSubject, 'id' | 'created_at'>
         Update: Partial<Omit<UserSubject, 'id' | 'user_id'>>
       }
+      // Grinds tables
+      grinds: {
+        Row: Grind
+        Insert: Omit<Grind, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Grind, 'id'>>
+      }
+      grind_registrations: {
+        Row: GrindRegistration
+        Insert: Omit<GrindRegistration, 'id' | 'created_at'>
+        Update: Partial<Omit<GrindRegistration, 'id'>>
+      }
       // Audio tables
       audio_topics: {
         Row: AudioTopic

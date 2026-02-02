@@ -131,21 +131,21 @@ export default function HomePage() {
               >
                 {/* Section label */}
                 <p className="small-caps text-[#57534E] text-sm mb-4">
-                  Leaving Certificate Study Platform
+                  On track to be the single largest lc resource archive
                 </p>
 
                 {/* Main headline - Crimson Pro */}
                 <h1 className="font-display text-4xl md:text-5xl lg:text-[3.5rem] leading-[1.1] font-medium text-[#1C1917] mb-6">
-                  Every past paper.
+                  Imagine if Studyclix
                   <br />
-                  Every marking scheme.
+                  Was free...
                   <br />
-                  One place.
+                  <span className="font-serif italic">And way better</span>
                 </h1>
 
                 {/* Subheadline */}
                 <p className="text-lg md:text-xl text-[#57534E] mb-8 max-w-xl leading-relaxed">
-                  The complete Leaving Certificate study archive — searchable, organised, and completely free.
+                  Just sign up, be an adventurer, explore it, I hope you like it.
                 </p>
 
                 {/* CTA buttons */}
@@ -154,7 +154,7 @@ export default function HomePage() {
                     href="/auth/signup"
                     className="btn-salmon text-base font-medium px-6 py-3 rounded-lg inline-flex items-center gap-2"
                   >
-                    Get Uncooked
+                    Uncook yourself
                     <span aria-hidden="true">→</span>
                   </Link>
                   <Link
@@ -212,7 +212,7 @@ export default function HomePage() {
                 <p className="font-display text-2xl md:text-3xl font-semibold text-[#1C1917]">
                   All subjects
                 </p>
-                <p className="text-sm text-[#57534E]">Higher & Ordinary</p>
+                <p className="text-sm text-[#57534E]"><em className="italic font-serif">nearly...</em></p>
               </div>
               <div className="stat-separator hidden md:block" />
               <div className="text-center md:text-left">
