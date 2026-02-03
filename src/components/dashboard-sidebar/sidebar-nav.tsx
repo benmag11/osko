@@ -8,6 +8,7 @@ import {
   Headphones,
   BarChart3,
   Calculator,
+  Users,
   Settings,
   Flag,
   type LucideIcon,
@@ -42,6 +43,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: 'Listening', url: '/dashboard/listening', icon: Headphones },
       { title: 'Points', url: '/dashboard/points', icon: Calculator },
       { title: 'Statistics', url: '/dashboard/statistics', icon: BarChart3 },
+      { title: 'Grinds', url: '/dashboard/grinds', icon: Users },
     ]
   },
   {

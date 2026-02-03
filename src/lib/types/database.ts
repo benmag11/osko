@@ -168,6 +168,13 @@ export interface Database {
         Args: Record<string, never>
         Returns: Subject[]
       }
+      // Grinds functions
+      get_grinds_for_week: {
+        Args: {
+          week_offset?: number
+        }
+        Returns: GrindWithStatus[]
+      }
     }
   }
 }
@@ -508,6 +515,43 @@ export interface AudioQuestionUpdatePayload {
   exam_type?: 'normal' | 'deferred' | 'supplemental'
   additional_info?: string | null
   topic_ids?: string[]
+}
+
+// =============================================================================
+// Grinds Types
+// =============================================================================
+
+export interface Grind {
+  id: string
+  title: string
+  description: string | null
+  scheduled_at: string
+  duration_minutes: number
+  meeting_url: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface GrindRegistration {
+  id: string
+  grind_id: string
+  user_id: string
+  confirmation_email_sent_at: string | null
+  reminder_email_sent_at: string | null
+  created_at: string
+}
+
+export interface GrindWithStatus {
+  id: string
+  title: string
+  description: string | null
+  scheduled_at: string
+  duration_minutes: number
+  meeting_url: string | null
+  created_at: string
+  registration_count: number
+  is_registered: boolean
 }
 
 /**

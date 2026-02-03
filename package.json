@@ -24,6 +24,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@react-email/components": "^1.0.6",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
     "@tanstack/react-query": "^5.85.0",
@@ -39,6 +40,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-intersection-observer": "^9.16.0",
+    "resend": "^6.9.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7"
