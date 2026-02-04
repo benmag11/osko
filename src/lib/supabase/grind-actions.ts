@@ -44,6 +44,22 @@ export async function registerForGrind(
     return { success: false, error: 'You must be logged in to register' }
   }
 
+  // Verify user has an active subscription
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('subscription_status, subscription_current_period_end')
+    .eq('user_id', user.id)
+    .single()
+
+  const hasActiveSubscription =
+    profile?.subscription_status === 'active' &&
+    (!profile.subscription_current_period_end ||
+      new Date(profile.subscription_current_period_end) > new Date())
+
+  if (!hasActiveSubscription) {
+    return { success: false, error: 'Active subscription required to register for grinds' }
+  }
+
   // Insert the registration
   const { data: registration, error } = await supabase
     .from('grind_registrations')

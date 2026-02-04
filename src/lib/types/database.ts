@@ -298,6 +298,12 @@ export interface UserProfile {
   is_admin: boolean
   created_at: string | null
   updated_at: string | null
+  // Subscription fields
+  stripe_customer_id: string | null
+  subscription_status: 'none' | 'active' | 'past_due' | 'canceled' | 'incomplete' | 'trialing'
+  subscription_id: string | null
+  subscription_current_period_end: string | null
+  subscription_cancel_at_period_end: boolean
 }
 
 // CAO Points Grade Types

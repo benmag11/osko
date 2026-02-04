@@ -4,6 +4,7 @@ import { NameSection } from './components/name-section'
 import { EmailSection } from './components/email-section'
 import { PasswordSection } from './components/password-section'
 import { SubjectSection } from './components/subject-section'
+import { BillingSection } from './components/billing-section'
 import { SettingsSection } from '@/components/settings/settings-section'
 import type { Subject } from '@/lib/types/database'
 
@@ -30,7 +31,12 @@ export function SettingsClient({
           <PasswordSection />
         </div>
       </SettingsSection>
-      
+
+      {/* Billing Section */}
+      <SettingsSection title="Billing">
+        <BillingSection />
+      </SettingsSection>
+
       {/* Subjects Section */}
       <SettingsSection title="Subjects">
         <SubjectSection 

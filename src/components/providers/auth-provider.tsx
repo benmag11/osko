@@ -7,6 +7,7 @@ import {
   useState,
   useCallback,
   useRef,
+  useMemo,
 } from 'react'
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
@@ -29,6 +30,7 @@ interface AuthContextType {
   isProfileLoading: boolean
   refetchProfile: () => Promise<UserProfile | null>
   signOut: () => Promise<void>
+  hasActiveSubscription: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -102,7 +104,7 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
       try {
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at')
+          .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at, subscription_status, subscription_current_period_end, subscription_cancel_at_period_end')
           .eq('user_id', userId)
           .abortSignal(controller.signal)
           .single()
@@ -327,6 +329,16 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
     return fetchProfile(currentUserId, { force: true })
   }, [currentUserId, fetchProfile])
 
+  // Computed property to check if user has an active subscription
+  const hasActiveSubscription = useMemo(() => {
+    if (!profile) return false
+    if (profile.subscription_status !== 'active') return false
+    if (profile.subscription_current_period_end) {
+      return new Date(profile.subscription_current_period_end) > new Date()
+    }
+    return true
+  }, [profile])
+
   const value = {
     user,
     session,
@@ -336,6 +348,7 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
     isProfileLoading,
     refetchProfile,
     signOut,
+    hasActiveSubscription,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

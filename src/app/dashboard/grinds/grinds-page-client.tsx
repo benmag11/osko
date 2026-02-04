@@ -1,12 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { DashboardPage } from '@/components/layout/dashboard-page'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Users, Loader2, ExternalLink } from 'lucide-react'
+import { Calendar, Clock, Users, Loader2, ExternalLink, Lock } from 'lucide-react'
 import { getGrindsForWeek, registerForGrind, unregisterFromGrind } from '@/lib/supabase/grind-actions'
+import { createCheckoutSession } from '@/lib/stripe/subscription-actions'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 import { useAuth } from '@/components/providers/auth-provider'
@@ -110,10 +112,25 @@ function TutorSection() {
   )
 }
 
-function GrindCard({ grind, weekOffset }: { grind: GrindWithStatus; weekOffset: number }) {
+function GrindCard({ grind, weekOffset, hasActiveSubscription }: {
+  grind: GrindWithStatus
+  weekOffset: number
+  hasActiveSubscription: boolean
+}) {
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const isPast = new Date(grind.scheduled_at) < new Date()
+  const [isSubscribeLoading, setIsSubscribeLoading] = useState(false)
+
+  const handleSubscribe = async () => {
+    setIsSubscribeLoading(true)
+    try {
+      await createCheckoutSession()
+    } catch (error) {
+      console.error('Failed to create checkout session:', error)
+      setIsSubscribeLoading(false)
+    }
+  }
 
   const register = useMutation({
     mutationFn: () => registerForGrind(grind.id),
@@ -214,6 +231,21 @@ function GrindCard({ grind, weekOffset }: { grind: GrindWithStatus; weekOffset: 
             <span className="inline-block text-xs text-warm-text-muted font-medium px-2 py-1 rounded-sm bg-stone-100">
               Ended
             </span>
+          ) : !hasActiveSubscription ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSubscribe}
+              disabled={isSubscribeLoading}
+              className="gap-1.5"
+            >
+              {isSubscribeLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Lock className="h-3.5 w-3.5" />
+              )}
+              Subscribe to sign up
+            </Button>
           ) : grind.is_registered ? (
             <Button
               variant="outline"
@@ -258,6 +290,7 @@ function GrindCard({ grind, weekOffset }: { grind: GrindWithStatus; weekOffset: 
 }
 
 function GrindList({ weekOffset }: { weekOffset: number }) {
+  const { hasActiveSubscription } = useAuth()
   const { data, isLoading, error } = useQuery({
     queryKey: ['grinds', weekOffset],
     queryFn: () => getGrindsForWeek(weekOffset),
@@ -292,7 +325,12 @@ function GrindList({ weekOffset }: { weekOffset: number }) {
   return (
     <div className="space-y-4">
       {grinds.map((grind) => (
-        <GrindCard key={grind.id} grind={grind} weekOffset={weekOffset} />
+        <GrindCard
+          key={grind.id}
+          grind={grind}
+          weekOffset={weekOffset}
+          hasActiveSubscription={hasActiveSubscription}
+        />
       ))}
     </div>
   )
@@ -309,7 +347,7 @@ export function GrindsPageClient() {
       </div>
 
       <div className="space-y-10">
-        {/* Upcoming Grinds — moved up */}
+        {/* Upcoming Grinds — visible to all, sign-up gated for subscribers */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
