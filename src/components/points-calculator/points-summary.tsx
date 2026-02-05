@@ -32,7 +32,7 @@ export function PointsSummary({
   return (
     <div className="rounded-sm border border-stone-400 bg-white overflow-hidden">
       {/* Accent bar */}
-      <div className="h-1 bg-stone-600" />
+      <div className="h-1 bg-stone-800" />
       <div className="p-4">
         <p className="text-sm font-medium text-stone-700">
           {showBest6 ? 'CAO Points (Best 6)' : 'Total Points'}

@@ -61,6 +61,11 @@ export async function GET(request: Request) {
     }
     
     if (data?.user) {
+      // Password recovery flow — skip onboarding check
+      if (next === '/auth/reset-password') {
+        return redirectWithBase(next)
+      }
+
       // Check if user has completed onboarding
       const { data: profile } = await supabase
         .from('user_profiles')

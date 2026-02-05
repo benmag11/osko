@@ -25,23 +25,7 @@ function capitalizeName(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
-function formatDayOfWeek(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-IE', { weekday: 'long' })
-}
-
-function formatDateShort(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-IE', {
-    day: 'numeric',
-    month: 'long',
-  })
-}
-
-function formatTimeRange(scheduledAt: string, durationMinutes: number): string {
-  const start = new Date(scheduledAt)
-  const end = new Date(start.getTime() + durationMinutes * 60 * 1000)
-  const opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
-  return `${start.toLocaleTimeString('en-IE', opts)} – ${end.toLocaleTimeString('en-IE', opts)}`
-}
+import { formatDayOfWeek, formatDateShort, formatTimeRange } from '@/lib/utils/format-date'
 
 export function GrindConfirmationEmail({
   userName,

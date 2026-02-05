@@ -268,6 +268,23 @@ export interface QuestionNavigationFields {
   additional_info: string | null
 }
 
+/**
+ * Shared fields between Question and AudioQuestion for components
+ * that accept either type (e.g., QuestionReportDialog).
+ * Uses the loosest nullability to accommodate both.
+ */
+export interface BaseReportableQuestion {
+  id: string
+  subject_id: string
+  year: number
+  paper_number: number | null
+  question_number: number | null
+  question_parts: string[] | null
+  exam_type: 'normal' | 'deferred' | 'supplemental'
+  additional_info: string | null
+  topics?: Array<{ id: string; name: string }>
+}
+
 export interface QuestionTopic {
   question_id: string
   topic_id: string

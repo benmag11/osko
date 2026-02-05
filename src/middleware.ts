@@ -63,7 +63,7 @@ export async function middleware(request: NextRequest) {
     }
     
     // Redirect away from auth pages (except callback)
-    if (isAuthPage && !request.nextUrl.pathname.includes('/callback')) {
+    if (isAuthPage && !request.nextUrl.pathname.includes('/callback') && !request.nextUrl.pathname.includes('/reset-password')) {
       // Check onboarding status before redirecting
       const userProfile = await getProfile()
       

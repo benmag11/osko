@@ -64,9 +64,6 @@ export async function getSubjectsWithAudioQuestions(): Promise<Subject[]> {
     }
 
     return (data || []) as Subject[]
-  }).catch(error => {
-    console.error('Failed to fetch audio subjects after retries:', error)
-    return []
   })
 }
 
@@ -92,9 +89,6 @@ export async function getAudioAvailableYears(subjectId: string): Promise<number[
     }
 
     return (data || []) as number[]
-  }).catch(error => {
-    console.error('Failed to fetch audio years after retries:', error)
-    return []
   })
 }
 
@@ -121,9 +115,6 @@ export async function getAudioTopics(subjectId: string): Promise<AudioTopic[]> {
     }
 
     return (data || []) as AudioTopic[]
-  }).catch(error => {
-    console.error('Failed to fetch audio topics after retries:', error)
-    return []
   })
 }
 

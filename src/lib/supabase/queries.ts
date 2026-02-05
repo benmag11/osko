@@ -48,13 +48,13 @@ async function withRetry<T>(
 export async function getSubjects(): Promise<Subject[]> {
   return withRetry(async () => {
     const supabase = await createServerSupabaseClient()
-    
+
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
       .order('name', { ascending: true })
       .order('level', { ascending: true })
-      
+
     if (error) {
       console.error('Error fetching subjects:', error)
       throw new QueryError(
@@ -63,12 +63,8 @@ export async function getSubjects(): Promise<Subject[]> {
         error
       )
     }
-    
+
     return data as Subject[]
-  }).catch(error => {
-    // Return empty array as fallback for non-critical errors
-    console.error('Failed to fetch subjects after retries:', error)
-    return []
   })
 }
 
@@ -76,24 +72,24 @@ export async function getSubjects(): Promise<Subject[]> {
 export async function getSubjectBySlug(slug: string): Promise<Subject | null> {
   return withRetry(async () => {
     const supabase = await createServerSupabaseClient()
-    
+
     const parts = slug.split('-')
     const level = parts[parts.length - 1]
     const name = parts.slice(0, -1).join(' ')
-    
+
     const levelMap: Record<string, string> = {
       'higher': 'Higher',
       'ordinary': 'Ordinary',
       'foundation': 'Foundation'
     }
-    
+
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
       .ilike('name', name)
       .eq('level', levelMap[level] || level)
       .single()
-      
+
     if (error) {
       // Return null for not found errors
       if (error.code === 'PGRST116') {
@@ -106,11 +102,8 @@ export async function getSubjectBySlug(slug: string): Promise<Subject | null> {
         error
       )
     }
-    
+
     return data as Subject
-  }).catch(error => {
-    console.error('Failed to fetch subject after retries:', error)
-    return null
   })
 }
 
@@ -134,10 +127,6 @@ export async function getTopics(subjectId: string): Promise<Topic[]> {
     }
 
     return data as Topic[]
-  }).catch(error => {
-    // Return empty array as fallback
-    console.error('Failed to fetch topics after retries:', error)
-    return []
   })
 }
 
@@ -161,10 +150,6 @@ export async function getTopicGroups(subjectId: string): Promise<TopicGroup[]> {
     }
 
     return data as TopicGroup[]
-  }).catch(error => {
-    // Return empty array as fallback
-    console.error('Failed to fetch topic groups after retries:', error)
-    return []
   })
 }
 
@@ -187,9 +172,6 @@ export async function getAvailableYears(subjectId: string): Promise<number[]> {
     }
     
     return data as number[]
-  }).catch(error => {
-    console.error('Failed to fetch years after retries:', error)
-    return []
   })
 }
 
@@ -212,9 +194,6 @@ export async function getAvailableQuestionNumbers(subjectId: string): Promise<nu
     }
     
     return data as number[]
-  }).catch(error => {
-    console.error('Failed to fetch question numbers after retries:', error)
-    return []
   })
 }
 
@@ -292,10 +271,6 @@ export async function getAllSubjects(): Promise<Subject[]> {
     }
     
     return data as Subject[]
-  }).catch(error => {
-    // Return empty array as fallback for non-critical errors
-    console.error('Failed to fetch subjects after retries:', error)
-    return []
   })
 }
 
@@ -338,9 +313,6 @@ export async function getUserSubjects(userId: string): Promise<UserSubjectWithSu
       grade: item.grade,
       subject: item.subject
     }))
-  }).catch(error => {
-    console.error('Failed to fetch user subjects after retries:', error)
-    return []
   })
 }
 

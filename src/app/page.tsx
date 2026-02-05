@@ -10,7 +10,6 @@ import {
   FileText,
   Headphones,
   Calculator,
-  Gift,
 } from 'lucide-react'
 
 const features = [
@@ -43,12 +42,6 @@ const features = [
     title: 'Points Calculator',
     description:
       'Plan your CAO points. See what grades you need across your subjects.',
-  },
-  {
-    icon: Gift,
-    title: 'Always Free',
-    description:
-      'No subscriptions, no hidden costs. Free for all students, forever.',
   },
 ]
 
@@ -131,7 +124,7 @@ export default function HomePage() {
               >
                 {/* Section label */}
                 <p className="small-caps text-[#57534E] text-sm mb-4">
-                  On track to be the single largest lc resource archive
+                  The single largest LC resource archive
                 </p>
 
                 {/* Main headline - Crimson Pro */}
@@ -213,13 +206,6 @@ export default function HomePage() {
                   All subjects
                 </p>
                 <p className="text-sm text-[#57534E]"><em className="italic font-serif">nearly...</em></p>
-              </div>
-              <div className="stat-separator hidden md:block" />
-              <div className="text-center md:text-left">
-                <p className="font-display text-2xl md:text-3xl font-semibold text-[#1C1917]">
-                  100% free
-                </p>
-                <p className="text-sm text-[#57534E]">no hidden costs</p>
               </div>
             </motion.div>
 

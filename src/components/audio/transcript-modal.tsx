@@ -9,7 +9,7 @@ import {
 import { TranscriptContent } from './transcript-content'
 import { AlertCircle, X } from 'lucide-react'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
-import type { AudioQuestion, TranscriptItem, Question } from '@/lib/types/database'
+import type { AudioQuestion, TranscriptItem } from '@/lib/types/database'
 
 interface TranscriptModalProps {
   question: AudioQuestion
@@ -61,7 +61,7 @@ export function TranscriptModal({
       })
   }, [open, question.map_json_url])
 
-  const title = formatQuestionTitle(question as unknown as Question)
+  const title = formatQuestionTitle(question)
 
   const handleRetry = () => {
     setIsLoading(true)

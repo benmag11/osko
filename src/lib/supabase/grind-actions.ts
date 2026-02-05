@@ -32,7 +32,7 @@ export async function getGrindsForWeek(
 
 export async function registerForGrind(
   grindId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; emailFailed?: boolean }> {
   const supabase = await createServerSupabaseClient()
 
   const {
@@ -129,31 +129,32 @@ export async function registerForGrind(
     const grind = grindResult.data
     const userName = profileResult.data?.name || user.email.split('@')[0]
 
-    // Send confirmation email (fire and forget, don't block registration)
-    sendGrindConfirmationEmail({
-      userEmail: user.email,
-      userName,
-      grindId,
-      grindTitle: grind.title,
-      grindDescription: grind.description,
-      scheduledAt: grind.scheduled_at,
-      durationMinutes: grind.duration_minutes,
-      meetingUrl: grind.meeting_url,
-    })
-      .then(async (result) => {
-        if (result.success && registration) {
-          // Update the registration to mark email as sent
-          await supabase
-            .from('grind_registrations')
-            .update({ confirmation_email_sent_at: new Date().toISOString() })
-            .eq('id', registration.id)
-        } else {
-          console.error('Failed to send confirmation email:', result.error)
-        }
+    // Send confirmation email — await it so we can report failure
+    try {
+      const emailResult = await sendGrindConfirmationEmail({
+        userEmail: user.email,
+        userName,
+        grindId,
+        grindTitle: grind.title,
+        grindDescription: grind.description,
+        scheduledAt: grind.scheduled_at,
+        durationMinutes: grind.duration_minutes,
+        meetingUrl: grind.meeting_url,
       })
-      .catch((err) => {
-        console.error('Error sending confirmation email:', err)
-      })
+
+      if (emailResult.success && registration) {
+        await supabase
+          .from('grind_registrations')
+          .update({ confirmation_email_sent_at: new Date().toISOString() })
+          .eq('id', registration.id)
+      } else {
+        console.error('Failed to send confirmation email:', emailResult.error)
+        return { success: true, emailFailed: true }
+      }
+    } catch (err) {
+      console.error('Error sending confirmation email:', err)
+      return { success: true, emailFailed: true }
+    }
   }
 
   return { success: true }

@@ -55,7 +55,7 @@ export default async function RootLayout({
   if (session?.user?.id) {
     const userId = session.user.id
 
-    const [{ data: profileData, error: profileError }, userSubjects] = await Promise.all([
+    const [profileResult, subjectsResult] = await Promise.allSettled([
       supabase
         .from('user_profiles')
         .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at, stripe_customer_id, subscription_status, subscription_id, subscription_current_period_end, subscription_cancel_at_period_end, free_grind_credits')
@@ -63,6 +63,10 @@ export default async function RootLayout({
         .single(),
       getUserSubjects(userId),
     ])
+
+    const profileData = profileResult.status === 'fulfilled' ? profileResult.value.data : null
+    const profileError = profileResult.status === 'fulfilled' ? profileResult.value.error : profileResult.reason
+    const userSubjects = subjectsResult.status === 'fulfilled' ? subjectsResult.value : []
 
     if (!profileError || profileError.code === 'PGRST116') {
       queryClient.setQueryData(queryKeys.user.profile(userId), {

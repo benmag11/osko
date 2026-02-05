@@ -205,9 +205,6 @@ export async function getAllSubjectsClient(): Promise<Subject[]> {
     }
 
     return (data || []) as Subject[]
-  }).catch(error => {
-    console.error('Failed to fetch subjects after retries:', error)
-    return []
   })
 }
 
@@ -255,8 +252,5 @@ export async function getUserSubjectsClient(userId: string): Promise<UserSubject
       grade: item.grade,
       subject: item.subject
     }))
-  }).catch(error => {
-    console.error('Failed to fetch user subjects after retries:', error)
-    return []
   })
 }

@@ -10,4 +10,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 })
 
 // Grinds subscription price ID
-export const GRINDS_PRICE_ID = process.env.STRIPE_PRICE_ID || 'price_1SwqBw2KMYYiTcpDcY1ICjsD'
+if (!process.env.STRIPE_PRICE_ID) {
+  throw new Error('STRIPE_PRICE_ID is not set in environment variables')
+}
+export const GRINDS_PRICE_ID = process.env.STRIPE_PRICE_ID

@@ -21,8 +21,13 @@ interface PageProps {
 export default async function SubjectPage({ params, searchParams }: PageProps) {
   const resolvedParams = await params
   const resolvedSearchParams = await searchParams
-  const subject = await getSubjectBySlug(resolvedParams.slug)
-  
+  let subject
+  try {
+    subject = await getSubjectBySlug(resolvedParams.slug)
+  } catch {
+    notFound()
+  }
+
   if (!subject) {
     notFound()
   }

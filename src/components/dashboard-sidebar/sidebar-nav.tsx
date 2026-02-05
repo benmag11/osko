@@ -7,6 +7,7 @@ import {
   BookOpen,
   Headphones,
   Calculator,
+  Calendar,
   Users,
   Settings,
   Flag,
@@ -42,6 +43,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: 'Listening', url: '/dashboard/listening', icon: Headphones },
       { title: 'Grinds', url: '/dashboard/grinds', icon: Users },
       { title: 'Points', url: '/dashboard/points', icon: Calculator },
+      { title: 'Timetable', url: '/dashboard/timetable', icon: Calendar },
     ]
   },
   {

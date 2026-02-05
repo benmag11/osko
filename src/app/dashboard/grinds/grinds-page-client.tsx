@@ -10,47 +10,11 @@ import { Calendar, Clock, Users, Loader2, ExternalLink, Lock, Info } from 'lucid
 import { getGrindsForWeek, registerForGrind, unregisterFromGrind } from '@/lib/supabase/grind-actions'
 import { createCheckoutSession } from '@/lib/stripe/subscription-actions'
 import { motion, AnimatePresence } from 'motion/react'
+import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/components/providers/auth-provider'
 import type { GrindWithStatus, SubscriptionState } from '@/lib/types/database'
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-IE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
-}
-
-function formatTime(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleTimeString('en-IE', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatTimeRange(scheduledAt: string, durationMinutes: number): string {
-  const start = new Date(scheduledAt)
-  const end = new Date(start.getTime() + durationMinutes * 60 * 1000)
-  const opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
-  return `${start.toLocaleTimeString('en-IE', opts)}–${end.toLocaleTimeString('en-IE', opts)}`
-}
-
-function getWeekDateRange(weekOffset: number): string {
-  const now = new Date()
-  // Get Monday of the target week (ISO week starts on Monday)
-  const dayOfWeek = now.getDay()
-  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-  const monday = new Date(now)
-  monday.setDate(now.getDate() + diffToMonday + weekOffset * 7)
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() + 6)
-
-  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
-  return `${monday.toLocaleDateString('en-IE', opts)} – ${sunday.toLocaleDateString('en-IE', opts)}`
-}
+import { formatDateLong, formatTime, formatTimeRange, getWeekDateRange } from '@/lib/utils/format-date'
 
 function TutorSection() {
   return (
@@ -120,17 +84,6 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
   const queryClient = useQueryClient()
   const { user, refetchProfile } = useAuth()
   const isPast = new Date(grind.scheduled_at) < new Date()
-  const [isSubscribeLoading, setIsSubscribeLoading] = useState(false)
-
-  const handleSubscribe = async () => {
-    setIsSubscribeLoading(true)
-    try {
-      await createCheckoutSession()
-    } catch (error) {
-      console.error('Failed to create checkout session:', error)
-      setIsSubscribeLoading(false)
-    }
-  }
 
   const register = useMutation({
     mutationFn: () => registerForGrind(grind.id),
@@ -206,7 +159,7 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-warm-text-muted">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
-            {formatDate(grind.scheduled_at)}
+            {formatDateLong(grind.scheduled_at)}
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="h-4 w-4" />
@@ -261,19 +214,11 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
               {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign Up — Free'}
             </Button>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSubscribe}
-              disabled={isSubscribeLoading}
-              className="gap-1.5"
-            >
-              {isSubscribeLoading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
+            <Button variant="outline" size="sm" asChild className="gap-1.5">
+              <Link href="/ultra">
                 <Lock className="h-3.5 w-3.5" />
-              )}
-              Subscribe to sign up
+                Join Uncooked Ultra
+              </Link>
             </Button>
           )}
         </div>
@@ -344,9 +289,6 @@ function SubscriptionBanner({ subscriptionState, periodEnd }: {
     }
   }
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-IE', { day: 'numeric', month: 'long' })
-
   switch (subscriptionState) {
     case 'active':
       return null
@@ -354,14 +296,14 @@ function SubscriptionBanner({ subscriptionState, periodEnd }: {
       return (
         <div className="flex items-start gap-3 rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <Info className="h-4 w-4 mt-0.5 shrink-0" />
-          <p>Your subscription ends on <span className="font-semibold">{periodEnd ? formatDate(periodEnd) : 'soon'}</span>. You have access until then.</p>
+          <p>Your subscription ends on <span className="font-semibold">{periodEnd ? formatDateLong(periodEnd) : 'soon'}</span>. You have access until then.</p>
         </div>
       )
     case 'trialing':
       return (
         <div className="flex items-start gap-3 rounded-sm border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
           <Info className="h-4 w-4 mt-0.5 shrink-0" />
-          <p>You&apos;re on a free trial. Subscribe to keep access after <span className="font-semibold">{periodEnd ? formatDate(periodEnd) : 'your trial ends'}</span>.</p>
+          <p>You&apos;re on a free trial. Subscribe to keep access after <span className="font-semibold">{periodEnd ? formatDateLong(periodEnd) : 'your trial ends'}</span>.</p>
         </div>
       )
     case 'past_due':
@@ -382,8 +324,8 @@ function SubscriptionBanner({ subscriptionState, periodEnd }: {
           <Info className="h-4 w-4 mt-0.5 shrink-0" />
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <p>Your subscription has ended. Subscribe for unlimited access.</p>
-            <Button variant="outline" size="sm" onClick={handleSubscribe} disabled={isSubscribeLoading} className="h-7 text-xs">
-              {isSubscribeLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Subscribe'}
+            <Button variant="outline" size="sm" asChild className="h-7 text-xs">
+              <Link href="/ultra">Join Uncooked Ultra</Link>
             </Button>
           </div>
         </div>
@@ -392,21 +334,11 @@ function SubscriptionBanner({ subscriptionState, periodEnd }: {
       return (
         <div className="flex items-start gap-3 rounded-sm border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
           <Info className="h-4 w-4 mt-0.5 shrink-0" />
-          <p>You have <span className="font-semibold">1 free grind</span>! Sign up for any session below to try it out.</p>
+          <p>You have <span className="font-semibold">one free grind</span>. You might as well use it.</p>
         </div>
       )
     case 'no_access':
-      return (
-        <div className="flex items-start gap-3 rounded-sm border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
-          <Info className="h-4 w-4 mt-0.5 shrink-0" />
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <p>Subscribe for unlimited access to weekly grinds.</p>
-            <Button variant="primary" size="sm" onClick={handleSubscribe} disabled={isSubscribeLoading} className="h-7 text-xs">
-              {isSubscribeLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Subscribe — €30/month'}
-            </Button>
-          </div>
-        </div>
-      )
+      return null
     default:
       return null
   }

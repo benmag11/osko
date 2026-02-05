@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, FileText, Flag, Headphones } from 'lucide-react'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
 import { AudioQuestionEditModal } from '@/components/admin/audio-question-edit-modal'
-import type { AudioQuestion, AudioTopic, Question } from '@/lib/types/database'
+import type { AudioQuestion, AudioTopic } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
 import { useInView } from 'react-intersection-observer'
@@ -72,7 +72,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
     setShowMarkingScheme(prev => !prev)
   }, [])
 
-  const title = formatQuestionTitle(question as unknown as Question)
+  const title = formatQuestionTitle(question)
   const rawDisplayWidth = displayWidth ?? (EXAM_VIEW_BASE_MAX_WIDTH_PX * (zoom ?? 1))
   const maxDisplayWidth = Math.max(1, Math.round(rawDisplayWidth))
   const questionImageSizes = `(max-width: 640px) 100vw, ${maxDisplayWidth}px`
@@ -161,8 +161,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
     hasForceFetchedRef.current = true
   }, [markingSchemeUrl, showMarkingScheme])
 
-  // Convert AudioQuestion to Question for report dialog (shares common fields)
-  const questionForReport = question as unknown as Question
+  // AudioQuestion satisfies BaseReportableQuestion directly — no cast needed
 
   return (
     <div
@@ -312,7 +311,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
 
       {canReport && showReportDialog && (
         <QuestionReportDialog
-          question={questionForReport}
+          question={question}
           open={showReportDialog}
           onOpenChange={setShowReportDialog}
         />

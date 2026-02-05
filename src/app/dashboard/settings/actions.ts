@@ -56,13 +56,13 @@ export async function verifyPasswordForEmailChange(password: string) {
     return { error: 'You must be logged in to change your email' }
   }
 
-  // Verify password by attempting to sign in
-  const { error } = await supabase.auth.signInWithPassword({
-    email: user.email!,
+  // Verify password via RPC (avoids creating a duplicate auth session)
+  const { data: isValid, error } = await supabase.rpc('verify_user_password', {
+    user_id: user.id,
     password,
   })
 
-  if (error) {
+  if (error || !isValid) {
     return { error: 'Incorrect password' }
   }
 
@@ -89,13 +89,13 @@ export async function requestEmailChange(newEmail: string, password: string) {
     return { error: 'You must be logged in to change your email' }
   }
 
-  // Verify password first
-  const { error: passwordError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
+  // Verify password via RPC (avoids creating a duplicate auth session)
+  const { data: isPasswordValid, error: passwordError } = await supabase.rpc('verify_user_password', {
+    user_id: user.id,
     password,
   })
 
-  if (passwordError) {
+  if (passwordError || !isPasswordValid) {
     return { error: 'Incorrect password' }
   }
 
@@ -105,13 +105,18 @@ export async function requestEmailChange(newEmail: string, password: string) {
   })
 
   if (error) {
+    // Do NOT reveal whether the email is already in use — this is an
+    // enumeration vulnerability. Return the generic success message regardless.
     if (error.message.includes('already registered')) {
-      return { error: 'This email is already in use' }
+      return {
+        success: true,
+        message: 'A 6-digit verification code has been sent to your new email address'
+      }
     }
     return { error: 'Failed to send verification code. Please try again.' }
   }
 
-  return { 
+  return {
     success: true,
     message: 'A 6-digit verification code has been sent to your new email address'
   }
@@ -131,8 +136,8 @@ export async function updatePassword(
     return { error: 'New passwords do not match' }
   }
 
-  if (newPassword.length < 6) {
-    return { error: 'Password must be at least 6 characters long' }
+  if (newPassword.length < 8) {
+    return { error: 'Password must be at least 8 characters long' }
   }
 
   if (currentPassword === newPassword) {
@@ -148,13 +153,13 @@ export async function updatePassword(
     return { error: 'You must be logged in to change your password' }
   }
 
-  // Verify current password
-  const { error: passwordError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
+  // Verify current password via RPC (avoids creating a duplicate auth session)
+  const { data: isPasswordValid, error: passwordError } = await supabase.rpc('verify_user_password', {
+    user_id: user.id,
     password: currentPassword,
   })
 
-  if (passwordError) {
+  if (passwordError || !isPasswordValid) {
     return { error: 'Current password is incorrect' }
   }
 

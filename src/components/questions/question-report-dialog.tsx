@@ -17,10 +17,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createReport } from '@/lib/supabase/report-actions'
-import type { Question } from '@/lib/types/database'
+import type { BaseReportableQuestion } from '@/lib/types/database'
 
 interface QuestionReportDialogProps {
-  question: Question
+  question: BaseReportableQuestion
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -53,13 +53,14 @@ export function QuestionReportDialog({
   const queryClient = useQueryClient()
 
   // Build question title for display
+  const parts = question.question_parts ?? []
   const questionTitle = `${question.year}${
     question.paper_number ? ` - Paper ${question.paper_number}` : ''
   }${question.exam_type === 'deferred' ? ' - Deferred' : ''} - Question ${
     question.question_number
   }${
-    question.question_parts.length > 0
-      ? ` - ${question.question_parts.map(p => `(${p})`).join(', ')}`
+    parts.length > 0
+      ? ` - ${parts.map(p => `(${p})`).join(', ')}`
       : ''
   }${
     question.additional_info ? ` - ${question.additional_info}` : ''

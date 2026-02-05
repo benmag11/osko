@@ -222,10 +222,8 @@ export function ReportDetailsDialog({
           topics={topics || []}
           open={showEditModal}
           onOpenChange={setShowEditModal}
-          onUpdateComplete={(auditLogId) => {
+          onUpdateComplete={() => {
             // The audit history will auto-refresh via React Query invalidation
-            // This callback can be used for additional actions if needed
-            console.log('Question updated successfully, audit log:', auditLogId)
           }}
         />
       )}

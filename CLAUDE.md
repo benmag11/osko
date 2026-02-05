@@ -18,6 +18,8 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth (email verification)
 - **Storage**: Supabase Storage (question/marking scheme images)
+- **Payments**: Stripe (subscriptions, invoices, free credits system)
+- **Email**: Resend
 - **API**: Server Actions + RPC functions
 
 ## Architecture
@@ -27,6 +29,8 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - **Questions**: Year, paper number, question number, parts, exam type (normal/deferred/supplemental)
 - **Topics**: Grouped topics per subject for filtering
 - **User Profiles**: Subject selections, personalized dashboard
+- **Subscriptions**: Stripe-backed subscription state tracking
+- **Grinds**: Tutoring session bookings
 - **Images**: CDN-served with width/height metadata, lazy loading tracking
 - **Word Coordinates**: OCR data for text search within question images
 
@@ -34,12 +38,20 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - **Pagination**: Cursor-based with RPC functions (`normal_search_questions_paginated`)
 - **Search**: Multi-field filtering (years, topics, exam types, question numbers, text search)
 - **Query Optimization**: Postgres functions for efficient joins and filtering
+- **Subscription Billing**: Stripe integration with free credits system
 - **Admin**: Report system for question issues
 
 ### Key Pages
 - Landing with feature showcase
-- Auth flow (signup/signin/verify/onboarding)
-- Dashboard (study view, settings, admin reports)
+- Auth flow (signup / signin / verify / callback)
+- Onboarding (subject selection)
+- Dashboard home
+- Study view (`/dashboard/study`)
+- Grinds (`/dashboard/grinds`) — subscription-based tutoring
+- Listening Practice (`/dashboard/listening`) — audio exam questions
+- Points Calculator (`/dashboard/points`) — CAO points tool
+- Settings (with billing)
+- Admin reports
 - Subject pages with filtered question lists
 
 ## Development Notes

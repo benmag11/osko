@@ -4,7 +4,10 @@ import { stripe } from '@/lib/stripe/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type Stripe from 'stripe'
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+  throw new Error('STRIPE_WEBHOOK_SECRET is not set in environment variables')
+}
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 /**
  * Maps Stripe subscription status to our database status
@@ -106,6 +109,7 @@ export async function POST(request: Request) {
 
         if (error) {
           console.error('Failed to link Stripe customer to user:', error)
+          throw error // Re-throw so Stripe retries on transient DB failures
         }
         break
       }
@@ -152,8 +156,8 @@ export async function POST(request: Request) {
       }
 
       default:
-        // Unhandled event type
-        console.log(`Unhandled event type: ${event.type}`)
+        // Unhandled event type — no action needed
+        break
     }
 
     return NextResponse.json({ received: true })

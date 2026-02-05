@@ -13,7 +13,12 @@ export const revalidate = 0
 
 export default async function OnboardingPage() {
   // Fetch all subjects from the database
-  const subjects = await getAllSubjects()
+  let subjects: Awaited<ReturnType<typeof getAllSubjects>>
+  try {
+    subjects = await getAllSubjects()
+  } catch {
+    subjects = []
+  }
 
   // Handle case where no subjects are available
   if (!subjects || subjects.length === 0) {

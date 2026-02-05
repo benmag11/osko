@@ -1,8 +1,8 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { signInWithGoogle } from '@/app/auth/oauth-actions'
-import { useState, useTransition } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 
 type GoogleOAuthVariant = 'signin' | 'signup'
 
@@ -13,27 +13,35 @@ const LABEL_BY_VARIANT: Record<GoogleOAuthVariant, string> = {
 
 function GoogleOAuthButton({ variant }: { variant: GoogleOAuthVariant }) {
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(false)
   const failureMessage =
     variant === 'signup'
       ? 'Failed to sign up with Google. Please try again.'
       : 'Failed to sign in with Google. Please try again.'
 
-  const handleClick = () => {
+  const handleClick = async () => {
     setError(null)
+    setIsLoading(true)
 
-    startTransition(() => {
-      signInWithGoogle()
-        .then((result) => {
-          if (result?.error) {
-            setError(result.error)
-          }
-        })
-        .catch((err) => {
-          console.error('Google OAuth error:', err)
-          setError(failureMessage)
-        })
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
     })
+
+    if (error) {
+      console.error('Google OAuth error:', error)
+      setError(error.message || failureMessage)
+      setIsLoading(false)
+    }
+    // On success, the browser navigates away — don't reset isLoading
+    // to avoid a brief button flash before navigation completes
   }
 
   return (
@@ -42,10 +50,10 @@ function GoogleOAuthButton({ variant }: { variant: GoogleOAuthVariant }) {
         type="button"
         variant="outline"
         className="w-full bg-white hover:bg-stone-50/80 border-stone-300 hover:border-stone-400 transition-colors"
-        disabled={isPending}
+        disabled={isLoading}
         onClick={handleClick}
       >
-        {isPending ? (
+        {isLoading ? (
           'Redirecting...'
         ) : (
           <>

@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm your email</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#FEF5EB;font-family:'Source Sans Pro',-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;">
+  <!-- Outer wrapper table for full-width background -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FEF5EB;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <!--[if mso]>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="520"><tr><td>
+        <![endif]-->
+        <!-- Inner container -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+
+          <!-- Logo Header -->
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <img
+                src="https://uncooked.ie/logo-full.png"
+                alt="Uncooked"
+                width="140"
+                height="32"
+                style="display:block;border:0;outline:none;text-decoration:none;"
+              />
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="border-top:1px solid #E5E4DC;font-size:1px;line-height:1px;" height="1">&nbsp;</td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding:32px 0;">
+
+              <!-- Heading -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:16px;">
+                    <h1 style="margin:0;font-size:24px;font-weight:400;line-height:32px;color:#1A1A1A;font-family:'Source Serif Pro',Georgia,serif;">Confirm your email</h1>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Body copy -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:28px;">
+                    <p style="margin:0;font-size:15px;line-height:24px;color:#4A4A4A;text-align:center;">
+                      Thanks for signing up to Uncooked! Enter the verification code below to confirm your email address and get started.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- OTP Code Block -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:8px;">
+                    <p style="margin:0;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#6B6B6B;text-align:center;">Your verification code</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-bottom:28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="background-color:#FFFFFF;border:1px solid #E5E4DC;border-radius:8px;padding:20px 40px;">
+                          <p style="margin:0;font-size:36px;font-weight:600;letter-spacing:8px;color:#1A1A1A;font-family:'Source Sans Pro',-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,monospace;">{{ .Token }}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Security note -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0;font-size:13px;line-height:20px;color:#6B6B6B;text-align:center;">
+                      This code will expire in 24 hours. If you didn't create an account, you can safely ignore this email.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="border-top:1px solid #E5E4DC;font-size:1px;line-height:1px;" height="1">&nbsp;</td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding-top:20px;">
+              <p style="margin:0 0 8px 0;">
+                <a href="{{ .SiteURL }}" target="_blank" style="font-size:13px;color:#ED805E;text-decoration:none;">uncooked.ie</a>
+              </p>
+              <p style="margin:0;font-size:12px;line-height:18px;color:#6B6B6B;">
+                Exam prep for the Irish Leaving Cert
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!--[if mso]>
+        </td></tr></table>
+        <![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

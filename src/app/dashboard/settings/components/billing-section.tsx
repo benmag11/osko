@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/providers/auth-provider'
-import { createCheckoutSession, createPortalSession } from '@/lib/stripe/subscription-actions'
+import { createPortalSession } from '@/lib/stripe/subscription-actions'
 import { Loader2 } from 'lucide-react'
 
 function BillingSkeleton() {
@@ -19,40 +20,9 @@ function BillingSkeleton() {
   )
 }
 
-function SubscribeCTA({ isLoading, onSubscribe }: { isLoading: boolean; onSubscribe: () => void }) {
-  return (
-    <>
-      <h3 className="text-base font-serif font-medium text-warm-text-primary mb-1">
-        Subscribe to access 3 weekly grinds
-      </h3>
-      <p className="text-sm text-warm-text-muted mb-4">
-        Join live tutoring sessions every week with expert guidance on Leaving Cert maths.
-      </p>
-      <div className="flex items-center gap-4">
-        <Button onClick={onSubscribe} disabled={isLoading} variant="primary" size="sm">
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
-        </Button>
-        <span className="text-sm text-warm-text-muted">
-          <span className="font-semibold text-warm-text-secondary">€30</span>/month
-        </span>
-      </div>
-    </>
-  )
-}
-
 export function BillingSection() {
   const { profile, isProfileLoading, subscriptionState } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
-
-  const handleSubscribe = async () => {
-    setIsLoading(true)
-    try {
-      await createCheckoutSession()
-    } catch (error) {
-      console.error('Failed to create checkout session:', error)
-      setIsLoading(false)
-    }
-  }
 
   const handleManageSubscription = async () => {
     setIsLoading(true)
@@ -83,7 +53,7 @@ export function BillingSection() {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-base font-serif font-medium text-warm-text-primary">
-                Grinds Subscription
+                Uncooked Ultra
               </h3>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                 Active
@@ -114,7 +84,7 @@ export function BillingSection() {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-base font-serif font-medium text-warm-text-primary">
-                Grinds Subscription
+                Uncooked Ultra
               </h3>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
                 Canceling
@@ -145,7 +115,7 @@ export function BillingSection() {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-base font-serif font-medium text-warm-text-primary">
-                Grinds Subscription
+                Uncooked Ultra
               </h3>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                 Trial
@@ -163,8 +133,8 @@ export function BillingSection() {
                 'You are on a free trial'
               )}
             </p>
-            <Button onClick={handleSubscribe} disabled={isLoading} variant="primary" size="sm">
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Subscribe'}
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/ultra">Upgrade</Link>
             </Button>
           </div>
         </div>
@@ -176,7 +146,7 @@ export function BillingSection() {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-base font-serif font-medium text-warm-text-primary">
-                Grinds Subscription
+                Uncooked Ultra
               </h3>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 border border-red-200">
                 Past Due
@@ -199,7 +169,9 @@ export function BillingSection() {
             <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-sm px-3 py-2 mb-3">
               You have <span className="font-semibold">1 free grind</span> available
             </p>
-            <SubscribeCTA isLoading={isLoading} onSubscribe={handleSubscribe} />
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/ultra">Upgrade</Link>
+            </Button>
           </div>
         </div>
       )
@@ -210,7 +182,9 @@ export function BillingSection() {
       return (
         <div className="px-6 py-5">
           <div className="flex-1">
-            <SubscribeCTA isLoading={isLoading} onSubscribe={handleSubscribe} />
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/ultra">Upgrade</Link>
+            </Button>
           </div>
         </div>
       )
