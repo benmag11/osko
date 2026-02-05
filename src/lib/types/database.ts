@@ -169,6 +169,20 @@ export interface Database {
         Returns: Subject[]
       }
       // Grinds functions
+      register_for_grind_with_credit: {
+        Args: {
+          p_user_id: string
+          p_grind_id: string
+        }
+        Returns: boolean
+      }
+      unregister_from_grind_with_credit_restore: {
+        Args: {
+          p_user_id: string
+          p_grind_id: string
+        }
+        Returns: boolean
+      }
       get_grinds_for_week: {
         Args: {
           week_offset?: number
@@ -304,6 +318,7 @@ export interface UserProfile {
   subscription_id: string | null
   subscription_current_period_end: string | null
   subscription_cancel_at_period_end: boolean
+  free_grind_credits: number
 }
 
 // CAO Points Grade Types
@@ -524,6 +539,20 @@ export interface AudioQuestionUpdatePayload {
 }
 
 // =============================================================================
+// Subscription State
+// =============================================================================
+
+export type SubscriptionState =
+  | 'loading'
+  | 'active'
+  | 'canceling'
+  | 'trialing'
+  | 'past_due'
+  | 'expired'
+  | 'free_credits'
+  | 'no_access'
+
+// =============================================================================
 // Grinds Types
 // =============================================================================
 
@@ -545,6 +574,7 @@ export interface GrindRegistration {
   user_id: string
   confirmation_email_sent_at: string | null
   reminder_email_sent_at: string | null
+  used_free_grind: boolean
   created_at: string
 }
 

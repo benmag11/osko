@@ -6,13 +6,13 @@ import { DashboardPage } from '@/components/layout/dashboard-page'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Users, Loader2, ExternalLink, Lock } from 'lucide-react'
+import { Calendar, Clock, Users, Loader2, ExternalLink, Lock, Info } from 'lucide-react'
 import { getGrindsForWeek, registerForGrind, unregisterFromGrind } from '@/lib/supabase/grind-actions'
 import { createCheckoutSession } from '@/lib/stripe/subscription-actions'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 import { useAuth } from '@/components/providers/auth-provider'
-import type { GrindWithStatus } from '@/lib/types/database'
+import type { GrindWithStatus, SubscriptionState } from '@/lib/types/database'
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
@@ -112,13 +112,13 @@ function TutorSection() {
   )
 }
 
-function GrindCard({ grind, weekOffset, hasActiveSubscription }: {
+function GrindCard({ grind, weekOffset, subscriptionState }: {
   grind: GrindWithStatus
   weekOffset: number
-  hasActiveSubscription: boolean
+  subscriptionState: SubscriptionState
 }) {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { user, refetchProfile } = useAuth()
   const isPast = new Date(grind.scheduled_at) < new Date()
   const [isSubscribeLoading, setIsSubscribeLoading] = useState(false)
 
@@ -159,6 +159,7 @@ function GrindCard({ grind, weekOffset, hasActiveSubscription }: {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['grinds', weekOffset] })
+      refetchProfile()
     },
   })
 
@@ -189,6 +190,7 @@ function GrindCard({ grind, weekOffset, hasActiveSubscription }: {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['grinds', weekOffset] })
+      refetchProfile()
     },
   })
 
@@ -231,7 +233,34 @@ function GrindCard({ grind, weekOffset, hasActiveSubscription }: {
             <span className="inline-block text-xs text-warm-text-muted font-medium px-2 py-1 rounded-sm bg-stone-100">
               Ended
             </span>
-          ) : !hasActiveSubscription ? (
+          ) : grind.is_registered ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => unregister.mutate()}
+              disabled={isMutating}
+            >
+              {unregister.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Leave'}
+            </Button>
+          ) : ['active', 'canceling', 'trialing', 'past_due'].includes(subscriptionState) ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => register.mutate()}
+              disabled={isMutating}
+            >
+              {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign Up'}
+            </Button>
+          ) : subscriptionState === 'free_credits' ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => register.mutate()}
+              disabled={isMutating}
+            >
+              {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign Up — Free'}
+            </Button>
+          ) : (
             <Button
               variant="outline"
               size="sm"
@@ -245,24 +274,6 @@ function GrindCard({ grind, weekOffset, hasActiveSubscription }: {
                 <Lock className="h-3.5 w-3.5" />
               )}
               Subscribe to sign up
-            </Button>
-          ) : grind.is_registered ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => unregister.mutate()}
-              disabled={isMutating}
-            >
-              {unregister.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Leave'}
-            </Button>
-          ) : (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => register.mutate()}
-              disabled={isMutating}
-            >
-              {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign Up'}
             </Button>
           )}
         </div>
@@ -289,19 +300,127 @@ function GrindCard({ grind, weekOffset, hasActiveSubscription }: {
   )
 }
 
+function GrindListSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      {/* Banner skeleton */}
+      <div className="h-12 rounded-sm bg-stone-100" />
+      {/* Card skeletons */}
+      <div className="rounded-sm border border-stone-200 bg-white p-6 space-y-3">
+        <div className="h-6 w-48 rounded bg-stone-100" />
+        <div className="h-4 w-72 rounded bg-stone-50" />
+        <div className="flex gap-4">
+          <div className="h-4 w-32 rounded bg-stone-50" />
+          <div className="h-4 w-24 rounded bg-stone-50" />
+        </div>
+        <div className="h-8 w-20 rounded bg-stone-100" />
+      </div>
+      <div className="rounded-sm border border-stone-200 bg-white p-6 space-y-3">
+        <div className="h-6 w-56 rounded bg-stone-100" />
+        <div className="h-4 w-64 rounded bg-stone-50" />
+        <div className="flex gap-4">
+          <div className="h-4 w-32 rounded bg-stone-50" />
+          <div className="h-4 w-24 rounded bg-stone-50" />
+        </div>
+        <div className="h-8 w-20 rounded bg-stone-100" />
+      </div>
+    </div>
+  )
+}
+
+function SubscriptionBanner({ subscriptionState, periodEnd }: {
+  subscriptionState: SubscriptionState
+  periodEnd: string | null
+}) {
+  const [isSubscribeLoading, setIsSubscribeLoading] = useState(false)
+
+  const handleSubscribe = async () => {
+    setIsSubscribeLoading(true)
+    try {
+      await createCheckoutSession()
+    } catch (error) {
+      console.error('Failed to create checkout session:', error)
+      setIsSubscribeLoading(false)
+    }
+  }
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-IE', { day: 'numeric', month: 'long' })
+
+  switch (subscriptionState) {
+    case 'active':
+      return null
+    case 'canceling':
+      return (
+        <div className="flex items-start gap-3 rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <Info className="h-4 w-4 mt-0.5 shrink-0" />
+          <p>Your subscription ends on <span className="font-semibold">{periodEnd ? formatDate(periodEnd) : 'soon'}</span>. You have access until then.</p>
+        </div>
+      )
+    case 'trialing':
+      return (
+        <div className="flex items-start gap-3 rounded-sm border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+          <Info className="h-4 w-4 mt-0.5 shrink-0" />
+          <p>You&apos;re on a free trial. Subscribe to keep access after <span className="font-semibold">{periodEnd ? formatDate(periodEnd) : 'your trial ends'}</span>.</p>
+        </div>
+      )
+    case 'past_due':
+      return (
+        <div className="flex items-start gap-3 rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <Info className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p>Payment past due. Update your payment method to keep access.</p>
+            <Button variant="outline" size="sm" onClick={handleSubscribe} disabled={isSubscribeLoading} className="h-7 text-xs">
+              {isSubscribeLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Update Payment'}
+            </Button>
+          </div>
+        </div>
+      )
+    case 'expired':
+      return (
+        <div className="flex items-start gap-3 rounded-sm border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
+          <Info className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p>Your subscription has ended. Subscribe for unlimited access.</p>
+            <Button variant="outline" size="sm" onClick={handleSubscribe} disabled={isSubscribeLoading} className="h-7 text-xs">
+              {isSubscribeLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Subscribe'}
+            </Button>
+          </div>
+        </div>
+      )
+    case 'free_credits':
+      return (
+        <div className="flex items-start gap-3 rounded-sm border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+          <Info className="h-4 w-4 mt-0.5 shrink-0" />
+          <p>You have <span className="font-semibold">1 free grind</span>! Sign up for any session below to try it out.</p>
+        </div>
+      )
+    case 'no_access':
+      return (
+        <div className="flex items-start gap-3 rounded-sm border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
+          <Info className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p>Subscribe for unlimited access to weekly grinds.</p>
+            <Button variant="primary" size="sm" onClick={handleSubscribe} disabled={isSubscribeLoading} className="h-7 text-xs">
+              {isSubscribeLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Subscribe — €30/month'}
+            </Button>
+          </div>
+        </div>
+      )
+    default:
+      return null
+  }
+}
+
 function GrindList({ weekOffset }: { weekOffset: number }) {
-  const { hasActiveSubscription } = useAuth()
+  const { isProfileLoading, subscriptionState, profile } = useAuth()
   const { data, isLoading, error } = useQuery({
     queryKey: ['grinds', weekOffset],
     queryFn: () => getGrindsForWeek(weekOffset),
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-warm-text-muted" />
-      </div>
-    )
+  if (isLoading || isProfileLoading) {
+    return <GrindListSkeleton />
   }
 
   if (error || data?.error) {
@@ -324,12 +443,16 @@ function GrindList({ weekOffset }: { weekOffset: number }) {
 
   return (
     <div className="space-y-4">
+      <SubscriptionBanner
+        subscriptionState={subscriptionState}
+        periodEnd={profile?.subscription_current_period_end ?? null}
+      />
       {grinds.map((grind) => (
         <GrindCard
           key={grind.id}
           grind={grind}
           weekOffset={weekOffset}
-          hasActiveSubscription={hasActiveSubscription}
+          subscriptionState={subscriptionState}
         />
       ))}
     </div>

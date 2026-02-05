@@ -26,7 +26,7 @@ export async function prefetchDashboardData(
   if (!profileEntry) {
     const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
-      .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at')
+      .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at, stripe_customer_id, subscription_status, subscription_id, subscription_current_period_end, subscription_cancel_at_period_end, free_grind_credits')
       .eq('user_id', userId)
       .single()
 

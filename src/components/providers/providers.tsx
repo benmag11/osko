@@ -90,7 +90,14 @@ export function Providers({ children, initialSession, initialQueryState }: Provi
     return client
   })
   const previousUserIdRef = useRef(userId)
-  
+
+  // Re-hydrate QueryClient when new server-rendered cache data arrives after redirect
+  useEffect(() => {
+    if (initialQueryState) {
+      hydrate(queryClient, initialQueryState)
+    }
+  }, [initialQueryState, queryClient])
+
   // Clean up query client when user changes
   useEffect(() => {
     if (previousUserIdRef.current !== userId) {

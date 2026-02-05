@@ -35,12 +35,11 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - **Search**: Multi-field filtering (years, topics, exam types, question numbers, text search)
 - **Query Optimization**: Postgres functions for efficient joins and filtering
 - **Admin**: Report system for question issues
-- **Statistics**: User study metrics, image load tracking
 
 ### Key Pages
 - Landing with feature showcase
 - Auth flow (signup/signin/verify/onboarding)
-- Dashboard (study view, statistics, settings, admin reports)
+- Dashboard (study view, settings, admin reports)
 - Subject pages with filtered question lists
 
 ## Development Notes

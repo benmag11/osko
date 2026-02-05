@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import { clearAllCache, invalidateUserCache } from '@/lib/cache/cache-utils'
 import { useRouter } from 'next/navigation'
-import type { UserProfile } from '@/lib/types/database'
+import type { UserProfile, SubscriptionState } from '@/lib/types/database'
 import { queryKeys } from '@/lib/queries/query-keys'
 
 /**
@@ -31,6 +31,9 @@ interface AuthContextType {
   refetchProfile: () => Promise<UserProfile | null>
   signOut: () => Promise<void>
   hasActiveSubscription: boolean
+  freeGrindCredits: number
+  canAccessGrinds: boolean
+  subscriptionState: SubscriptionState
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -54,7 +57,7 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
   const [isLoading, setIsLoading] = useState(!initialSession)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [profileError, setProfileError] = useState<Error | null>(null)
-  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(false)
+  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(true)
   const [previousUserId, setPreviousUserId] = useState<string | null>(
     initialSession?.user?.id ?? null
   )
@@ -104,7 +107,7 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
       try {
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at, subscription_status, subscription_current_period_end, subscription_cancel_at_period_end')
+          .select('id, user_id, name, is_admin, onboarding_completed, created_at, updated_at, stripe_customer_id, subscription_status, subscription_id, subscription_current_period_end, subscription_cancel_at_period_end, free_grind_credits')
           .eq('user_id', userId)
           .abortSignal(controller.signal)
           .single()
@@ -193,6 +196,18 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
           }
           break
           
+        case 'INITIAL_SESSION':
+          if (newSession?.user) {
+            setUser(newSession.user)
+            setSession(newSession)
+            setPreviousUserId(newUserId)
+            if (newUserId && !hydrateProfileFromCache(newUserId)) {
+              void fetchProfile(newUserId)
+            }
+          }
+          setIsLoading(false)
+          break
+
         case 'PASSWORD_RECOVERY':
         case 'MFA_CHALLENGE_VERIFIED':
           setUser(newSession?.user ?? null)
@@ -230,6 +245,9 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
     if (!initialSession) {
       initializeAuth()
     } else if (initialSession.user) {
+      setUser(initialSession.user)
+      setSession(initialSession)
+      setPreviousUserId(initialSession.user.id)
       if (!hydrateProfileFromCache(initialSession.user.id)) {
         void fetchProfile(initialSession.user.id)
       }
@@ -330,13 +348,36 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
   }, [currentUserId, fetchProfile])
 
   // Computed property to check if user has an active subscription
+  // Includes active, past_due, and trialing — these users should still access grinds
   const hasActiveSubscription = useMemo(() => {
     if (!profile) return false
-    if (profile.subscription_status !== 'active') return false
+    const status = profile.subscription_status
+    if (!['active', 'past_due', 'trialing'].includes(status)) return false
     if (profile.subscription_current_period_end) {
       return new Date(profile.subscription_current_period_end) > new Date()
     }
     return true
+  }, [profile])
+
+  const freeGrindCredits = profile?.free_grind_credits ?? 0
+
+  const canAccessGrinds = hasActiveSubscription || freeGrindCredits > 0
+
+  const subscriptionState: SubscriptionState = useMemo(() => {
+    if (!profile) return 'loading'
+    const status = profile.subscription_status
+    const periodEnd = profile.subscription_current_period_end
+    const periodValid = periodEnd ? new Date(periodEnd) > new Date() : true
+
+    if (status === 'active' && !profile.subscription_cancel_at_period_end && periodValid) return 'active'
+    if (status === 'active' && profile.subscription_cancel_at_period_end) return 'canceling'
+    if (status === 'trialing') return 'trialing'
+    if (status === 'past_due') return 'past_due'
+    if (status === 'canceled' || status === 'incomplete') return 'expired'
+    // active but period expired falls through to here
+    if (status === 'active' && !periodValid) return 'expired'
+    if (status === 'none' && profile.free_grind_credits > 0) return 'free_credits'
+    return 'no_access'
   }, [profile])
 
   const value = {
@@ -349,6 +390,9 @@ export function AuthProvider({ children, initialSession = null }: AuthProviderPr
     refetchProfile,
     signOut,
     hasActiveSubscription,
+    freeGrindCredits,
+    canAccessGrinds,
+    subscriptionState,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

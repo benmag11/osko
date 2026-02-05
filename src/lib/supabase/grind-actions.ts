@@ -44,38 +44,71 @@ export async function registerForGrind(
     return { success: false, error: 'You must be logged in to register' }
   }
 
-  // Verify user has an active subscription
+  // Verify user has an active subscription or free credits
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('subscription_status, subscription_current_period_end')
+    .select('subscription_status, subscription_current_period_end, free_grind_credits')
     .eq('user_id', user.id)
     .single()
 
   const hasActiveSubscription =
-    profile?.subscription_status === 'active' &&
+    profile != null &&
+    ['active', 'past_due', 'trialing'].includes(profile.subscription_status) &&
     (!profile.subscription_current_period_end ||
       new Date(profile.subscription_current_period_end) > new Date())
 
-  if (!hasActiveSubscription) {
-    return { success: false, error: 'Active subscription required to register for grinds' }
-  }
+  let registration: { id: string } | null = null
 
-  // Insert the registration
-  const { data: registration, error } = await supabase
-    .from('grind_registrations')
-    .insert({
-      grind_id: grindId,
-      user_id: user.id,
-    })
-    .select('id')
-    .single()
+  if (hasActiveSubscription) {
+    // Subscriber path: insert registration normally
+    const { data, error } = await supabase
+      .from('grind_registrations')
+      .insert({
+        grind_id: grindId,
+        user_id: user.id,
+        used_free_grind: false,
+      })
+      .select('id')
+      .single()
 
-  if (error) {
-    if (error.code === '23505') {
-      return { success: false, error: 'You are already registered for this grind' }
+    if (error) {
+      if (error.code === '23505') {
+        return { success: false, error: 'You are already registered for this grind' }
+      }
+      console.error('Failed to register for grind:', error)
+      return { success: false, error: 'Failed to register' }
     }
-    console.error('Failed to register for grind:', error)
-    return { success: false, error: 'Failed to register' }
+    registration = data
+  } else if (profile && profile.free_grind_credits > 0) {
+    // Free credit path: use atomic RPC function
+    const { data: success, error } = await supabase.rpc('register_for_grind_with_credit', {
+      p_user_id: user.id,
+      p_grind_id: grindId,
+    })
+
+    if (error) {
+      if (error.code === '23505') {
+        return { success: false, error: 'You are already registered for this grind' }
+      }
+      console.error('Failed to register for grind with credit:', error)
+      return { success: false, error: 'Failed to register' }
+    }
+
+    if (!success) {
+      return { success: false, error: 'No free grinds remaining. Subscribe to access grinds.' }
+    }
+
+    // Fetch the registration ID for the confirmation email
+    const { data: reg } = await supabase
+      .from('grind_registrations')
+      .select('id')
+      .eq('grind_id', grindId)
+      .eq('user_id', user.id)
+      .single()
+
+    registration = reg
+  } else {
+    return { success: false, error: 'No free grinds remaining. Subscribe to access grinds.' }
   }
 
   // Fetch grind details and user profile for the email
@@ -108,7 +141,7 @@ export async function registerForGrind(
       meetingUrl: grind.meeting_url,
     })
       .then(async (result) => {
-        if (result.success) {
+        if (result.success && registration) {
           // Update the registration to mark email as sent
           await supabase
             .from('grind_registrations')
@@ -140,15 +173,18 @@ export async function unregisterFromGrind(
     return { success: false, error: 'You must be logged in to unregister' }
   }
 
-  const { error } = await supabase
-    .from('grind_registrations')
-    .delete()
-    .eq('grind_id', grindId)
-    .eq('user_id', user.id)
+  const { data: success, error } = await supabase.rpc('unregister_from_grind_with_credit_restore', {
+    p_user_id: user.id,
+    p_grind_id: grindId,
+  })
 
   if (error) {
     console.error('Failed to unregister from grind:', error)
     return { success: false, error: 'Failed to unregister' }
+  }
+
+  if (!success) {
+    return { success: false, error: 'Registration not found' }
   }
 
   return { success: true }

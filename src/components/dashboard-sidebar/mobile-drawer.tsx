@@ -6,8 +6,9 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   BookOpen,
-  BarChart3,
+  Headphones,
   Calculator,
+  Users,
   Settings,
   Flag,
   LogOut,
@@ -42,8 +43,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     items: [
       { title: 'Study', url: '/dashboard/study', icon: BookOpen },
+      { title: 'Listening', url: '/dashboard/listening', icon: Headphones },
+      { title: 'Grinds', url: '/dashboard/grinds', icon: Users },
       { title: 'Points', url: '/dashboard/points', icon: Calculator },
-      { title: 'Statistics', url: '/dashboard/statistics', icon: BarChart3 },
     ]
   },
   {
