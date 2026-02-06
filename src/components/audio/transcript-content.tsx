@@ -48,7 +48,7 @@ function groupSentencesIntoParagraphs(transcript: TranscriptItem[]): GroupedItem
       }
       const headerLevel = item.type === 'header_one' ? 'one' as const : 'two' as const
       result.push({ type: 'header', headerLevel, text: item.text })
-    } else {
+    } else if (item.type === 'sentence') {
       // Check if we need to start a new paragraph group
       const shouldStartNewGroup =
         !currentGroup ||
@@ -197,7 +197,8 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
                   )
                 }
 
-                // Sentence type
+                // Sentence type — TypeScript can't narrow through early returns in .map()
+                const sentence = item as TranscriptSentence
                 const currentSentenceIndex = sentenceCounter
                 sentenceCounter++
                 const isSentenceActive = activeSentenceIndex === currentSentenceIndex
@@ -217,15 +218,15 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
                     )}
                   >
                     {/* Speaker label */}
-                    {item.speaker && (
+                    {sentence.speaker && (
                       <span className="font-serif text-sm italic text-salmon-600 mb-2 block">
-                        {item.speaker}
+                        {sentence.speaker}
                       </span>
                     )}
 
                     {/* Irish text with word-level interaction */}
                     <p className="font-serif text-lg sm:text-xl leading-[1.8] text-stone-800 tracking-[0.01em]">
-                      {item.words.map((word, wordIndex) => {
+                      {sentence.words.map((word, wordIndex) => {
                         const isWordActive =
                           isSentenceActive && activeWordIndexInSentence === wordIndex
 
@@ -239,16 +240,16 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
                             )}
                           >
                             {word.text}
-                            {wordIndex < item.words.length - 1 ? ' ' : ''}
+                            {wordIndex < sentence.words.length - 1 ? ' ' : ''}
                           </span>
                         )
                       })}
                     </p>
 
                     {/* Translation */}
-                    {item.translation && (
+                    {sentence.translation && (
                       <p className="mt-2 text-sm sm:text-base font-sans text-stone-500 italic leading-relaxed">
-                        {item.translation}
+                        {sentence.translation}
                       </p>
                     )}
                   </motion.div>
