@@ -85,7 +85,7 @@ export function GrindConfirmationEmail({
             )}
 
             <Text style={reminderNote}>
-              We'll send you a reminder <strong>2 hours before</strong> the session starts.
+              We'll send you a reminder with the meeting link <strong>2 hours before</strong> the session starts.
             </Text>
 
             <Text style={signoff}>

@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from './server'
 import type { GrindWithStatus } from '@/lib/types/database'
 import { sendGrindConfirmationEmail } from '@/lib/email/grind-emails'
+import { GRINDS_ARE_FREE } from '@/lib/config/grinds'
 
 export async function getGrindsForWeek(
   weekOffset: number
@@ -44,23 +45,10 @@ export async function registerForGrind(
     return { success: false, error: 'You must be logged in to register' }
   }
 
-  // Verify user has an active subscription or free credits
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('subscription_status, subscription_current_period_end, free_grind_credits')
-    .eq('user_id', user.id)
-    .single()
-
-  const hasActiveSubscription =
-    profile != null &&
-    ['active', 'past_due', 'trialing'].includes(profile.subscription_status) &&
-    (!profile.subscription_current_period_end ||
-      new Date(profile.subscription_current_period_end) > new Date())
-
   let registration: { id: string } | null = null
 
-  if (hasActiveSubscription) {
-    // Subscriber path: insert registration normally
+  if (GRINDS_ARE_FREE) {
+    // Temporary: all grinds are free — skip subscription/credits check
     const { data, error } = await supabase
       .from('grind_registrations')
       .insert({
@@ -79,36 +67,71 @@ export async function registerForGrind(
       return { success: false, error: 'Failed to register' }
     }
     registration = data
-  } else if (profile && profile.free_grind_credits > 0) {
-    // Free credit path: use atomic RPC function
-    const { data: success, error } = await supabase.rpc('register_for_grind_with_credit', {
-      p_user_id: user.id,
-      p_grind_id: grindId,
-    })
-
-    if (error) {
-      if (error.code === '23505') {
-        return { success: false, error: 'You are already registered for this grind' }
-      }
-      console.error('Failed to register for grind with credit:', error)
-      return { success: false, error: 'Failed to register' }
-    }
-
-    if (!success) {
-      return { success: false, error: 'No free grinds remaining. Subscribe to access grinds.' }
-    }
-
-    // Fetch the registration ID for the confirmation email
-    const { data: reg } = await supabase
-      .from('grind_registrations')
-      .select('id')
-      .eq('grind_id', grindId)
+  } else {
+    // Verify user has an active subscription or free credits
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('subscription_status, subscription_current_period_end, free_grind_credits')
       .eq('user_id', user.id)
       .single()
 
-    registration = reg
-  } else {
-    return { success: false, error: 'No free grinds remaining. Subscribe to access grinds.' }
+    const hasActiveSubscription =
+      profile != null &&
+      ['active', 'past_due', 'trialing'].includes(profile.subscription_status) &&
+      (!profile.subscription_current_period_end ||
+        new Date(profile.subscription_current_period_end) > new Date())
+
+    if (hasActiveSubscription) {
+      // Subscriber path: insert registration normally
+      const { data, error } = await supabase
+        .from('grind_registrations')
+        .insert({
+          grind_id: grindId,
+          user_id: user.id,
+          used_free_grind: false,
+        })
+        .select('id')
+        .single()
+
+      if (error) {
+        if (error.code === '23505') {
+          return { success: false, error: 'You are already registered for this grind' }
+        }
+        console.error('Failed to register for grind:', error)
+        return { success: false, error: 'Failed to register' }
+      }
+      registration = data
+    } else if (profile && profile.free_grind_credits > 0) {
+      // Free credit path: use atomic RPC function
+      const { data: success, error } = await supabase.rpc('register_for_grind_with_credit', {
+        p_user_id: user.id,
+        p_grind_id: grindId,
+      })
+
+      if (error) {
+        if (error.code === '23505') {
+          return { success: false, error: 'You are already registered for this grind' }
+        }
+        console.error('Failed to register for grind with credit:', error)
+        return { success: false, error: 'Failed to register' }
+      }
+
+      if (!success) {
+        return { success: false, error: 'No free grinds remaining. Subscribe to access grinds.' }
+      }
+
+      // Fetch the registration ID for the confirmation email
+      const { data: reg } = await supabase
+        .from('grind_registrations')
+        .select('id')
+        .eq('grind_id', grindId)
+        .eq('user_id', user.id)
+        .single()
+
+      registration = reg
+    } else {
+      return { success: false, error: 'No free grinds remaining. Subscribe to access grinds.' }
+    }
   }
 
   // Fetch grind details and user profile for the email

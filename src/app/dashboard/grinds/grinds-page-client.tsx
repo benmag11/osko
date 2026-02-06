@@ -15,6 +15,7 @@ import Image from 'next/image'
 import { useAuth } from '@/components/providers/auth-provider'
 import type { GrindWithStatus, SubscriptionState } from '@/lib/types/database'
 import { formatDateLong, formatTime, formatTimeRange, getWeekDateRange } from '@/lib/utils/format-date'
+import { GRINDS_ARE_FREE } from '@/lib/config/grinds'
 
 function TutorSection() {
   return (
@@ -195,6 +196,15 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
             >
               {unregister.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Leave'}
             </Button>
+          ) : GRINDS_ARE_FREE ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => register.mutate()}
+              disabled={isMutating}
+            >
+              {register.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign Up'}
+            </Button>
           ) : ['active', 'canceling', 'trialing', 'past_due'].includes(subscriptionState) ? (
             <Button
               variant="primary"
@@ -236,7 +246,7 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
               <span className="font-medium text-stone-700">{user?.email}</span>{' '}
               confirming your registration.
               <br />
-              Another reminder will be sent <span className="font-medium text-stone-700">2 hours</span> before your class.
+              Another reminder with the meeting link will be sent <span className="font-medium text-stone-700">2 hours</span> before your class.
             </motion.p>
           )}
         </AnimatePresence>
@@ -375,10 +385,12 @@ function GrindList({ weekOffset }: { weekOffset: number }) {
 
   return (
     <div className="space-y-4">
-      <SubscriptionBanner
-        subscriptionState={subscriptionState}
-        periodEnd={profile?.subscription_current_period_end ?? null}
-      />
+      {!GRINDS_ARE_FREE && (
+        <SubscriptionBanner
+          subscriptionState={subscriptionState}
+          periodEnd={profile?.subscription_current_period_end ?? null}
+        />
+      )}
       {grinds.map((grind) => (
         <GrindCard
           key={grind.id}

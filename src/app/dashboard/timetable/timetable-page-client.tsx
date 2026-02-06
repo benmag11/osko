@@ -7,7 +7,6 @@ import {
   groupExamsByDay,
   getExamInsights,
   generateGoogleCalendarUrl,
-  generateIcsEvents,
   formatDuration,
   formatTime,
   parseExamLabel,
@@ -16,12 +15,10 @@ import {
   type ExamDay,
   type ExamInsights,
 } from '@/lib/data/exam-timetable-2026'
-import { createEvents } from 'ics'
 import Link from 'next/link'
 import {
   Settings,
   Calendar,
-  Download,
   ChevronLeft,
   ChevronRight,
   PartyPopper,
@@ -65,20 +62,6 @@ export function TimetablePageClient({
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
   }, [insights.firstExam])
 
-  const handleDownloadIcs = () => {
-    const events = generateIcsEvents(matched)
-    createEvents(events, (error, value) => {
-      if (error || !value) return
-      const blob = new Blob([value], { type: 'text/calendar;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'leaving-cert-2026.ics'
-      a.click()
-      URL.revokeObjectURL(url)
-    })
-  }
-
   const lastExamId = insights.lastExam?.id ?? null
 
   // ── Empty state ──
@@ -94,7 +77,6 @@ export function TimetablePageClient({
         <InsightsBar
           daysUntilExams={daysUntilExams}
           insights={insights}
-          onDownloadIcs={handleDownloadIcs}
         />
       )}
 
@@ -174,11 +156,9 @@ function TimetableMasthead() {
 function InsightsBar({
   daysUntilExams,
   insights,
-  onDownloadIcs,
 }: {
   daysUntilExams: number
   insights: ExamInsights
-  onDownloadIcs: () => void
 }) {
   return (
     <motion.div
@@ -236,22 +216,6 @@ function InsightsBar({
           </span>
         </motion.div>
 
-        {/* Spacer → push download to far right */}
-        <div className="flex-1" />
-
-        {/* ICS download */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          onClick={onDownloadIcs}
-          className="group flex items-center gap-1.5 text-sm text-stone-400 hover:text-salmon-500 transition-colors cursor-pointer"
-        >
-          <Download className="size-3.5" />
-          <span className="group-hover:underline underline-offset-2">
-            Download .ics
-          </span>
-        </motion.button>
       </div>
     </motion.div>
   )
@@ -347,9 +311,36 @@ function ScheduleGrid({
     return map
   }, [days])
 
+  // Find the first free-day column after the last exam day for celebration placement
+  const celebrationDayIndex = useMemo(() => {
+    let lastExamDayIdx = -1
+    for (let i = days.length - 1; i >= 0; i--) {
+      if (!days[i].isFreeDay && days[i].slots.length > 0) {
+        lastExamDayIdx = i
+        break
+      }
+    }
+    if (lastExamDayIdx === -1) return null
+    // Find next free day after the last exam day
+    for (let i = lastExamDayIdx + 1; i < days.length; i++) {
+      if (days[i].isFreeDay) return i
+    }
+    return null // Last exam is on the final day
+  }, [days])
+
+  // Edge case: if last exam is the final day, add a trailing column for celebration
+  const lastExamIsLastDay = useMemo(() => {
+    for (let i = days.length - 1; i >= 0; i--) {
+      if (!days[i].isFreeDay && days[i].slots.length > 0) {
+        return i === days.length - 1
+      }
+    }
+    return false
+  }, [days])
+
   const gridTemplateColumns = `48px ${days
-    .map((d) => (d.isWeekend ? '28px' : 'minmax(120px, 1fr)'))
-    .join(' ')} auto`
+    .map(() => 'minmax(120px, 1fr)')
+    .join(' ')}${lastExamIsLastDay ? ' minmax(100px, auto)' : ''}`
 
   const gridTemplateRows = `auto repeat(${timeSlots.length}, minmax(72px, auto))`
 
@@ -421,8 +412,8 @@ function ScheduleGrid({
             </motion.div>
           ))}
 
-          {/* End column header */}
-          <div className="border-b border-stone-200" />
+          {/* Trailing celebration header (only when last exam is final day) */}
+          {lastExamIsLastDay && <div className="border-b border-stone-200" />}
 
           {/* ── Rows 1..N: Time slot rows ── */}
           {timeSlots.map((time, rowIdx) => (
@@ -437,10 +428,53 @@ function ScheduleGrid({
             />
           ))}
 
-          {/* ── End column (spans all time rows) ── */}
-        </div>
+          {/* Spanning free-day columns with vertical "Free" text */}
+          {days.map((day, i) => {
+            if (!day.isFreeDay) return null
+            const isCelebration = celebrationDayIndex === i
+            return (
+              <div
+                key={`free-${day.date}`}
+                className="relative"
+                style={{
+                  gridColumn: i + 2,
+                  gridRow: `2 / span ${timeSlots.length}`,
+                  backgroundImage:
+                    'repeating-linear-gradient(135deg, transparent, transparent 3px, rgba(168,162,158,0.08) 3px, rgba(168,162,158,0.08) 4px)',
+                }}
+              >
+                {isCelebration ? (
+                  <InlineCelebration />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span
+                      className="text-sm font-serif italic text-stone-300 select-none"
+                      style={{
+                        writingMode: 'vertical-rl',
+                        transform: 'rotate(180deg)',
+                      }}
+                    >
+                      Free
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          })}
 
-        {/* End celebration — absolutely positioned to the right edge of the grid */}
+          {/* Trailing celebration column (only when last exam is final day) */}
+          {lastExamIsLastDay && (
+            <div
+              className="relative"
+              style={{
+                gridColumn: days.length + 2,
+                gridRow: `2 / span ${timeSlots.length}`,
+              }}
+            >
+              <InlineCelebration />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -470,29 +504,17 @@ function TimeSlotRow({
       {/* Time label */}
       <TimeLabel time={time} />
 
-      {/* Cells for each day */}
+      {/* Cells for each day (skip free days — they're handled by spanning cells) */}
       {days.map((day, colIdx) => {
-        if (day.isWeekend) {
-          return (
-            <WeekendCell key={day.date} isLastRow={isLastRow} />
-          )
-        }
+        if (day.isFreeDay) return null
 
         const slots = examLookup.get(`${day.date}|${time}`) ?? []
-
-        if (day.isFreeDay) {
-          return (
-            <div
-              key={day.date}
-              className={`bg-stone-50/50 ${!isLastRow ? 'border-b border-stone-100' : ''}`}
-            />
-          )
-        }
 
         return (
           <motion.div
             key={day.date}
             className={`px-1.5 py-1.5 ${!isLastRow ? 'border-b border-stone-100' : ''}`}
+            style={{ gridColumn: colIdx + 2 }}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
@@ -512,9 +534,6 @@ function TimeSlotRow({
           </motion.div>
         )
       })}
-
-      {/* End column cell — show celebration in last row */}
-      {isLastRow ? <EndColumn /> : <div />}
     </>
   )
 }
@@ -526,16 +545,6 @@ function TimeSlotRow({
 function DayHeader({ day }: { day: ExamDay }) {
   const hasExams = !day.isFreeDay
 
-  if (day.isWeekend) {
-    return (
-      <div className="border-b border-stone-200 flex items-end justify-center pb-2">
-        <span className="text-[9px] text-stone-300 font-medium leading-none">
-          {day.dayOfWeek.slice(0, 2)}
-        </span>
-      </div>
-    )
-  }
-
   return (
     <div
       className={`px-2 pt-3 pb-2 text-center ${
@@ -544,7 +553,9 @@ function DayHeader({ day }: { day: ExamDay }) {
           : 'border-b border-dashed border-stone-200'
       }`}
     >
-      <span className="block text-[10px] uppercase tracking-wider text-stone-400 font-medium leading-none">
+      <span className={`block text-[10px] uppercase tracking-wider font-medium leading-none ${
+        hasExams ? 'text-stone-400' : 'text-stone-300'
+      }`}>
         {day.dayOfWeek.slice(0, 3)}
       </span>
       <span
@@ -575,18 +586,36 @@ function TimeLabel({ time }: { time: string }) {
 }
 
 // ─────────────────────────────────────────────
-// Weekend cell (narrow, hatched)
+// Inline celebration (rendered in first free day after last exam)
 // ─────────────────────────────────────────────
 
-function WeekendCell({ isLastRow }: { isLastRow: boolean }) {
+function InlineCelebration() {
   return (
-    <div
-      className={`${!isLastRow ? 'border-b border-stone-100' : ''}`}
-      style={{
-        backgroundImage:
-          'repeating-linear-gradient(135deg, transparent, transparent 3px, rgba(168,162,158,0.08) 3px, rgba(168,162,158,0.08) 4px)',
-      }}
-    />
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, delay: 0.75, ease: 'easeOut' }}
+      className="absolute inset-0 flex flex-col items-center justify-center z-[1]"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        transition={{
+          duration: 0.4,
+          delay: 0.9,
+          type: 'spring',
+          stiffness: 200,
+        }}
+      >
+        <PartyPopper className="size-5 text-salmon-500 mb-1.5" />
+      </motion.div>
+      <span className="font-display text-base font-semibold text-warm-text-primary leading-tight">
+        Finished.
+      </span>
+      <span className="text-[10px] text-stone-400 mt-0.5">
+        Enjoy the summer
+      </span>
+    </motion.div>
   )
 }
 
@@ -653,8 +682,12 @@ function ExamCard({
           {descriptor}
         </p>
       )}
+      {/* Time range */}
+      <p className="mt-1 text-[11px] text-stone-400 tabular-nums leading-tight">
+        {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
+      </p>
       {/* Duration + calendar */}
-      <div className="mt-1.5 flex items-center gap-1.5">
+      <div className="mt-1 flex items-center gap-1.5">
         <span className="rounded-full bg-cream-200 px-1.5 py-0.5 text-[10px] font-medium text-stone-500 tabular-nums">
           {duration}
         </span>
@@ -674,40 +707,6 @@ function ExamCard({
         </span>
       )}
     </div>
-  )
-}
-
-// ─────────────────────────────────────────────
-// End column — "Finished." celebration
-// ─────────────────────────────────────────────
-
-function EndColumn() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: 0.75, ease: 'easeOut' }}
-      className="flex flex-col items-center justify-center px-6 min-w-[120px]"
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        transition={{
-          duration: 0.4,
-          delay: 0.9,
-          type: 'spring',
-          stiffness: 200,
-        }}
-      >
-        <PartyPopper className="size-6 text-salmon-500 mb-2" />
-      </motion.div>
-      <span className="font-display text-xl font-semibold text-warm-text-primary">
-        Finished.
-      </span>
-      <span className="text-[11px] text-stone-400 mt-0.5">
-        Enjoy the summer
-      </span>
-    </motion.div>
   )
 }
 
@@ -733,8 +732,6 @@ function MobileTimetable({
   return (
     <div className="md:hidden">
       {days.map((day) => {
-        if (day.isWeekend) return null
-
         const isLastExamDay = !day.isFreeDay && lastExamDate === day.date
 
         return (

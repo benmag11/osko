@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/providers/auth-provider'
 import { createPortalSession } from '@/lib/stripe/subscription-actions'
 import { Loader2 } from 'lucide-react'
+import { GRINDS_ARE_FREE } from '@/lib/config/grinds'
 
 function BillingSkeleton() {
   return (
@@ -133,9 +134,11 @@ export function BillingSection() {
                 'You are on a free trial'
               )}
             </p>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/ultra">Upgrade</Link>
-            </Button>
+            {!GRINDS_ARE_FREE && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/ultra">Upgrade</Link>
+              </Button>
+            )}
           </div>
         </div>
       )
@@ -163,6 +166,7 @@ export function BillingSection() {
       )
 
     case 'free_credits':
+      if (GRINDS_ARE_FREE) return null
       return (
         <div className="px-6 py-5">
           <div className="flex-1">
@@ -179,6 +183,7 @@ export function BillingSection() {
     case 'expired':
     case 'no_access':
     default:
+      if (GRINDS_ARE_FREE) return null
       return (
         <div className="px-6 py-5">
           <div className="flex-1">

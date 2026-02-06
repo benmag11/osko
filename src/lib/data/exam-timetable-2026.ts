@@ -79,18 +79,12 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 export function groupExamsByDay(exams: ExamSlot[]): ExamDay[] {
-  if (exams.length === 0) return []
-
-  // Get all unique exam dates across the full timetable period
-  const allTimetableDates = [...new Set(EXAM_TIMETABLE_2026.map(s => s.date))].sort()
-  const firstDate = allTimetableDates[0]
-  const lastDate = allTimetableDates[allTimetableDates.length - 1]
+  // Full 21-day exam period: June 3 – June 23, 2026
+  const firstDate = '2026-06-03'
+  const lastDate = '2026-06-23'
 
   // Build set of user's exam dates
   const userExamDates = new Set(exams.map(e => e.date))
-
-  // Build set of all timetable dates (only weekdays that have any exam)
-  const timetableDateSet = new Set(allTimetableDates)
 
   const days: ExamDay[] = []
   const current = new Date(firstDate + 'T00:00:00')
@@ -99,22 +93,18 @@ export function groupExamsByDay(exams: ExamSlot[]): ExamDay[] {
   while (current <= end) {
     const dateStr = current.toISOString().split('T')[0]
     const dayOfWeek = current.getDay()
-
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
-    // Include weekends (as free days) and weekdays that have exams on the timetable
-    if (isWeekend || timetableDateSet.has(dateStr)) {
-      const dayExams = exams.filter(e => e.date === dateStr)
-      days.push({
-        date: dateStr,
-        dayOfWeek: DAY_NAMES[dayOfWeek],
-        dayOfMonth: current.getDate(),
-        month: MONTH_NAMES[current.getMonth()],
-        slots: dayExams,
-        isFreeDay: !userExamDates.has(dateStr),
-        isWeekend,
-      })
-    }
+    const dayExams = exams.filter(e => e.date === dateStr)
+    days.push({
+      date: dateStr,
+      dayOfWeek: DAY_NAMES[dayOfWeek],
+      dayOfMonth: current.getDate(),
+      month: MONTH_NAMES[current.getMonth()],
+      slots: dayExams,
+      isFreeDay: !userExamDates.has(dateStr),
+      isWeekend,
+    })
 
     current.setDate(current.getDate() + 1)
   }
@@ -141,7 +131,7 @@ export function getExamInsights(exams: ExamSlot[], days: ExamDay[]): ExamInsight
   }
 
   const examDaysList = days.filter(d => !d.isFreeDay)
-  const freeDaysList = days.filter(d => d.isFreeDay && !d.isWeekend)
+  const freeDaysList = days.filter(d => d.isFreeDay)
 
   let busiestDay: ExamInsights['busiestDay'] = null
   for (const day of examDaysList) {
