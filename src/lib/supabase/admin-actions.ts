@@ -2,7 +2,7 @@
 
 import { createServerSupabaseClient } from './server'
 import { ensureAdmin } from './admin-context'
-import type { QuestionUpdatePayload, QuestionAuditLog, AudioQuestionUpdatePayload, AudioQuestionAuditLog } from '@/lib/types/database'
+import type { QuestionUpdatePayload, QuestionAuditLog, AudioQuestionUpdatePayload, AudioQuestionAuditLog, Topic, AudioTopic } from '@/lib/types/database'
 
 export async function updateQuestionMetadata(
   questionId: string,
@@ -125,6 +125,100 @@ export async function getQuestionAuditHistory(
   }
 
   return data || []
+}
+
+// =============================================================================
+// Topic Creation Actions
+// =============================================================================
+
+export async function createTopic(
+  name: string,
+  subjectId: string
+): Promise<{ success: boolean; topic?: Topic; error?: string }> {
+  try {
+    await ensureAdmin()
+  } catch {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  try {
+    // Check for duplicate name within this subject (case-insensitive)
+    // Escape ILIKE wildcards to prevent false matches (e.g. "Topic_1" matching "TopicA1")
+    const escapedName = name.trim().replace(/%/g, '\\%').replace(/_/g, '\\_')
+    const { data: existing } = await supabase
+      .from('normal_topics')
+      .select('id')
+      .eq('subject_id', subjectId)
+      .ilike('name', escapedName)
+      .limit(1)
+
+    if (existing && existing.length > 0) {
+      return { success: false, error: 'A topic with this name already exists' }
+    }
+
+    const { data: topic, error } = await supabase
+      .from('normal_topics')
+      .insert({ name: name.trim(), subject_id: subjectId, group_id: null })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return { success: true, topic: topic as Topic }
+  } catch (error) {
+    console.error('Failed to create topic:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create topic'
+    }
+  }
+}
+
+export async function createAudioTopic(
+  name: string,
+  subjectId: string
+): Promise<{ success: boolean; topic?: AudioTopic; error?: string }> {
+  try {
+    await ensureAdmin()
+  } catch {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  try {
+    // Check for duplicate name within this subject (case-insensitive)
+    // Escape ILIKE wildcards to prevent false matches (e.g. "Topic_1" matching "TopicA1")
+    const escapedName = name.trim().replace(/%/g, '\\%').replace(/_/g, '\\_')
+    const { data: existing } = await supabase
+      .from('audio_topics')
+      .select('id')
+      .eq('subject_id', subjectId)
+      .ilike('name', escapedName)
+      .limit(1)
+
+    if (existing && existing.length > 0) {
+      return { success: false, error: 'A topic with this name already exists' }
+    }
+
+    const { data: topic, error } = await supabase
+      .from('audio_topics')
+      .insert({ name: name.trim(), subject_id: subjectId })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return { success: true, topic: topic as AudioTopic }
+  } catch (error) {
+    console.error('Failed to create audio topic:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create topic'
+    }
+  }
 }
 
 // =============================================================================

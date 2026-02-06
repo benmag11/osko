@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { updateAudioQuestionMetadata } from '@/lib/supabase/admin-actions'
+import { updateAudioQuestionMetadata, createAudioTopic } from '@/lib/supabase/admin-actions'
 import type { AudioQuestion, AudioTopic } from '@/lib/types/database'
 
 interface AudioQuestionEditModalProps {
@@ -53,6 +53,8 @@ export function AudioQuestionEditModal({
   const [selectedTopics, setSelectedTopics] = useState<string[]>(
     question.topics?.map(t => t.id) || []
   )
+  const [localTopics, setLocalTopics] = useState<AudioTopic[]>(topics)
+  const [newTopicName, setNewTopicName] = useState('')
 
   // Sync state when dialog opens or question changes
   useEffect(() => {
@@ -64,8 +66,10 @@ export function AudioQuestionEditModal({
       setExamType(question.exam_type)
       setAdditionalInfo(question.additional_info || '')
       setSelectedTopics(question.topics?.map(t => t.id) || [])
+      setLocalTopics(topics)
+      setNewTopicName('')
     }
-  }, [open, question])
+  }, [open, question, topics])
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -92,6 +96,34 @@ export function AudioQuestionEditModal({
       router.refresh()
       onUpdateComplete?.(data.auditLogId)
       onOpenChange(false)
+    },
+    onError: (error) => {
+      toast.error(error.message)
+    }
+  })
+
+  const createTopicMutation = useMutation({
+    mutationFn: async (name: string) => {
+      // Client-side duplicate check (case-insensitive)
+      const isDuplicate = localTopics.some(
+        t => t.name.toLowerCase() === name.trim().toLowerCase()
+      )
+      if (isDuplicate) {
+        throw new Error('A topic with this name already exists')
+      }
+
+      const result = await createAudioTopic(name, question.subject_id)
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create topic')
+      }
+      return result.topic!
+    },
+    onSuccess: (topic) => {
+      setLocalTopics(prev => [...prev, topic])
+      setSelectedTopics(prev => [...prev, topic.id])
+      setNewTopicName('')
+      queryClient.invalidateQueries({ queryKey: ['audio-topics', question.subject_id] })
+      toast.success(`Topic "${topic.name}" created`)
     },
     onError: (error) => {
       toast.error(error.message)
@@ -192,29 +224,54 @@ export function AudioQuestionEditModal({
           {/* Topics */}
           <div className="grid grid-cols-4 items-start gap-4">
             <Label className="text-right pt-2">Topics</Label>
-            <div className="col-span-3 space-y-2 max-h-48 overflow-y-auto border rounded-lg p-3">
-              {topics.length > 0 ? (
-                topics.map(topic => (
-                  <div key={topic.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={topic.id}
-                      checked={selectedTopics.includes(topic.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedTopics([...selectedTopics, topic.id])
-                        } else {
-                          setSelectedTopics(selectedTopics.filter(id => id !== topic.id))
-                        }
-                      }}
-                    />
-                    <Label htmlFor={topic.id} className="cursor-pointer">
-                      {topic.name}
-                    </Label>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No topics available for this subject</p>
-              )}
+            <div className="col-span-3 space-y-3">
+              <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                {localTopics.length > 0 ? (
+                  localTopics.map(topic => (
+                    <div key={topic.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={topic.id}
+                        checked={selectedTopics.includes(topic.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedTopics([...selectedTopics, topic.id])
+                          } else {
+                            setSelectedTopics(selectedTopics.filter(id => id !== topic.id))
+                          }
+                        }}
+                      />
+                      <Label htmlFor={topic.id} className="cursor-pointer">
+                        {topic.name}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No topics available for this subject</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={newTopicName}
+                  onChange={(e) => setNewTopicName(e.target.value)}
+                  placeholder="New topic name..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newTopicName.trim()) {
+                      e.preventDefault()
+                      createTopicMutation.mutate(newTopicName)
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!newTopicName.trim() || createTopicMutation.isPending}
+                  onClick={() => createTopicMutation.mutate(newTopicName)}
+                  className="shrink-0"
+                >
+                  {createTopicMutation.isPending ? 'Adding...' : '+ Add'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

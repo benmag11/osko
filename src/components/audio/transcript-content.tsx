@@ -174,23 +174,25 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
                 if (item.type === 'header_one' || item.type === 'header_two') {
                   if (item.type === 'header_one') {
                     return (
-                      <div key={`header-${itemIndex}`} className="flex items-center gap-4 my-10 first:mt-4">
-                        <div className="flex-1 h-px bg-stone-300" />
-                        <span className="text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
+                      <div key={`header-${itemIndex}`} className="mt-14 mb-6 first:mt-4 text-center">
+                        <div className="flex items-center justify-center gap-3 mb-3 text-stone-300">
+                          <div className="w-8 h-px bg-stone-300" />
+                          <span className="text-xs">✦</span>
+                          <div className="w-8 h-px bg-stone-300" />
+                        </div>
+                        <span className="font-serif text-base sm:text-lg font-semibold text-stone-700 tracking-wide">
                           {item.text}
                         </span>
-                        <div className="flex-1 h-px bg-stone-300" />
                       </div>
                     )
                   }
-                  // header_two — subtler sub-section divider
+                  // header_two — left-aligned sub-section label
                   return (
-                    <div key={`header-${itemIndex}`} className="flex items-center gap-3 my-6 first:mt-4">
-                      <div className="flex-1 h-px bg-stone-200" />
-                      <span className="text-[10px] font-sans font-medium text-stone-400 tracking-wide">
+                    <div key={`header-${itemIndex}`} className="mt-8 mb-3">
+                      <span className="font-sans text-xs sm:text-sm font-medium text-stone-500 tracking-wide">
                         {item.text}
                       </span>
-                      <div className="flex-1 h-px bg-stone-200" />
+                      <div className="w-8 h-px bg-stone-300 mt-1.5" />
                     </div>
                   )
                 }
@@ -260,23 +262,25 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
                 if (group.type === 'header') {
                   if (group.headerLevel === 'one') {
                     return (
-                      <div key={`header-${groupIndex}`} className="flex items-center gap-4 my-10 first:mt-4">
-                        <div className="flex-1 h-px bg-stone-300" />
-                        <span className="text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
+                      <div key={`header-${groupIndex}`} className="mt-14 mb-6 first:mt-4 text-center">
+                        <div className="flex items-center justify-center gap-3 mb-3 text-stone-300">
+                          <div className="w-8 h-px bg-stone-300" />
+                          <span className="text-xs">✦</span>
+                          <div className="w-8 h-px bg-stone-300" />
+                        </div>
+                        <span className="font-serif text-base sm:text-lg font-semibold text-stone-700 tracking-wide">
                           {group.text}
                         </span>
-                        <div className="flex-1 h-px bg-stone-300" />
                       </div>
                     )
                   }
-                  // header_two — subtler sub-section divider
+                  // header_two — left-aligned sub-section label
                   return (
-                    <div key={`header-${groupIndex}`} className="flex items-center gap-3 my-6 first:mt-4">
-                      <div className="flex-1 h-px bg-stone-200" />
-                      <span className="text-[10px] font-sans font-medium text-stone-400 tracking-wide">
+                    <div key={`header-${groupIndex}`} className="mt-8 mb-3">
+                      <span className="font-sans text-xs sm:text-sm font-medium text-stone-500 tracking-wide">
                         {group.text}
                       </span>
-                      <div className="flex-1 h-px bg-stone-200" />
+                      <div className="w-8 h-px bg-stone-300 mt-1.5" />
                     </div>
                   )
                 }
