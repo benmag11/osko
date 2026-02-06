@@ -221,6 +221,31 @@ export function generateIcsEvents(exams: ExamSlot[]): Parameters<typeof import('
 }
 
 // ─────────────────────────────────────────────
+// Parse exam label into subject + descriptor
+// ─────────────────────────────────────────────
+
+export function parseExamLabel(label: string): { subject: string; descriptor: string | null } {
+  const emDashIndex = label.indexOf(' — ')
+  if (emDashIndex !== -1) {
+    return { subject: label.slice(0, emDashIndex), descriptor: label.slice(emDashIndex + 3) }
+  }
+  const commaIndex = label.indexOf(', ')
+  if (commaIndex !== -1) {
+    return { subject: label.slice(0, commaIndex), descriptor: label.slice(commaIndex + 2) }
+  }
+  return { subject: label, descriptor: null }
+}
+
+// ─────────────────────────────────────────────
+// Compute unique time-slot rows from user exams
+// ─────────────────────────────────────────────
+
+export function computeTimeSlotRows(exams: ExamSlot[]): string[] {
+  const times = new Set(exams.map(e => e.startTime))
+  return [...times].sort()
+}
+
+// ─────────────────────────────────────────────
 // Duration formatting
 // ─────────────────────────────────────────────
 

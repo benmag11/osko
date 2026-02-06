@@ -63,6 +63,7 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
             isAdmin={isAdmin}
             displayWidth={EXAM_VIEW_BASE_MAX_WIDTH_PX}
             isPriority={index === 0}
+            searchTerms={filters.searchTerms}
           />
         </div>
       ))}

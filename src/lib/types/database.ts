@@ -223,13 +223,22 @@ export interface GroupedTopics {
   }>
 }
 
-// Type for word coordinate information
-export interface WordCoordinate {
-  text: string
+// Type for word coordinate information (matches OCR pipeline output)
+export interface WordBbox {
   x: number
   y: number
-  width: number
-  height: number
+  w: number
+  h: number
+}
+
+export interface WordCoordinate {
+  text: string
+  bbox: WordBbox
+  confidence: number
+}
+
+export interface WordCoordinatesData {
+  words: WordCoordinate[]
 }
 
 export interface Question {
@@ -248,7 +257,7 @@ export interface Question {
   marking_scheme_image_height: number | null
   full_text: string | null
   additional_info: string | null
-  word_coordinates: WordCoordinate[] | null
+  word_coordinates: WordCoordinatesData | null
   created_at: string
   updated_at: string
   topics?: Array<{

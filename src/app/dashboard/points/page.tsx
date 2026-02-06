@@ -10,7 +10,7 @@ export default async function PointsPage() {
 
   if (!bootstrap.session?.user) {
     return (
-      <DashboardPage>
+      <DashboardPage maxWidth="max-w-6xl">
         <p className="text-center text-warm-text-muted">
           Please sign in to calculate your points
         </p>
@@ -32,7 +32,7 @@ export default async function PointsPage() {
   const dehydratedState = dehydrate(queryClient)
 
   return (
-    <DashboardPage>
+    <DashboardPage maxWidth="max-w-6xl">
       <HydrationBoundary state={dehydratedState}>
         <PointsCalculatorClient
           userId={userId}

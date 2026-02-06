@@ -472,6 +472,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                     isAdmin={isAdmin}
                     displayWidth={BASE_MAX_WIDTH_PX * zoom}
                     isPriority={index === 0}
+                    searchTerms={filters.searchTerms}
                   />
                 </div>
               ))}

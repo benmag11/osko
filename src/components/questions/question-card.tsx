@@ -13,6 +13,7 @@ import { formatQuestionTitle } from '@/lib/utils/question-format'
 import { useInView } from 'react-intersection-observer'
 import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import { getTransformedImageUrl } from '@/lib/supabase/image-loader'
+import { SearchHighlightOverlay } from './search-highlight-overlay'
 import styles from './styles/question-card.module.css'
 
 interface QuestionCardProps {
@@ -23,6 +24,7 @@ interface QuestionCardProps {
   isAdmin?: boolean
   displayWidth?: number
   isPriority?: boolean
+  searchTerms?: string[]
 }
 
 export const QuestionCard = memo(function QuestionCard({
@@ -33,6 +35,7 @@ export const QuestionCard = memo(function QuestionCard({
   isAdmin = false,
   displayWidth,
   isPriority = false,
+  searchTerms,
 }: QuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -187,18 +190,28 @@ export const QuestionCard = memo(function QuestionCard({
       <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.17)]">
         <div className="relative w-full bg-cream-50">
           {hasValidQuestionImage ? (
-            <TrackedImage
-              src={question.question_image_url!}
-              alt={`Question ${question.question_number ?? 'image'}`}
-              width={questionImageWidth}
-              height={questionImageHeight}
-              className="w-full h-auto"
-              priority={isPriority}
-              fetchPriority={isPriority ? 'high' : 'auto'}
-              sizes={questionImageSizes}
-              imageType="question"
-              questionId={question.id}
-            />
+            <>
+              <TrackedImage
+                src={question.question_image_url!}
+                alt={`Question ${question.question_number ?? 'image'}`}
+                width={questionImageWidth}
+                height={questionImageHeight}
+                className="w-full h-auto"
+                priority={isPriority}
+                fetchPriority={isPriority ? 'high' : 'auto'}
+                sizes={questionImageSizes}
+                imageType="question"
+                questionId={question.id}
+              />
+              {searchTerms && searchTerms.length > 0 && (
+                <SearchHighlightOverlay
+                  wordCoordinates={question.word_coordinates}
+                  searchTerms={searchTerms}
+                  naturalWidth={questionImageWidth}
+                  naturalHeight={questionImageHeight}
+                />
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-center h-48 bg-stone-100">
               <p className="text-warm-text-muted">Question image not available</p>
