@@ -123,7 +123,7 @@ export async function POST(request: Request) {
           subscription_status: mapSubscriptionStatus(subscription.status),
           subscription_id: subscription.id,
           subscription_current_period_end: new Date(
-            subscription.current_period_end * 1000
+            subscription.items.data[0].current_period_end * 1000
           ).toISOString(),
           subscription_cancel_at_period_end: subscription.cancel_at_period_end,
         })
