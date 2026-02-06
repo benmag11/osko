@@ -51,6 +51,7 @@ export function TrackedImage({
   return (
     <Image
       {...props}
+      draggable={false}
       placeholder="blur"
       blurDataURL={BLUR_PLACEHOLDER}
       onLoad={handleLoad}

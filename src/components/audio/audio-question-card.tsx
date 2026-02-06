@@ -303,6 +303,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
                   alt={`Marking scheme for question ${question.question_number ?? ''}`}
                   className="w-full h-auto rounded-lg"
                   loading="eager"
+                  draggable={false}
                 />
                 <ImageLightbox
                   src={question.marking_scheme_image_url!}

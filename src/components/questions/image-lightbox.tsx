@@ -68,6 +68,7 @@ export function ImageLightbox({ src, alt, naturalWidth }: ImageLightboxProps) {
               src={fullscreenUrl}
               alt={alt}
               className="max-h-full max-w-full object-contain"
+              draggable={false}
             />
           )}
 
