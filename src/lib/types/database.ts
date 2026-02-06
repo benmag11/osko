@@ -443,7 +443,7 @@ export interface TranscriptWord {
  * Header section in transcript (e.g., "Fógra 1")
  */
 export interface TranscriptHeader {
-  type: 'header'
+  type: 'header_one' | 'header_two'
   text: string
 }
 

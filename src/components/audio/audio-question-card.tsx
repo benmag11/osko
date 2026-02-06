@@ -13,6 +13,7 @@ import { formatQuestionTitle } from '@/lib/utils/question-format'
 import { useInView } from 'react-intersection-observer'
 import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from '@/components/questions/constants'
 import { getTransformedImageUrl } from '@/lib/supabase/image-loader'
+import { ImageLightbox } from '@/components/questions/image-lightbox'
 import styles from '@/components/questions/styles/question-card.module.css'
 import { TranscriptModal } from './transcript-modal'
 import { AudioPlayer } from './audio-player'
@@ -217,20 +218,27 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
           </div>
         )}
 
-        <div className={cn("relative w-full bg-cream-50", !hasAudio && "rounded-t-xl")}>
+        <div className={cn("group relative w-full bg-cream-50", !hasAudio && "rounded-t-xl")}>
           {hasValidQuestionImage ? (
-            <TrackedImage
-              src={question.question_image_url!}
-              alt={`Question ${question.question_number ?? 'image'}`}
-              width={questionImageWidth}
-              height={questionImageHeight}
-              className="w-full h-auto"
-              priority={isPriority}
-              fetchPriority={isPriority ? 'high' : 'auto'}
-              sizes={questionImageSizes}
-              imageType="question"
-              questionId={question.id}
-            />
+            <>
+              <TrackedImage
+                src={question.question_image_url!}
+                alt={`Question ${question.question_number ?? 'image'}`}
+                width={questionImageWidth}
+                height={questionImageHeight}
+                className="w-full h-auto"
+                priority={isPriority}
+                fetchPriority={isPriority ? 'high' : 'auto'}
+                sizes={questionImageSizes}
+                imageType="question"
+                questionId={question.id}
+              />
+              <ImageLightbox
+                src={question.question_image_url!}
+                alt={`Question ${question.question_number ?? 'image'}`}
+                naturalWidth={questionImageWidth}
+              />
+            </>
           ) : (
             <div className="flex items-center justify-center h-48 bg-stone-100">
               <p className="text-warm-text-muted">Question image not available</p>
@@ -288,13 +296,20 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
 
           {showMarkingScheme && markingSchemeUrl && (
             <div className="px-4 pb-4">
-              {/* Native <img> with exact same URL as prefetch = guaranteed cache hit = instant */}
-              <img
-                src={markingSchemeUrl}
-                alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                className="w-full h-auto rounded-lg"
-                loading="eager"
-              />
+              <div className="group relative">
+                {/* Native <img> with exact same URL as prefetch = guaranteed cache hit = instant */}
+                <img
+                  src={markingSchemeUrl}
+                  alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                  className="w-full h-auto rounded-lg"
+                  loading="eager"
+                />
+                <ImageLightbox
+                  src={question.marking_scheme_image_url!}
+                  alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                  naturalWidth={markingSchemeWidth}
+                />
+              </div>
             </div>
           )}
         </div>

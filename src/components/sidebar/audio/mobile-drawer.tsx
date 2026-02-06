@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import { Search, ListFilter, CalendarSearch, Plus, Headphones } from 'lucide-react'
 import {
   Accordion,
@@ -11,6 +12,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { MobileDrawer } from '../core/mobile-drawer'
+import { FilterTag } from '@/components/filters/filter-tag'
 import { useFilters } from '@/components/providers/filter-provider'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
 import { cn } from '@/lib/utils'
@@ -35,7 +37,7 @@ export function AudioMobileDrawer({
   topics,
   years,
 }: AudioMobileDrawerProps) {
-  const { filters, addSearchTerm, toggleTopic, toggleYear, isPending } = useFilters()
+  const { filters, addSearchTerm, removeSearchTerm, toggleTopic, toggleYear, isPending } = useFilters()
   const [searchValue, setSearchValue] = useState('')
 
   const handleAddKeyword = () => {
@@ -88,22 +90,57 @@ export function AudioMobileDrawer({
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-2 pb-3">
-            <div className="flex gap-2">
-              <Input
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
-                placeholder="Search transcripts..."
-                className="h-8 text-sm flex-1"
-              />
-              <button
-                type="button"
-                onClick={handleAddKeyword}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-stone-300 bg-transparent transition-colors hover:border-salmon-500"
-                aria-label="Add search keyword"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <Input
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
+                  placeholder="Search transcripts..."
+                  className="h-8 text-sm flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddKeyword}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-stone-300 bg-transparent transition-colors hover:border-salmon-500"
+                  aria-label="Add search keyword"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <AnimatePresence initial={false}>
+                {(filters.searchTerms?.length ?? 0) > 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex flex-col gap-1.5 overflow-hidden"
+                  >
+                    <p className="text-xs text-stone-400">
+                      Including questions containing:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {filters.searchTerms?.map((term) => (
+                        <motion.div
+                          key={term}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                          layout
+                        >
+                          <FilterTag
+                            label={term}
+                            onRemove={() => removeSearchTerm(term)}
+                            size="sm"
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </AccordionContent>
         </AccordionItem>

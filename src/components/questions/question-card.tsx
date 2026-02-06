@@ -14,6 +14,7 @@ import { useInView } from 'react-intersection-observer'
 import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import { getTransformedImageUrl } from '@/lib/supabase/image-loader'
 import { SearchHighlightOverlay } from './search-highlight-overlay'
+import { ImageLightbox } from './image-lightbox'
 import styles from './styles/question-card.module.css'
 
 interface QuestionCardProps {
@@ -188,7 +189,7 @@ export const QuestionCard = memo(function QuestionCard({
       </div>
       
       <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.17)]">
-        <div className="relative w-full bg-cream-50">
+        <div className="group relative w-full bg-cream-50">
           {hasValidQuestionImage ? (
             <>
               <TrackedImage
@@ -211,6 +212,11 @@ export const QuestionCard = memo(function QuestionCard({
                   naturalHeight={questionImageHeight}
                 />
               )}
+              <ImageLightbox
+                src={question.question_image_url!}
+                alt={`Question ${question.question_number ?? 'image'}`}
+                naturalWidth={questionImageWidth}
+              />
             </>
           ) : (
             <div className="flex items-center justify-center h-48 bg-stone-100">
@@ -252,13 +258,20 @@ export const QuestionCard = memo(function QuestionCard({
 
           {showMarkingScheme && markingSchemeUrl && (
             <div className="px-4 pb-4">
-              {/* Native <img> with exact same URL as prefetch = guaranteed cache hit = instant */}
-              <img
-                src={markingSchemeUrl}
-                alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                className="w-full h-auto rounded-lg"
-                loading="eager"
-              />
+              <div className="group relative">
+                {/* Native <img> with exact same URL as prefetch = guaranteed cache hit = instant */}
+                <img
+                  src={markingSchemeUrl}
+                  alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                  className="w-full h-auto rounded-lg"
+                  loading="eager"
+                />
+                <ImageLightbox
+                  src={question.marking_scheme_image_url!}
+                  alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                  naturalWidth={markingSchemeWidth}
+                />
+              </div>
             </div>
           )}
         </div>

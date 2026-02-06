@@ -20,7 +20,11 @@ export interface ExamDay {
   month: string
   slots: ExamSlot[]
   isFreeDay: boolean
-  isWeekend: boolean
+}
+
+export interface ExamWeek {
+  weekNumber: number
+  days: ExamDay[]
 }
 
 export interface ExamInsights {

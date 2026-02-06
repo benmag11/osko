@@ -28,7 +28,7 @@ interface ParagraphGroup {
   }>
 }
 
-type GroupedItem = ParagraphGroup | { type: 'header'; text: string }
+type GroupedItem = ParagraphGroup | { type: 'header'; headerLevel: 'one' | 'two'; text: string }
 
 /**
  * Groups sentences by speaker for paragraph mode display
@@ -40,13 +40,14 @@ function groupSentencesIntoParagraphs(transcript: TranscriptItem[]): GroupedItem
   let sentenceIndex = 0
 
   for (const item of transcript) {
-    if (item.type === 'header') {
+    if (item.type === 'header_one' || item.type === 'header_two') {
       // Flush current group before header
       if (currentGroup && currentGroup.sentences.length > 0) {
         result.push(currentGroup)
         currentGroup = null
       }
-      result.push({ type: 'header', text: item.text })
+      const headerLevel = item.type === 'header_one' ? 'one' as const : 'two' as const
+      result.push({ type: 'header', headerLevel, text: item.text })
     } else {
       // Check if we need to start a new paragraph group
       const shouldStartNewGroup =
@@ -170,14 +171,26 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
             // ========== SENTENCE VIEW (Translations ON) ==========
             <div className="space-y-1">
               {transcript.map((item, itemIndex) => {
-                if (item.type === 'header') {
+                if (item.type === 'header_one' || item.type === 'header_two') {
+                  if (item.type === 'header_one') {
+                    return (
+                      <div key={`header-${itemIndex}`} className="flex items-center gap-4 my-10 first:mt-4">
+                        <div className="flex-1 h-px bg-stone-300" />
+                        <span className="text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
+                          {item.text}
+                        </span>
+                        <div className="flex-1 h-px bg-stone-300" />
+                      </div>
+                    )
+                  }
+                  // header_two — subtler sub-section divider
                   return (
-                    <div key={`header-${itemIndex}`} className="flex items-center gap-4 my-10 first:mt-4">
-                      <div className="flex-1 h-px bg-stone-300" />
-                      <span className="text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
+                    <div key={`header-${itemIndex}`} className="flex items-center gap-3 my-6 first:mt-4">
+                      <div className="flex-1 h-px bg-stone-200" />
+                      <span className="text-[10px] font-sans font-medium text-stone-400 tracking-wide">
                         {item.text}
                       </span>
-                      <div className="flex-1 h-px bg-stone-300" />
+                      <div className="flex-1 h-px bg-stone-200" />
                     </div>
                   )
                 }
@@ -245,13 +258,25 @@ export function TranscriptContent({ audioUrl, transcript }: TranscriptContentPro
             <div className="space-y-6">
               {groupedItems.map((group, groupIndex) => {
                 if (group.type === 'header') {
+                  if (group.headerLevel === 'one') {
+                    return (
+                      <div key={`header-${groupIndex}`} className="flex items-center gap-4 my-10 first:mt-4">
+                        <div className="flex-1 h-px bg-stone-300" />
+                        <span className="text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
+                          {group.text}
+                        </span>
+                        <div className="flex-1 h-px bg-stone-300" />
+                      </div>
+                    )
+                  }
+                  // header_two — subtler sub-section divider
                   return (
-                    <div key={`header-${groupIndex}`} className="flex items-center gap-4 my-10 first:mt-4">
-                      <div className="flex-1 h-px bg-stone-300" />
-                      <span className="text-[11px] font-sans font-semibold text-stone-400 uppercase tracking-widest">
+                    <div key={`header-${groupIndex}`} className="flex items-center gap-3 my-6 first:mt-4">
+                      <div className="flex-1 h-px bg-stone-200" />
+                      <span className="text-[10px] font-sans font-medium text-stone-400 tracking-wide">
                         {group.text}
                       </span>
-                      <div className="flex-1 h-px bg-stone-300" />
+                      <div className="flex-1 h-px bg-stone-200" />
                     </div>
                   )
                 }

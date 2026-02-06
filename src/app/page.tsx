@@ -296,6 +296,12 @@ export default function HomePage() {
                 className="h-6 w-auto opacity-60"
               />
             </Link>
+            <Link
+              href="/contact"
+              className="text-sm text-[#57534E] hover:text-[#1C1917] transition-colors"
+            >
+              Contact
+            </Link>
             <p className="text-sm text-[#57534E]">
               © {new Date().getFullYear()} Uncooked. Built for Irish students.
             </p>

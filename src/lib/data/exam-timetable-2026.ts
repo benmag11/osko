@@ -5,12 +5,59 @@ import {
   SEPARATELY_ANNOUNCED,
   type ExamSlot,
   type ExamDay,
+  type ExamWeek,
   type ExamInsights,
 } from './exam-timetable-2026-data'
 
 // Re-export types and data for consumers
 export { EXAM_TIMETABLE_2026 }
-export type { ExamSlot, ExamDay, ExamInsights }
+export type { ExamSlot, ExamDay, ExamWeek, ExamInsights }
+
+// ─────────────────────────────────────────────
+// Session types and constants
+// ─────────────────────────────────────────────
+
+export type ExamSession = 'morning' | 'afternoon'
+
+export interface SessionConfig {
+  label: string
+  /** Earliest possible start (minutes from midnight) */
+  startMinutes: number
+  /** Latest possible end (minutes from midnight) */
+  endMinutes: number
+}
+
+export const SESSION_CONFIG: Record<ExamSession, SessionConfig> = {
+  morning: { label: 'Morning', startMinutes: 9 * 60 + 30, endMinutes: 13 * 60 },
+  afternoon: { label: 'Afternoon', startMinutes: 13 * 60 + 30, endMinutes: 18 * 60 },
+}
+
+// ─────────────────────────────────────────────
+// Session utility functions
+// ─────────────────────────────────────────────
+
+/** Classify an exam slot as morning or afternoon based on start time */
+export function getExamSession(slot: ExamSlot): ExamSession {
+  const [h] = slot.startTime.split(':').map(Number)
+  return h < 13 ? 'morning' : 'afternoon'
+}
+
+/** Group an array of exam slots by session */
+export function groupExamsBySession(slots: ExamSlot[]): {
+  morning: ExamSlot[]
+  afternoon: ExamSlot[]
+} {
+  const morning: ExamSlot[] = []
+  const afternoon: ExamSlot[] = []
+  for (const slot of slots) {
+    if (getExamSession(slot) === 'morning') {
+      morning.push(slot)
+    } else {
+      afternoon.push(slot)
+    }
+  }
+  return { morning, afternoon }
+}
 
 // ─────────────────────────────────────────────
 // Helper: map level string to short code
@@ -81,30 +128,26 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 export function groupExamsByDay(exams: ExamSlot[]): ExamDay[] {
   if (exams.length === 0) return []
 
-  // Get all unique exam dates across the full timetable period
-  const allTimetableDates = [...new Set(EXAM_TIMETABLE_2026.map(s => s.date))].sort()
-  const firstDate = allTimetableDates[0]
-  const lastDate = allTimetableDates[allTimetableDates.length - 1]
+  // Use user's own exam date range (first→last user exam), not full timetable
+  const userDates = [...new Set(exams.map(e => e.date))].sort()
+  const firstDate = userDates[0]
+  const lastDate = userDates[userDates.length - 1]
 
-  // Build set of user's exam dates
-  const userExamDates = new Set(exams.map(e => e.date))
+  const userExamDates = new Set(userDates)
 
-  // Build set of all timetable dates (only weekdays that have any exam)
-  const timetableDateSet = new Set(allTimetableDates)
-
+  // Include weekdays only — skip weekends (Sat=6, Sun=0)
   const days: ExamDay[] = []
   const current = new Date(firstDate + 'T00:00:00')
   const end = new Date(lastDate + 'T00:00:00')
 
   while (current <= end) {
-    const dateStr = current.toISOString().split('T')[0]
     const dayOfWeek = current.getDay()
 
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-
-    // Include weekends (as free days) and weekdays that have exams on the timetable
-    if (isWeekend || timetableDateSet.has(dateStr)) {
+    // Skip weekends
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      const dateStr = current.toISOString().split('T')[0]
       const dayExams = exams.filter(e => e.date === dateStr)
+
       days.push({
         date: dateStr,
         dayOfWeek: DAY_NAMES[dayOfWeek],
@@ -112,7 +155,6 @@ export function groupExamsByDay(exams: ExamSlot[]): ExamDay[] {
         month: MONTH_NAMES[current.getMonth()],
         slots: dayExams,
         isFreeDay: !userExamDates.has(dateStr),
-        isWeekend,
       })
     }
 
@@ -120,6 +162,35 @@ export function groupExamsByDay(exams: ExamSlot[]): ExamDay[] {
   }
 
   return days
+}
+
+// ─────────────────────────────────────────────
+// Group days into weeks (split on Monday boundaries)
+// ─────────────────────────────────────────────
+
+export function groupDaysByWeek(days: ExamDay[]): ExamWeek[] {
+  if (days.length === 0) return []
+
+  const weeks: ExamWeek[] = []
+  let currentWeek: ExamDay[] = []
+  let weekNumber = 1
+
+  for (const day of days) {
+    // Start a new week when we hit a Monday and already have days accumulated
+    if (day.dayOfWeek === 'Monday' && currentWeek.length > 0) {
+      weeks.push({ weekNumber, days: currentWeek })
+      currentWeek = []
+      weekNumber++
+    }
+    currentWeek.push(day)
+  }
+
+  // Push the final week
+  if (currentWeek.length > 0) {
+    weeks.push({ weekNumber, days: currentWeek })
+  }
+
+  return weeks
 }
 
 // ─────────────────────────────────────────────
@@ -141,7 +212,7 @@ export function getExamInsights(exams: ExamSlot[], days: ExamDay[]): ExamInsight
   }
 
   const examDaysList = days.filter(d => !d.isFreeDay)
-  const freeDaysList = days.filter(d => d.isFreeDay && !d.isWeekend)
+  const freeDaysList = days.filter(d => d.isFreeDay)
 
   let busiestDay: ExamInsights['busiestDay'] = null
   for (const day of examDaysList) {
@@ -234,15 +305,6 @@ export function parseExamLabel(label: string): { subject: string; descriptor: st
     return { subject: label.slice(0, commaIndex), descriptor: label.slice(commaIndex + 2) }
   }
   return { subject: label, descriptor: null }
-}
-
-// ─────────────────────────────────────────────
-// Compute unique time-slot rows from user exams
-// ─────────────────────────────────────────────
-
-export function computeTimeSlotRows(exams: ExamSlot[]): string[] {
-  const times = new Set(exams.map(e => e.startTime))
-  return [...times].sort()
 }
 
 // ─────────────────────────────────────────────
