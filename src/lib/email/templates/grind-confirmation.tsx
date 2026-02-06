@@ -58,7 +58,7 @@ export function GrindConfirmationEmail({
 
           {/* Content */}
           <Section style={content}>
-            <Text style={greeting}>Hi {capitalizeName(userName)}, you're confirmed!</Text>
+            <Text style={greeting}>Hi {capitalizeName(userName)}, you&apos;re confirmed!</Text>
 
             {/* Date/Time Hero Block */}
             <Section style={dateTimeHero}>
@@ -85,7 +85,7 @@ export function GrindConfirmationEmail({
             )}
 
             <Text style={reminderNote}>
-              We'll send you a reminder with the meeting link <strong>2 hours before</strong> the session starts.
+              We&apos;ll send you a reminder with the meeting link <strong>2 hours before</strong> the session starts.
             </Text>
 
             <Text style={signoff}>
