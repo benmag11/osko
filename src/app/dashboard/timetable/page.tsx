@@ -4,6 +4,7 @@ import { getDashboardBootstrap } from '@/lib/supabase/dashboard-bootstrap'
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query'
 import { QUERY_CONFIG } from '@/lib/config/cache'
 import { queryKeys } from '@/lib/queries/query-keys'
+import { formatName } from '@/lib/utils/format-name'
 
 export default async function TimetablePage() {
   const bootstrap = await getDashboardBootstrap()
@@ -19,6 +20,8 @@ export default async function TimetablePage() {
   }
 
   const userId = bootstrap.session.user.id
+  const userName = formatName(bootstrap.profile?.name || 'Student').split(/\s+/)[0]
+
   const queryClient = new QueryClient({
     defaultOptions: QUERY_CONFIG.defaultOptions,
   })
@@ -38,6 +41,7 @@ export default async function TimetablePage() {
       <HydrationBoundary state={dehydratedState}>
         <TimetablePageClient
           userId={userId}
+          userName={userName}
           initialSubjects={bootstrap.userSubjects}
         />
       </HydrationBoundary>

@@ -42,6 +42,10 @@ const NAV_GROUPS: NavGroup[] = [
       { title: 'Study', url: '/dashboard/study', icon: BookOpen },
       { title: 'Listening', url: '/dashboard/listening', icon: Headphones },
       { title: 'Grinds', url: '/dashboard/grinds', icon: Users },
+    ]
+  },
+  {
+    items: [
       { title: 'Points', url: '/dashboard/points', icon: Calculator },
       { title: 'Timetable', url: '/dashboard/timetable', icon: Calendar },
     ]
