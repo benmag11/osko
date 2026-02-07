@@ -51,7 +51,7 @@ export function getPointsForGrade(grade: Grade | string | null): number {
  */
 export function isMathsSubject(subjectName: string): boolean {
   const normalizedName = subjectName.toLowerCase()
-  return MATHS_SUBJECT_NAMES.some(name => normalizedName.includes(name))
+  return MATHS_SUBJECT_NAMES.some(name => normalizedName === name)
 }
 
 /**
