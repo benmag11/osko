@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { getSubjectsWithAudioQuestionsClient } from '@/lib/supabase/audio-client-queries'
 import { generateSlug } from '@/lib/utils/slug'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 import type { Subject } from '@/lib/types/database'
 
 interface AudioSubjectsPanelProps {
@@ -93,9 +94,11 @@ export function AudioSubjectsPanel({ currentSubject }: AudioSubjectsPanelProps) 
                     {subject.name}
                   </span>
                   <span
-                    className={cn('text-sm shrink-0', isHigher ? 'text-salmon-500' : 'text-sky-500')}
+                    className={cn('text-sm shrink-0',
+                      isLcvpSubject(subject.name) ? 'text-stone-400' : isHigher ? 'text-salmon-500' : 'text-sky-500'
+                    )}
                   >
-                    ({isHigher ? 'H' : 'O'})
+                    ({isLcvpSubject(subject.name) ? 'C' : isHigher ? 'H' : 'O'})
                   </span>
                   {isActive && (
                     <div className="h-1.5 w-1.5 rounded-full bg-salmon-500 animate-pulse shrink-0" />

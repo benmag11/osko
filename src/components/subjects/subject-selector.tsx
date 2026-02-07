@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { SubjectCard } from './subject-card'
 import { SelectedSubjectCard } from './selected-subject-card'
 import type { Subject } from '@/lib/types/database'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 
 interface SubjectSelectorProps {
   subjects: Subject[]
@@ -161,10 +162,11 @@ export function SubjectSelector({
                         <SelectedSubjectCard
                           key={subject.id}
                           subject={subject.name}
-                          level={subject.level === 'Higher' || subject.level === 'Ordinary' 
-                            ? subject.level 
+                          level={subject.level === 'Higher' || subject.level === 'Ordinary'
+                            ? subject.level
                             : 'Ordinary'} // Safe fallback
                           onRemove={() => removeSubject(subject.id)}
+                          isLcvp={isLcvpSubject(subject.name)}
                         />
                       ))}
                     </div>

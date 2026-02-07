@@ -350,7 +350,8 @@ export interface UserProfile {
 // CAO Points Grade Types
 export type HigherGrade = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'H7' | 'H8'
 export type OrdinaryGrade = 'O1' | 'O2' | 'O3' | 'O4' | 'O5' | 'O6' | 'O7' | 'O8'
-export type Grade = HigherGrade | OrdinaryGrade
+export type LcvpGrade = 'Distinction' | 'Merit' | 'Pass'
+export type Grade = HigherGrade | OrdinaryGrade | LcvpGrade
 
 export interface UserSubject {
   id: string

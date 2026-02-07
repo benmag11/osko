@@ -14,6 +14,7 @@ interface SubjectGradeRowProps {
   onGradeChange: (direction: 'up' | 'down') => void
   isExperimenting?: boolean
   onLevelToggle?: () => void
+  isLcvp?: boolean
 }
 
 export function SubjectGradeRow({
@@ -26,6 +27,7 @@ export function SubjectGradeRow({
   onGradeChange,
   isExperimenting = false,
   onLevelToggle,
+  isLcvp = false,
 }: SubjectGradeRowProps) {
   const totalPoints = basePoints + mathsBonus
   const levelAbbrev = level === 'Higher' ? 'H' : level === 'Ordinary' ? 'O' : 'F'
@@ -42,7 +44,9 @@ export function SubjectGradeRow({
       {/* Subject info */}
       <div className="flex items-center gap-3.5 min-w-0 flex-1">
         {/* Level indicator */}
-        {isExperimenting && level !== 'Foundation' ? (
+        {isLcvp ? (
+          <span className="text-sm font-semibold text-stone-400 w-[1.25rem] text-center">—</span>
+        ) : isExperimenting && level !== 'Foundation' ? (
           <button
             onClick={onLevelToggle}
             className={cn(
@@ -81,7 +85,7 @@ export function SubjectGradeRow({
 
       {/* Grade selector and points */}
       <div className="flex items-center gap-3">
-        <GradeSelector grade={grade} onGradeChange={onGradeChange} />
+        <GradeSelector grade={grade} onGradeChange={onGradeChange} subjectName={subjectName} />
 
         {/* Points display */}
         <div className="flex items-baseline gap-1 min-w-[70px] justify-end">

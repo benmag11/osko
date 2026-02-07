@@ -7,6 +7,7 @@ import { getSubjectIcon } from '@/lib/utils/subject-icons'
 import { useUserSubjects } from '@/lib/hooks/use-user-subjects'
 import { useUserProfile } from '@/lib/hooks/use-user-profile'
 import { cn } from '@/lib/utils'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 import type { Subject } from '@/lib/types/database'
 
 interface SubjectsPanelProps {
@@ -84,9 +85,11 @@ export function SubjectsPanel({ currentSubject }: SubjectsPanelProps) {
                     {subject.name}
                   </span>
                   <span
-                    className={cn('text-sm shrink-0', isHigher ? 'text-salmon-500' : 'text-sky-500')}
+                    className={cn('text-sm shrink-0',
+                      isLcvpSubject(subject.name) ? 'text-stone-400' : isHigher ? 'text-salmon-500' : 'text-sky-500'
+                    )}
                   >
-                    ({isHigher ? 'H' : 'O'})
+                    ({isLcvpSubject(subject.name) ? 'C' : isHigher ? 'H' : 'O'})
                   </span>
                   {isActive && (
                     <div className="h-1.5 w-1.5 rounded-full bg-salmon-500 animate-pulse shrink-0" />

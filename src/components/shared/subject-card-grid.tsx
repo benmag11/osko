@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 
 export interface SubjectWithSlug {
   id: string
@@ -44,7 +45,7 @@ export function SubjectCardGrid({ subjects, baseUrl }: SubjectCardGridProps) {
                     {subject.name}
                   </h3>
                   <p className="text-sm text-exam-text-muted">
-                    {subject.level} Level
+                    {isLcvpSubject(subject.name) ? 'Common Level' : `${subject.level} Level`}
                   </p>
                 </div>
               </div>

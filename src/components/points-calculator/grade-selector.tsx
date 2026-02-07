@@ -5,19 +5,28 @@ import { cn } from '@/lib/utils'
 import { isAtGradeBoundary } from '@/lib/utils/points-calculator'
 import type { Grade } from '@/lib/types/database'
 
+const LCVP_DISPLAY: Record<string, string> = {
+  Distinction: 'Dist.',
+  Merit: 'Merit',
+  Pass: 'Pass',
+}
+
 interface GradeSelectorProps {
   grade: Grade
   onGradeChange: (direction: 'up' | 'down') => void
   disabled?: boolean
+  subjectName?: string
 }
 
 export function GradeSelector({
   grade,
   onGradeChange,
   disabled = false,
+  subjectName,
 }: GradeSelectorProps) {
-  const canGoUp = !isAtGradeBoundary(grade, 'up')
-  const canGoDown = !isAtGradeBoundary(grade, 'down')
+  const canGoUp = !isAtGradeBoundary(grade, 'up', subjectName)
+  const canGoDown = !isAtGradeBoundary(grade, 'down', subjectName)
+  const displayGrade = LCVP_DISPLAY[grade] ?? grade
 
   return (
     <div className="flex items-center gap-1">
@@ -38,8 +47,8 @@ export function GradeSelector({
       </button>
 
       {/* Grade display */}
-      <span className="w-8 text-center font-medium text-stone-900">
-        {grade}
+      <span className="min-w-[3.5rem] text-center font-medium text-stone-900">
+        {displayGrade}
       </span>
 
       {/* Down arrow - decrease grade */}

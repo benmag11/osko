@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from './server'
 import { QueryError } from '@/lib/errors'
 import { buildSearchQueryParams } from './query-builders'
+import { parseSlug } from '@/lib/utils/slug'
 import type {
   Subject,
   Topic,
@@ -73,21 +74,13 @@ export async function getSubjectBySlug(slug: string): Promise<Subject | null> {
   return withRetry(async () => {
     const supabase = await createServerSupabaseClient()
 
-    const parts = slug.split('-')
-    const level = parts[parts.length - 1]
-    const name = parts.slice(0, -1).join(' ')
-
-    const levelMap: Record<string, string> = {
-      'higher': 'Higher',
-      'ordinary': 'Ordinary',
-      'foundation': 'Foundation'
-    }
+    const { name, level } = parseSlug(slug)
 
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
       .ilike('name', name)
-      .eq('level', levelMap[level] || level)
+      .eq('level', level)
       .single()
 
     if (error) {

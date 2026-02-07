@@ -7,6 +7,7 @@ import { updateUserSubjects } from '../actions'
 import { ChevronDown, Check, X, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Subject } from '@/lib/types/database'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queries/query-keys'
 import { useUserProfile } from '@/lib/hooks/use-user-profile'
@@ -155,10 +156,12 @@ export function SubjectSection({ allSubjects, userSubjects }: SubjectSectionProp
                 <div
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    subject.level === 'Higher' ? 'bg-salmon-500' : 'bg-sky-500'
+                    isLcvpSubject(subject.name) ? 'bg-stone-400' : subject.level === 'Higher' ? 'bg-salmon-500' : 'bg-sky-500'
                   )}
                 />
-                <span className="text-xs text-warm-text-muted">{subject.level}</span>
+                <span className="text-xs text-warm-text-muted">
+                  {isLcvpSubject(subject.name) ? 'Common' : subject.level}
+                </span>
               </div>
             ))}
           </div>

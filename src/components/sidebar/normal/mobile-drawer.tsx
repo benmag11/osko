@@ -22,6 +22,7 @@ import { useFilters } from '@/components/providers/filter-provider'
 import { useUserSubjects } from '@/lib/hooks/use-user-subjects'
 import { useUserProfile } from '@/lib/hooks/use-user-profile'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 import type { Subject, Topic } from '@/lib/types/database'
 
 interface NormalMobileDrawerProps {
@@ -74,7 +75,7 @@ export function NormalMobileDrawer({
                 {subject.name}
               </span>
               <span className="truncate text-xs font-sans text-warm-text-muted">
-                {subject.level} Level
+                {isLcvpSubject(subject.name) ? 'Common Level' : `${subject.level} Level`}
               </span>
             </div>
             <ChevronsUpDown className="h-4 w-4 shrink-0 text-warm-text-muted" />

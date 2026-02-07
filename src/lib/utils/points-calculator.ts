@@ -1,4 +1,4 @@
-import type { Grade, HigherGrade, OrdinaryGrade, UserSubjectWithSubject } from '@/lib/types/database'
+import type { Grade, HigherGrade, OrdinaryGrade, LcvpGrade, UserSubjectWithSubject } from '@/lib/types/database'
 
 // CAO Points Grid - Higher Level
 const HIGHER_POINTS: Record<HigherGrade, number> = {
@@ -24,6 +24,16 @@ const ORDINARY_POINTS: Record<OrdinaryGrade, number> = {
   O8: 0,
 }
 
+// CAO Points Grid - LCVP (single-level subject)
+const LCVP_POINTS: Record<LcvpGrade, number> = {
+  Distinction: 66,
+  Merit: 46,
+  Pass: 28,
+}
+
+// LCVP grades ordered best to worst
+const LCVP_GRADES: LcvpGrade[] = ['Distinction', 'Merit', 'Pass']
+
 // Mathematics subject name for bonus detection
 const MATHS_SUBJECT_NAMES = ['mathematics', 'maths']
 
@@ -43,7 +53,17 @@ export function getPointsForGrade(grade: Grade | string | null): number {
   if (grade in ORDINARY_POINTS) {
     return ORDINARY_POINTS[grade as OrdinaryGrade]
   }
+  if (grade in LCVP_POINTS) {
+    return LCVP_POINTS[grade as LcvpGrade]
+  }
   return 0
+}
+
+/**
+ * Check if a subject is LCVP (case-insensitive)
+ */
+export function isLcvpSubject(subjectName: string): boolean {
+  return subjectName.toLowerCase() === 'lcvp'
 }
 
 /**
@@ -77,7 +97,8 @@ export function getMathsBonus(
 /**
  * Get the default grade for a subject level
  */
-export function getDefaultGrade(level: 'Higher' | 'Ordinary' | 'Foundation'): Grade {
+export function getDefaultGrade(level: 'Higher' | 'Ordinary' | 'Foundation', subjectName?: string): Grade {
+  if (subjectName && isLcvpSubject(subjectName)) return 'Merit'
   return level === 'Higher' ? 'H3' : 'O3'
 }
 
@@ -86,25 +107,32 @@ export function getDefaultGrade(level: 'Higher' | 'Ordinary' | 'Foundation'): Gr
  */
 export function getEffectiveGrade(
   storedGrade: string | null,
-  level: 'Higher' | 'Ordinary' | 'Foundation'
+  level: 'Higher' | 'Ordinary' | 'Foundation',
+  subjectName?: string
 ): Grade {
-  if (storedGrade && isValidGrade(storedGrade)) {
+  if (storedGrade && isValidGrade(storedGrade, subjectName)) {
     return storedGrade as Grade
   }
-  return getDefaultGrade(level)
+  return getDefaultGrade(level, subjectName)
 }
 
 /**
  * Check if a string is a valid grade
  */
-export function isValidGrade(grade: string): grade is Grade {
+export function isValidGrade(grade: string, subjectName?: string): grade is Grade {
+  if (subjectName && isLcvpSubject(subjectName)) {
+    return grade in LCVP_POINTS
+  }
   return grade in HIGHER_POINTS || grade in ORDINARY_POINTS
 }
 
 /**
  * Get all valid grades for a level
  */
-export function getGradesForLevel(level: 'Higher' | 'Ordinary' | 'Foundation'): Grade[] {
+export function getGradesForLevel(level: 'Higher' | 'Ordinary' | 'Foundation', subjectName?: string): Grade[] {
+  if (subjectName && isLcvpSubject(subjectName)) {
+    return [...LCVP_GRADES]
+  }
   if (level === 'Higher') {
     return Object.keys(HIGHER_POINTS) as HigherGrade[]
   }
@@ -115,12 +143,23 @@ export function getGradesForLevel(level: 'Higher' | 'Ordinary' | 'Foundation'): 
  * Navigate to the next grade in a direction
  * @param currentGrade - The current grade
  * @param direction - 'up' to improve (lower number), 'down' to decrease (higher number)
+ * @param subjectName - Optional subject name for LCVP handling
  * @returns The new grade, or the same grade if at boundary
  */
 export function getNextGrade(
   currentGrade: Grade | string,
-  direction: 'up' | 'down'
+  direction: 'up' | 'down',
+  subjectName?: string
 ): Grade {
+  if (subjectName && isLcvpSubject(subjectName)) {
+    const currentIndex = LCVP_GRADES.indexOf(currentGrade as LcvpGrade)
+    if (currentIndex === -1) return 'Merit'
+    const newIndex = direction === 'up'
+      ? Math.max(0, currentIndex - 1)
+      : Math.min(LCVP_GRADES.length - 1, currentIndex + 1)
+    return LCVP_GRADES[newIndex]
+  }
+
   const gradeStr = currentGrade as string
   const prefix = gradeStr[0] as 'H' | 'O'
   const currentNumber = parseInt(gradeStr[1], 10)
@@ -142,8 +181,15 @@ export function getNextGrade(
  */
 export function isAtGradeBoundary(
   grade: Grade | string,
-  direction: 'up' | 'down'
+  direction: 'up' | 'down',
+  subjectName?: string
 ): boolean {
+  if (subjectName && isLcvpSubject(subjectName)) {
+    const index = LCVP_GRADES.indexOf(grade as LcvpGrade)
+    if (direction === 'up') return index === 0
+    return index === LCVP_GRADES.length - 1
+  }
+
   const gradeNumber = parseInt((grade as string)[1], 10)
   if (direction === 'up') {
     return gradeNumber === 1
@@ -153,12 +199,17 @@ export function isAtGradeBoundary(
 
 /**
  * Convert a grade when switching between Higher and Ordinary levels
- * Preserves the grade number (O1 → H1, H3 → O3, etc.)
+ * Preserves the grade number (O1 -> H1, H3 -> O3, etc.)
+ * Returns LCVP grades as-is (no level conversion applies)
  */
 export function convertGradeLevel(
   currentGrade: Grade,
   newLevel: 'Higher' | 'Ordinary'
 ): Grade {
+  // LCVP grades don't convert between levels
+  if (LCVP_GRADES.includes(currentGrade as LcvpGrade)) {
+    return currentGrade
+  }
   const gradeNumber = currentGrade[1] // '1', '2', etc.
   const newPrefix = newLevel === 'Higher' ? 'H' : 'O'
   return `${newPrefix}${gradeNumber}` as Grade
@@ -175,6 +226,7 @@ export interface SubjectPointsBreakdown {
   basePoints: number
   mathsBonus: number
   totalPoints: number
+  isLcvp: boolean
 }
 
 /**
@@ -184,7 +236,7 @@ export function calculateSubjectsBreakdown(
   userSubjects: UserSubjectWithSubject[]
 ): SubjectPointsBreakdown[] {
   return userSubjects.map(us => {
-    const grade = getEffectiveGrade(us.grade, us.subject.level)
+    const grade = getEffectiveGrade(us.grade, us.subject.level, us.subject.name)
     const basePoints = getPointsForGrade(grade)
     const mathsBonus = getMathsBonus(us.subject.name, grade)
 
@@ -196,6 +248,7 @@ export function calculateSubjectsBreakdown(
       basePoints,
       mathsBonus,
       totalPoints: basePoints + mathsBonus,
+      isLcvp: isLcvpSubject(us.subject.name),
     }
   })
 }

@@ -16,6 +16,7 @@ import { FilterTag } from '@/components/filters/filter-tag'
 import { useFilters } from '@/components/providers/filter-provider'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
 import { cn } from '@/lib/utils'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 import type { Subject, AudioTopic } from '@/lib/types/database'
 
 interface AudioMobileDrawerProps {
@@ -64,8 +65,8 @@ export function AudioMobileDrawer({
         </div>
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="font-semibold text-stone-800 truncate">{subject.name}</span>
-          <span className={cn('text-sm shrink-0', isHigher ? 'text-salmon-500' : 'text-sky-500')}>
-            ({isHigher ? 'H' : 'O'})
+          <span className={cn('text-sm shrink-0', isLcvpSubject(subject.name) ? 'text-stone-400' : isHigher ? 'text-salmon-500' : 'text-sky-500')}>
+            ({isLcvpSubject(subject.name) ? 'C' : isHigher ? 'H' : 'O'})
           </span>
           <Headphones className="h-4 w-4 text-salmon-500 shrink-0" />
         </div>

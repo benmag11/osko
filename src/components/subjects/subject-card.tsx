@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Subject } from '@/lib/types/database'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 
 interface SubjectCardProps {
   subjectName: string
@@ -22,7 +23,8 @@ export function SubjectCard({
   onSelectSubject
 }: SubjectCardProps) {
   const Icon = getSubjectIcon(subjectName)
-  
+  const isLcvp = isLcvpSubject(subjectName)
+
   return (
     <Card className={cn(
       "border-stone-400 transition-colors",
@@ -34,31 +36,47 @@ export function SubjectCard({
           <h3 className="font-serif font-medium text-base text-warm-text-primary text-left truncate">{subjectName}</h3>
         </div>
         <div className="flex gap-2">
-          {higherSubject && (
+          {isLcvp && higherSubject ? (
             <Button
               size="sm"
-              variant={selectedLevel === 'Higher' ? 'default' : 'outline'}
+              variant={selectedLevel ? 'default' : 'outline'}
               onClick={() => onSelectSubject(higherSubject)}
               className={cn(
                 "flex-1 h-7 text-xs",
-                selectedLevel === 'Higher' && "bg-salmon-500 hover:bg-salmon-600 text-cream-50" // Higher level style
+                selectedLevel && "bg-salmon-500 hover:bg-salmon-600 text-cream-50"
               )}
             >
-              Higher
+              Select
             </Button>
-          )}
-          {ordinarySubject && (
-            <Button
-              size="sm"
-              variant={selectedLevel === 'Ordinary' ? 'default' : 'outline'}
-              onClick={() => onSelectSubject(ordinarySubject)}
-              className={cn(
-                "flex-1 h-7 text-xs",
-                selectedLevel === 'Ordinary' && "bg-sky-500 hover:bg-sky-600 text-cream-50" // Ordinary level style
+          ) : (
+            <>
+              {higherSubject && (
+                <Button
+                  size="sm"
+                  variant={selectedLevel === 'Higher' ? 'default' : 'outline'}
+                  onClick={() => onSelectSubject(higherSubject)}
+                  className={cn(
+                    "flex-1 h-7 text-xs",
+                    selectedLevel === 'Higher' && "bg-salmon-500 hover:bg-salmon-600 text-cream-50"
+                  )}
+                >
+                  Higher
+                </Button>
               )}
-            >
-              Ordinary
-            </Button>
+              {ordinarySubject && (
+                <Button
+                  size="sm"
+                  variant={selectedLevel === 'Ordinary' ? 'default' : 'outline'}
+                  onClick={() => onSelectSubject(ordinarySubject)}
+                  className={cn(
+                    "flex-1 h-7 text-xs",
+                    selectedLevel === 'Ordinary' && "bg-sky-500 hover:bg-sky-600 text-cream-50"
+                  )}
+                >
+                  Ordinary
+                </Button>
+              )}
+            </>
           )}
         </div>
       </CardContent>

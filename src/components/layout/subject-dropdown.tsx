@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getSubjectIcon } from '@/lib/utils/subject-icons'
 import { cn } from '@/lib/utils'
+import { isLcvpSubject } from '@/lib/utils/points-calculator'
 import type { Subject } from '@/lib/types/database'
 
 interface SubjectWithSlug extends Subject {
@@ -126,7 +127,7 @@ export function SubjectDropdown({
                       "text-xs leading-tight",
                       isActive ? "text-salmon-600" : "text-warm-text-muted"
                     )}>
-                      {subject.level} Level
+                      {isLcvpSubject(subject.name) ? 'Common Level' : `${subject.level} Level`}
                     </span>
                   </div>
                 </DropdownMenuItem>

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { SubjectGradeRow } from '@/components/points-calculator/subject-grade-row'
 import { PointsSummary } from '@/components/points-calculator/points-summary'
 import { useUpdateGrade } from '@/lib/hooks/use-update-grade'
-import { calculatePoints, getNextGrade, getEffectiveGrade, convertGradeLevel } from '@/lib/utils/points-calculator'
+import { calculatePoints, getNextGrade, getEffectiveGrade, convertGradeLevel, isLcvpSubject } from '@/lib/utils/points-calculator'
 import type { UserSubjectWithSubject, Grade } from '@/lib/types/database'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -35,8 +35,8 @@ export function PointsCalculatorClient({
     const subject = subjects.find(s => s.subject_id === subjectId)
     if (!subject) return
 
-    const currentGrade = getEffectiveGrade(subject.grade, subject.subject.level)
-    const newGrade = getNextGrade(currentGrade, direction)
+    const currentGrade = getEffectiveGrade(subject.grade, subject.subject.level, subject.subject.name)
+    const newGrade = getNextGrade(currentGrade, direction, subject.subject.name)
 
     // Optimistically update local state
     setSubjects(prev =>
@@ -62,8 +62,9 @@ export function PointsCalculatorClient({
     )
   }
 
-  const handleLevelToggle = (subjectId: string, currentLevel: 'Higher' | 'Ordinary' | 'Foundation') => {
+  const handleLevelToggle = (subjectId: string, currentLevel: 'Higher' | 'Ordinary' | 'Foundation', subjectName: string) => {
     if (currentLevel === 'Foundation') return // Can't toggle Foundation
+    if (isLcvpSubject(subjectName)) return // LCVP is single-level
 
     const newLevel = currentLevel === 'Higher' ? 'Ordinary' : 'Higher'
 
@@ -158,13 +159,14 @@ export function PointsCalculatorClient({
                     key={userSubject.id}
                     subjectName={userSubject.subject.name}
                     level={effectiveLevel}
-                    grade={getEffectiveGrade(userSubject.grade, effectiveLevel)}
+                    grade={getEffectiveGrade(userSubject.grade, effectiveLevel, userSubject.subject.name)}
                     basePoints={breakdown?.basePoints ?? 0}
                     mathsBonus={breakdown?.mathsBonus ?? 0}
                     isInBest6={isInBest6}
                     onGradeChange={(direction) => handleGradeChange(userSubject.subject_id, direction)}
                     isExperimenting={isExperimenting}
-                    onLevelToggle={() => handleLevelToggle(userSubject.subject_id, effectiveLevel)}
+                    onLevelToggle={() => handleLevelToggle(userSubject.subject_id, effectiveLevel, userSubject.subject.name)}
+                    isLcvp={isLcvpSubject(userSubject.subject.name)}
                   />
                 )
               })}
