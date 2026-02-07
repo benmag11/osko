@@ -29,9 +29,6 @@ export function AudioSubjectsPanel({ currentSubject }: AudioSubjectsPanelProps) 
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
-  // Sort subjects alphabetically by name
-  const sortedSubjects = [...subjects].sort((a, b) => a.name.localeCompare(b.name))
-
   const handleSubjectClick = (subject: Subject) => {
     const slug = generateSlug(subject)
     router.push(`/audio/${slug}`)
@@ -49,15 +46,15 @@ export function AudioSubjectsPanel({ currentSubject }: AudioSubjectsPanelProps) 
             </div>
           ))}
         </div>
-      ) : sortedSubjects.length === 0 ? (
+      ) : subjects.length === 0 ? (
         // Empty state
         <div className="px-4 py-8 text-sm text-stone-400 text-center">
           No subjects with audio content
         </div>
       ) : (
-        // Subject list
+        // Subject list (sorted alphabetically)
         <div className="px-1 py-0.5">
-          {sortedSubjects.map((subject) => {
+          {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((subject) => {
             const Icon = getSubjectIcon(subject.name)
             const isActive = currentSubject.id === subject.id
             const isHigher = subject.level === 'Higher'

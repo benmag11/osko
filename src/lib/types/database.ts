@@ -105,6 +105,7 @@ export interface Database {
           subject_id: string
           created_at: string | null
           grade: string | null
+          is_favourite: boolean
           subject: Subject
         }>
       }
@@ -358,6 +359,7 @@ export interface UserSubject {
   user_id: string
   subject_id: string
   grade: string | null
+  is_favourite: boolean
   created_at: string | null
 }
 

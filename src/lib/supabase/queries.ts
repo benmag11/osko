@@ -296,6 +296,7 @@ export async function getUserSubjects(userId: string): Promise<UserSubjectWithSu
       subject_id: string
       created_at: string | null
       grade: string | null
+      is_favourite: boolean
       subject: Subject
     }
     return (data || []).map((item: RPCResponse) => ({
@@ -304,6 +305,7 @@ export async function getUserSubjects(userId: string): Promise<UserSubjectWithSu
       subject_id: item.subject_id,
       created_at: item.created_at,
       grade: item.grade,
+      is_favourite: item.is_favourite,
       subject: item.subject
     }))
   })

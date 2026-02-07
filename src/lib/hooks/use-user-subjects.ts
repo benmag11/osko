@@ -9,6 +9,7 @@ import { queryKeys } from '@/lib/queries/query-keys'
 
 interface SubjectWithSlug extends Subject {
   slug: string
+  isFavourite: boolean
 }
 
 interface UseUserSubjectsReturn {
@@ -33,10 +34,11 @@ export function useUserSubjects(userId: string | undefined): UseUserSubjectsRetu
       // Get user subjects with built-in retry and error handling
       const userSubjects = await getUserSubjectsClient(userId)
       
-      // Transform to include slugs for navigation
+      // Transform to include slugs for navigation, preserving RPC sort order (favourites first)
       return userSubjects.map(userSubject => ({
         ...userSubject.subject,
-        slug: generateSlug(userSubject.subject)
+        slug: generateSlug(userSubject.subject),
+        isFavourite: userSubject.is_favourite
       }))
     },
     enabled: !!userId,

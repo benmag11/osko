@@ -17,6 +17,7 @@ export default async function StudyPage() {
     name: userSubject.subject.name,
     level: userSubject.subject.level,
     slug: generateSlug(userSubject.subject),
+    isFavourite: userSubject.is_favourite ?? false,
   }))
 
   return <StudyPageClient userName={userName} subjects={subjectsWithSlugs} />

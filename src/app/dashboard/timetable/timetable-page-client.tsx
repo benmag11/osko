@@ -86,6 +86,13 @@ export function TimetablePageClient({
 
       {/* Calendar container */}
       <div className="rounded-sm border border-stone-200 bg-white overflow-hidden shadow-sm">
+        {/* Month header */}
+        <div className="px-4 pt-3.5 pb-3 border-b border-stone-100">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-stone-400">
+            June 2026
+          </h2>
+        </div>
+
         {/* Desktop: schedule grid */}
         <ScheduleGrid
           days={days}

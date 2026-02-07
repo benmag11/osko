@@ -23,9 +23,6 @@ export function SubjectsPanel({ currentSubject }: SubjectsPanelProps) {
   const { user } = useUserProfile()
   const { subjects, isLoading } = useUserSubjects(user?.id)
 
-  // Sort subjects alphabetically by name
-  const sortedSubjects = [...subjects].sort((a, b) => a.name.localeCompare(b.name))
-
   const handleSubjectClick = (slug: string) => {
     router.push(`/subject/${slug}`)
   }
@@ -42,13 +39,13 @@ export function SubjectsPanel({ currentSubject }: SubjectsPanelProps) {
             </div>
           ))}
         </div>
-      ) : sortedSubjects.length === 0 ? (
+      ) : subjects.length === 0 ? (
         // Empty state
         <div className="px-4 py-8 text-sm text-stone-400 text-center">No subjects enrolled</div>
       ) : (
         // Subject list
         <div className="px-1 py-0.5">
-          {sortedSubjects.map((subject) => {
+          {subjects.map((subject) => {
             const Icon = getSubjectIcon(subject.name)
             const isActive = currentSubject.id === subject.id
             const isHigher = subject.level === 'Higher'
