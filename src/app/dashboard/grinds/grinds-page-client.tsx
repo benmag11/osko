@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, Users, Loader2, ExternalLink, Lock, Info } from 'lucide-react'
-import { getGrindsForWeek, registerForGrind, unregisterFromGrind } from '@/lib/supabase/grind-actions'
+import { getGrindsForWeek, registerForGrind } from '@/lib/supabase/grind-actions'
 import { createCheckoutSession } from '@/lib/stripe/subscription-actions'
 import { motion, AnimatePresence } from 'motion/react'
 import Link from 'next/link'
@@ -117,38 +117,7 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
     },
   })
 
-  const unregister = useMutation({
-    mutationFn: () => unregisterFromGrind(grind.id),
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['grinds', weekOffset] })
-      const previous = queryClient.getQueryData<{ data: GrindWithStatus[] }>(['grinds', weekOffset])
-
-      queryClient.setQueryData<{ data: GrindWithStatus[] }>(['grinds', weekOffset], (old) => {
-        if (!old) return old
-        return {
-          ...old,
-          data: old.data.map((g) =>
-            g.id === grind.id
-              ? { ...g, is_registered: false, registration_count: Math.max(0, g.registration_count - 1) }
-              : g
-          ),
-        }
-      })
-
-      return { previous }
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['grinds', weekOffset], context.previous)
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['grinds', weekOffset] })
-      refetchProfile()
-    },
-  })
-
-  const isMutating = register.isPending || unregister.isPending
+  const isMutating = register.isPending
 
   return (
     <Card className="bg-white rounded-sm">
@@ -188,14 +157,9 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
               Ended
             </span>
           ) : grind.is_registered ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => unregister.mutate()}
-              disabled={isMutating}
-            >
-              {unregister.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Leave'}
-            </Button>
+            <span className="inline-block text-xs font-medium px-2 py-1 rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Registered
+            </span>
           ) : GRINDS_ARE_FREE ? (
             <Button
               variant="primary"
