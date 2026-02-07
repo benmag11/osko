@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import {
   getSubjectBySlug,
 } from '@/lib/supabase/queries'
@@ -42,34 +41,6 @@ export default async function AudioSubjectPage({ params, searchParams }: PagePro
   if (!subject) {
     notFound()
   }
-
-  /* ──── TEMPORARY: Irish listening under construction ────
-     Remove this entire block once Irish audio is ready */
-  if (subject.name === 'Irish') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-warm-bg px-4">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="text-6xl">🔧</div>
-          <h1 className="text-3xl font-serif text-warm-text-secondary">
-            Under Construction
-          </h1>
-          <p className="text-warm-text-muted text-lg leading-relaxed">
-            We&apos;re fixing up the Irish listening section. It&apos;ll be back up tomorrow!
-          </p>
-          <p className="text-warm-text-muted">
-            In the meantime, why not try out one of the other language subjects?
-          </p>
-          <Link
-            href="/dashboard/listening"
-            className="inline-block mt-4 px-6 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
-          >
-            Back to Listening
-          </Link>
-        </div>
-      </div>
-    )
-  }
-  /* ──── END TEMPORARY ──── */
 
   // Parse filters early (note: audio filters don't include questionNumbers)
   const baseFilters = parseSearchParams(resolvedSearchParams, subject.id)

@@ -222,16 +222,24 @@ Deno.serve(async (req: Request) => {
     // Get user details for each registration
     const userIds = [...new Set(reminders.map((r) => r.user_id))];
 
-    // Get user emails from auth.users
-    const { data: authUsers, error: authError } = await supabase.auth.admin
-      .listUsers();
+    // Get user emails from auth.users (targeted lookups, not bulk list)
+    const userResults = await Promise.allSettled(
+      userIds.map((id) => supabase.auth.admin.getUserById(id))
+    );
 
-    if (authError) {
-      console.error("Error fetching auth users:", authError);
-      return new Response(JSON.stringify({ error: "Failed to fetch users" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+    const emailMap = new Map<string, string>();
+    for (let i = 0; i < userIds.length; i++) {
+      const result = userResults[i];
+      if (result.status === "fulfilled" && result.value.data?.user?.email) {
+        emailMap.set(userIds[i], result.value.data.user.email);
+      } else {
+        console.error(
+          `Failed to fetch user ${userIds[i]}:`,
+          result.status === "rejected"
+            ? result.reason
+            : result.value.error
+        );
+      }
     }
 
     // Get user profiles for names
@@ -239,11 +247,6 @@ Deno.serve(async (req: Request) => {
       .from("user_profiles")
       .select("user_id, name")
       .in("user_id", userIds);
-
-    // Create lookup maps
-    const emailMap = new Map(
-      authUsers.users.map((u) => [u.id, u.email])
-    );
     const nameMap = new Map(
       (profiles || []).map((p) => [p.user_id, p.name])
     );
