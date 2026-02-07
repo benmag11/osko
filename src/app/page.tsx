@@ -207,6 +207,13 @@ export default function HomePage() {
                 </p>
                 <p className="text-sm text-[#57534E]"><em className="italic font-serif">nearly...</em></p>
               </div>
+              <div className="stat-separator hidden md:block" />
+              <div className="text-center md:text-left">
+                <p className="font-display text-2xl md:text-3xl font-semibold text-[#1C1917]">
+                  100% free
+                </p>
+                <p className="text-sm text-[#57534E]">no hidden costs</p>
+              </div>
             </motion.div>
 
             {/* ============================================
