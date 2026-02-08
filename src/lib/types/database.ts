@@ -395,15 +395,18 @@ export interface QuestionUpdatePayload {
 export interface QuestionReport {
   id: string
   question_id: string
+  question_type: 'normal' | 'audio'
+  normal_question_id: string | null
+  audio_question_id: string | null
   user_id: string
   report_type: 'metadata' | 'incorrect_topic' | 'other'
-  description: string
+  description: string | null
   status: 'pending' | 'resolved' | 'dismissed'
   resolved_by: string | null
   resolved_at: string | null
   admin_notes: string | null
   created_at: string
-  // Joined data
+  // Joined data (unified from either normal_question or audio_question join)
   question?: Question
 }
 
@@ -420,8 +423,9 @@ export interface ReportStatistics {
 
 export interface CreateReportPayload {
   question_id: string
+  question_type: 'normal' | 'audio'
   report_type: 'metadata' | 'incorrect_topic' | 'other'
-  description: string
+  description?: string
 }
 
 export interface UpdateReportPayload {

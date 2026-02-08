@@ -4,6 +4,7 @@ import { NameSection } from './components/name-section'
 import { EmailSection } from './components/email-section'
 import { PasswordSection } from './components/password-section'
 import { SubjectSection } from './components/subject-section'
+import { FeatureRequestSection } from './components/feature-request-section'
 import { BillingSection } from './components/billing-section'
 import { SettingsSection } from '@/components/settings/settings-section'
 import Link from 'next/link'
@@ -44,6 +45,11 @@ export function SettingsClient({
           allSubjects={allSubjects}
           userSubjects={userSubjects}
         />
+      </SettingsSection>
+
+      {/* Suggest a Feature Section */}
+      <SettingsSection title="Suggest a Feature">
+        <FeatureRequestSection />
       </SettingsSection>
 
       {/* Help & Support Section */}

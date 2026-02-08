@@ -13,52 +13,66 @@ export async function createReport(
   payload: CreateReportPayload
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createServerSupabaseClient()
-  
+
   try {
+    // Server-side validation
+    const validReportTypes = ['metadata', 'incorrect_topic', 'other'] as const
+    if (!validReportTypes.includes(payload.report_type)) {
+      return { success: false, error: 'Invalid report type' }
+    }
+    if (payload.description && payload.description.trim().length > 500) {
+      return { success: false, error: 'Description must be 500 characters or less' }
+    }
+
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError || !user) {
       return { success: false, error: 'You must be logged in to report a question' }
     }
-    
-    // Check for existing report of same type by this user
+
+    // Determine which typed FK column to use
+    const isAudio = payload.question_type === 'audio'
+    const fkColumn = isAudio ? 'audio_question_id' : 'normal_question_id'
+
+    // Check for existing report of same type by this user using the typed FK
     const { data: existingReport } = await supabase
       .from('question_reports')
       .select('id')
-      .eq('question_id', payload.question_id)
+      .eq(fkColumn, payload.question_id)
       .eq('user_id', user.id)
       .eq('report_type', payload.report_type)
       .single()
-    
+
     if (existingReport) {
-      return { 
-        success: false, 
-        error: 'You have already reported this issue for this question' 
+      return {
+        success: false,
+        error: 'You have already reported this issue for this question'
       }
     }
-    
-    // Create the report
+
+    // Create the report with the correct typed FK column
     const { error: insertError } = await supabase
       .from('question_reports')
       .insert({
-        question_id: payload.question_id,
+        question_type: payload.question_type,
+        [fkColumn]: payload.question_id,
         user_id: user.id,
         report_type: payload.report_type,
-        description: payload.description
+        description: payload.description?.trim() || null
       })
-    
+
     if (insertError) {
       console.error('Failed to create report:', insertError)
       return { success: false, error: 'Failed to submit report' }
     }
-    
+
     return { success: true }
   } catch (error) {
     console.error('Error creating report:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to submit report' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to submit report'
     }
   }
 }
@@ -86,10 +100,13 @@ export async function updateReportStatus(
       updateData.admin_notes = updates.admin_notes
     }
     
-    // If resolving, add resolver info
+    // If resolving/dismissing, add resolver info; if re-opening, clear it
     if (updates.status === 'resolved' || updates.status === 'dismissed') {
       updateData.resolved_by = userId
       updateData.resolved_at = new Date().toISOString()
+    } else if (updates.status === 'pending') {
+      updateData.resolved_by = null
+      updateData.resolved_at = null
     }
     
     const { error: updateError } = await supabase
@@ -121,49 +138,74 @@ export async function getReports(
   } catch {
     return []
   }
-  
+
   const supabase = await createServerSupabaseClient()
-  
-  // Build query
+
+  // Two LEFT JOINs: one for normal questions, one for audio questions.
+  // Only one will return data per row based on question_type.
   let query = supabase
     .from('question_reports')
     .select(`
       *,
-      question:normal_questions!inner(
+      normal_question:normal_questions!question_reports_normal_question_id_fkey(
         id,
         year,
         paper_number,
         question_number,
         question_parts,
         exam_type,
+        additional_info,
         subject_id,
         subject:subjects(id, name, level),
         topics:normal_question_topics(
           topic:normal_topics(id, name)
         )
+      ),
+      audio_question:audio_questions!question_reports_audio_question_id_fkey(
+        id,
+        year,
+        paper_number,
+        question_number,
+        question_parts,
+        exam_type,
+        additional_info,
+        subject_id,
+        subject:subjects(id, name, level),
+        topics:audio_question_topics(
+          topic:audio_topics(id, name)
+        )
       )
     `)
     .order('created_at', { ascending: false })
-  
+
   if (status) {
     query = query.eq('status', status)
   }
-  
+
   const { data, error } = await query
-  
+
   if (error) {
     console.error('Failed to fetch reports:', error)
     return []
   }
-  
-  // Transform the topics data structure
-  const transformedData = data?.map(report => {
-    if (report.question?.topics) {
-      report.question.topics = report.question.topics.map((t: { topic: { id: string; name: string } }) => t.topic)
+
+  // Normalize: merge whichever join returned data into a unified `question` field
+  const transformedData = data?.map((report) => {
+    const raw = report.normal_question ?? report.audio_question
+    if (raw?.topics) {
+      raw.topics = raw.topics.map(
+        (t: { topic: { id: string; name: string } }) => t.topic
+      )
     }
-    return report
+    return {
+      ...report,
+      question: raw ?? undefined,
+      // Clean up the split join fields from the response
+      normal_question: undefined,
+      audio_question: undefined,
+    } as QuestionReport
   })
-  
+
   return transformedData || []
 }
 

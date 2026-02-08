@@ -49,7 +49,7 @@ export function GrindConfirmationEmail({
               src="https://uncooked.ie/logo-full.png"
               alt="Uncooked"
               width={140}
-              height={32}
+              height={46}
               style={logoImage}
             />
           </Section>

@@ -17,10 +17,13 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 import { updateReportStatus } from '@/lib/supabase/report-actions'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
+import { AudioQuestionEditModal } from '@/components/admin/audio-question-edit-modal'
 import { AuditHistory } from '@/components/admin/audit-history'
 import { formatDateTime } from '@/lib/utils/format-date'
+import { formatQuestionTitle } from '@/lib/utils/question-format'
 import { useTopics } from '@/lib/hooks/use-topics'
-import type { QuestionReport } from '@/lib/types/database'
+import { useAudioTopics } from '@/lib/hooks/use-audio-topics'
+import type { QuestionReport, AudioQuestion, AudioTopic } from '@/lib/types/database'
 
 interface ReportDetailsDialogProps {
   report: QuestionReport
@@ -37,7 +40,10 @@ export function ReportDetailsDialog({
 }: ReportDetailsDialogProps) {
   const [adminNotes, setAdminNotes] = useState(report.admin_notes || '')
   const [showEditModal, setShowEditModal] = useState(false)
-  const { topics } = useTopics(report.question?.subject_id || '')
+  const isAudio = report.question_type === 'audio'
+  const subjectId = report.question?.subject_id || ''
+  const { topics: normalTopics } = useTopics(isAudio ? '' : subjectId)
+  const { topics: audioTopics } = useAudioTopics(isAudio ? subjectId : '')
   
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -61,18 +67,7 @@ export function ReportDetailsDialog({
   })
   
   const question = report.question
-  const questionTitle = question ?
-    `${question.year}${
-      question.paper_number ? ` - Paper ${question.paper_number}` : ''
-    }${question.exam_type === 'deferred' ? ' - Deferred' : ''} - Question ${
-      question.question_number
-    }${
-      question.question_parts?.length > 0
-        ? ` - ${question.question_parts.map(p => `(${p})`).join(', ')}`
-        : ''
-    }${
-      question.additional_info ? ` - ${question.additional_info}` : ''
-    }` : 'Unknown Question'
+  const questionTitle = question ? formatQuestionTitle(question) : 'Unknown Question'
   
   return (
     <>
@@ -135,7 +130,9 @@ export function ReportDetailsDialog({
             <div>
               <Label className="text-sm font-medium">Description</Label>
               <div className="mt-1 p-3 rounded-lg bg-cream-50 border border-stone-200">
-                <p className="text-sm whitespace-pre-wrap">{report.description}</p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {report.description || <span className="text-warm-text-muted italic">No description provided</span>}
+                </p>
               </div>
             </div>
             
@@ -144,7 +141,7 @@ export function ReportDetailsDialog({
               <div>
                 <Label className="text-sm font-medium">Metadata Change History</Label>
                 <div className="mt-1 p-3 rounded-lg bg-cream-50 border border-stone-200">
-                  <AuditHistory questionId={question.id} topics={topics || []} />
+                  <AuditHistory questionId={question.id} questionType={report.question_type} topics={isAudio ? audioTopics : normalTopics} />
                 </div>
               </div>
             )}
@@ -215,17 +212,26 @@ export function ReportDetailsDialog({
         </DialogContent>
       </Dialog>
       
-      {/* Edit Question Modal */}
+      {/* Edit Question Modal — branches by question type */}
       {question && showEditModal && (
-        <QuestionEditModal
-          question={question}
-          topics={topics || []}
-          open={showEditModal}
-          onOpenChange={setShowEditModal}
-          onUpdateComplete={() => {
-            // The audit history will auto-refresh via React Query invalidation
-          }}
-        />
+        isAudio ? (
+          <AudioQuestionEditModal
+            question={question as unknown as AudioQuestion}
+            topics={audioTopics as AudioTopic[]}
+            open={showEditModal}
+            onOpenChange={setShowEditModal}
+          />
+        ) : (
+          <QuestionEditModal
+            question={question}
+            topics={normalTopics}
+            open={showEditModal}
+            onOpenChange={setShowEditModal}
+            onUpdateComplete={() => {
+              // The audit history will auto-refresh via React Query invalidation
+            }}
+          />
+        )
       )}
     </>
   )

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Check, X, Eye } from 'lucide-react'
+import { Check, X, Eye, Headphones } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -138,7 +138,12 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
             return (
               <TableRow key={report.id}>
                 <TableCell className="font-medium">
-                  {questionTitle}
+                  <span className="flex items-center gap-1.5">
+                    {report.question_type === 'audio' && (
+                      <Headphones className="h-3.5 w-3.5 text-salmon-500 shrink-0" />
+                    )}
+                    {questionTitle}
+                  </span>
                 </TableCell>
                 <TableCell>
                   {subjectName}

@@ -328,6 +328,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
       {canReport && showReportDialog && (
         <QuestionReportDialog
           question={question}
+          questionType="audio"
           open={showReportDialog}
           onOpenChange={setShowReportDialog}
         />

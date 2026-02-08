@@ -132,7 +132,7 @@ export function PasswordResetOtpForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Reset your password</CardTitle>
           <CardDescription>
-            We&apos;ve sent a 6-digit code to <span className="font-medium">{email}</span>
+            A 6-digit code has been sent to <span className="font-medium">{email}</span>
           </CardDescription>
         </CardHeader>
         <CardContent>

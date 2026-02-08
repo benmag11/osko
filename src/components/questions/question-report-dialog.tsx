@@ -18,9 +18,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { createReport } from '@/lib/supabase/report-actions'
 import type { BaseReportableQuestion } from '@/lib/types/database'
+import { formatQuestionTitle } from '@/lib/utils/question-format'
 
 interface QuestionReportDialogProps {
   question: BaseReportableQuestion
+  questionType: 'normal' | 'audio'
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -39,12 +41,13 @@ const reportTypeOptions = [
   {
     value: 'other' as const,
     label: 'Other',
-    placeholder: 'Spill your heart out! The more detail the better, it goes a long way to make this website more useful for everyone.'
+    placeholder: 'The more detail the better — it goes a long way to making the website more useful for everyone.'
   }
 ]
 
 export function QuestionReportDialog({
   question,
+  questionType,
   open,
   onOpenChange
 }: QuestionReportDialogProps) {
@@ -52,19 +55,7 @@ export function QuestionReportDialog({
   const [description, setDescription] = useState('')
   const queryClient = useQueryClient()
 
-  // Build question title for display
-  const parts = question.question_parts ?? []
-  const questionTitle = `${question.year}${
-    question.paper_number ? ` - Paper ${question.paper_number}` : ''
-  }${question.exam_type === 'deferred' ? ' - Deferred' : ''} - Question ${
-    question.question_number
-  }${
-    parts.length > 0
-      ? ` - ${parts.map(p => `(${p})`).join(', ')}`
-      : ''
-  }${
-    question.additional_info ? ` - ${question.additional_info}` : ''
-  }`
+  const questionTitle = formatQuestionTitle(question)
 
   // Get assigned topics for this question
   const assignedTopics = question.topics || []
@@ -74,17 +65,15 @@ export function QuestionReportDialog({
       if (!selectedType) {
         throw new Error('Please select a report type')
       }
-      if (!description.trim() || description.trim().length < 10) {
-        throw new Error('Please provide a description (minimum 10 characters)')
-      }
-      if (description.length > 500) {
+      if (description.trim().length > 500) {
         throw new Error('Description is too long (maximum 500 characters)')
       }
 
       const result = await createReport({
         question_id: question.id,
+        question_type: questionType,
         report_type: selectedType,
-        description: description.trim()
+        description: description.trim() || undefined
       })
 
       if (!result.success) {
@@ -179,10 +168,14 @@ export function QuestionReportDialog({
           {/* Description input */}
           {selectedType && (
             <div className="space-y-2 animate-in slide-in-from-top-1">
+              <Label className="text-sm text-warm-text-muted">
+                Additional details <span className="text-warm-text-muted/60">(Optional)</span>
+              </Label>
               <Textarea
                 placeholder={reportTypeOptions.find(o => o.value === selectedType)?.placeholder}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                maxLength={500}
                 className="min-h-[100px] resize-none"
               />
               <p className="text-xs text-warm-text-muted text-right">
@@ -201,7 +194,7 @@ export function QuestionReportDialog({
           </Button>
           <Button
             onClick={() => submitMutation.mutate()}
-            disabled={!selectedType || !description.trim() || description.trim().length < 10 || submitMutation.isPending}
+            disabled={!selectedType || submitMutation.isPending}
           >
             {submitMutation.isPending ? 'Submitting...' : 'Submit Report'}
           </Button>

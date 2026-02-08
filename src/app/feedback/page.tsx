@@ -1,16 +1,72 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { ContactClient } from './contact-client'
+import { FeedbackClient } from './feedback-client'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Contact — Uncooked',
-  description: 'Get in touch with the Uncooked team. I\'m here to help with any questions, bug reports, or feedback.',
+  title: 'Feedback — Uncooked',
+  description: 'Share your feedback about an Uncooked grind session.',
 }
 
-export default async function ContactPage() {
+export default async function FeedbackPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ grind?: string }>
+}) {
+  const { grind: grindId } = await searchParams
   const supabase = await createServerSupabaseClient()
+
+  // Fetch grind title
+  let grindTitle: string | null = null
+  if (grindId) {
+    const { data } = await supabase
+      .from('grinds')
+      .select('title')
+      .eq('id', grindId)
+      .single()
+
+    grindTitle = data?.title ?? null
+  }
+
+  if (!grindId || !grindTitle) {
+    return (
+      <div className="landing-background">
+        <div className="relative z-10">
+          <header className="px-6 md:px-12 lg:px-16 py-5">
+            <div className="max-w-6xl mx-auto flex items-center justify-between">
+              <Link
+                href="/"
+                className="transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 rounded"
+              >
+                <Image
+                  src="/logo-full.svg"
+                  alt="Uncooked"
+                  width={134}
+                  height={36}
+                  priority
+                  className="h-7 w-auto md:h-8"
+                />
+              </Link>
+            </div>
+          </header>
+
+          <main className="px-6 md:px-12 lg:px-16 pt-12 md:pt-20 pb-20 md:pb-28">
+            <div className="max-w-6xl mx-auto text-center">
+              <h1 className="font-display text-3xl md:text-4xl font-medium text-[#1C1917] mb-3">
+                Grind Not Found
+              </h1>
+              <p className="text-[#57534E] max-w-md mx-auto">
+                This feedback link is invalid or the grind no longer exists.
+              </p>
+            </div>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  // Check auth for pre-fill
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -83,16 +139,21 @@ export default async function ContactPage() {
         <main className="px-6 md:px-12 lg:px-16 pt-12 md:pt-20 pb-20 md:pb-28">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-10 md:mb-14">
-              <p className="small-caps text-[#57534E] text-sm mb-3">Support</p>
+              <p className="small-caps text-[#57534E] text-sm mb-3">Feedback</p>
               <h1 className="font-display text-3xl md:text-4xl font-medium text-[#1C1917] mb-3">
-                Get in Touch
+                How Was the Grind?
               </h1>
               <p className="text-[#57534E] max-w-md mx-auto">
-                Have a question, found a bug, or just want to say hi? I&apos;d love to hear from you.
+                Your feedback helps make future sessions better for everyone.
               </p>
             </div>
 
-            <ContactClient userName={userName} userEmail={userEmail} />
+            <FeedbackClient
+              grindId={grindId}
+              grindTitle={grindTitle}
+              userName={userName}
+              userEmail={userEmail}
+            />
           </div>
         </main>
 

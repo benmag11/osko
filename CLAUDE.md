@@ -33,6 +33,16 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - **Grinds**: Tutoring session bookings
 - **Images**: CDN-served with width/height metadata, lazy loading tracking
 - **Word Coordinates**: OCR data for text search within question images
+- **Audio Questions/Topics**: Separate tables for audio content (`audio_questions`, `audio_topics`, `audio_question_topics`)
+- **Question Reports**: User-reported issues with admin statistics
+- **Audit Logs**: Change tracking for questions
+- **Transcripts**: Word-level timing data for audio sync
+
+### Frontend Patterns
+- **Dashboard Bootstrap**: `getDashboardBootstrap` for centralized server-side data loading
+- **React Query Hydration**: `HydrationBoundary` for SSR prefetch
+- **Filter & Navigation Providers**: URL-based filter state management
+- **Sidebar Architecture**: Separate normal/audio implementations with mobile/desktop support
 
 ### Backend Features
 - **Pagination**: Cursor-based with RPC functions (`normal_search_questions_paginated`)
@@ -40,6 +50,9 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - **Query Optimization**: Postgres functions for efficient joins and filtering
 - **Subscription Billing**: Stripe integration with free credits system
 - **Admin**: Report system for question issues
+- **Email Templates**: React Email via Resend (grinds confirmation, reminders, contact notifications)
+- **Grinds Config**: `GRINDS_ARE_FREE` flag in `/lib/config/grinds`
+- **Audio Player**: Synchronized transcript following with word-level timing
 
 ### Key Pages
 - Landing with feature showcase
@@ -50,9 +63,13 @@ Exam paper study platform for Irish Leaving Certificate subjects. Provides searc
 - Grinds (`/dashboard/grinds`) — subscription-based tutoring
 - Listening Practice (`/dashboard/listening`) — audio exam questions
 - Points Calculator (`/dashboard/points`) — CAO points tool
+- Timetable (`/dashboard/timetable`) — exam timetable with ICS calendar downloads
 - Settings (with billing)
+- Ultra landing (`/ultra`) — subscription marketing page
+- Contact (`/contact`) — contact form
 - Admin reports
 - Subject pages with filtered question lists
+- Audio subject pages (`/audio/[slug]`) — per-subject audio question browsing
 
 ## Development Notes
 - Server components by default, client components marked explicitly

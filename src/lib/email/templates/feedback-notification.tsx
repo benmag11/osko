@@ -11,20 +11,20 @@ import {
   Img,
 } from '@react-email/components'
 
-interface ContactNotificationEmailProps {
+interface FeedbackNotificationEmailProps {
   name: string
   email: string
-  category: string
+  grindTitle: string
   message: string
 }
 
-export function ContactNotificationEmail({
+export function FeedbackNotificationEmail({
   name,
   email,
-  category,
+  grindTitle,
   message,
-}: ContactNotificationEmailProps) {
-  const previewText = `New contact form submission from ${name} — ${category}`
+}: FeedbackNotificationEmailProps) {
+  const previewText = `New grind feedback from ${name} — ${grindTitle}`
 
   return (
     <Html>
@@ -47,7 +47,7 @@ export function ContactNotificationEmail({
 
           {/* Content */}
           <Section style={content}>
-            <Text style={heading}>New Contact Form Submission</Text>
+            <Text style={heading}>New Grind Feedback</Text>
 
             {/* Sender Details Card */}
             <Section style={detailsCard}>
@@ -61,13 +61,13 @@ export function ContactNotificationEmail({
                 </Link>
               </Text>
 
-              <Text style={detailLabel}>Category</Text>
-              <Text style={detailValue}>{category}</Text>
+              <Text style={detailLabel}>Grind</Text>
+              <Text style={detailValue}>{grindTitle}</Text>
             </Section>
 
             {/* Message Card */}
             <Section style={messageCard}>
-              <Text style={detailLabel}>Message</Text>
+              <Text style={detailLabel}>Feedback</Text>
               <Text style={messageText}>{message}</Text>
             </Section>
 
@@ -199,4 +199,4 @@ const footerLink = {
   textDecoration: 'none',
 }
 
-export default ContactNotificationEmail
+export default FeedbackNotificationEmail

@@ -290,6 +290,7 @@ export const QuestionCard = memo(function QuestionCard({
       {canReport && showReportDialog && (
         <QuestionReportDialog
           question={question}
+          questionType="normal"
           open={showReportDialog}
           onOpenChange={setShowReportDialog}
         />

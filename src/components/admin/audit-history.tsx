@@ -2,15 +2,18 @@
 
 import { useAuditHistory } from '@/lib/hooks/use-audit-history'
 import { formatDateTime } from '@/lib/utils/format-date'
-import type { QuestionUpdatePayload, AuditLogChanges, Question, Topic } from '@/lib/types/database'
+import type { QuestionUpdatePayload, AuditLogChanges, Question } from '@/lib/types/database'
+
+type TopicLike = { id: string; name: string }
 
 interface AuditHistoryProps {
   questionId: string
-  topics?: Topic[]
+  questionType?: 'normal' | 'audio'
+  topics?: TopicLike[]
 }
 
-export function AuditHistory({ questionId, topics = [] }: AuditHistoryProps) {
-  const { history, isLoading, error } = useAuditHistory(questionId)
+export function AuditHistory({ questionId, questionType = 'normal', topics = [] }: AuditHistoryProps) {
+  const { history, isLoading, error } = useAuditHistory(questionId, questionType)
   
   if (isLoading) {
     return (
@@ -52,7 +55,7 @@ export function AuditHistory({ questionId, topics = [] }: AuditHistoryProps) {
 interface ChangeSummaryProps {
   changes: AuditLogChanges
   action: string
-  topics: Topic[]
+  topics: TopicLike[]
 }
 
 function ChangeSummary({ changes, action, topics }: ChangeSummaryProps) {
@@ -74,7 +77,7 @@ function ChangeSummary({ changes, action, topics }: ChangeSummaryProps) {
 interface UpdateChangesProps {
   before: Partial<Question>
   after: QuestionUpdatePayload
-  topics: Topic[]
+  topics: TopicLike[]
 }
 
 function UpdateChanges({ before, after, topics }: UpdateChangesProps) {
