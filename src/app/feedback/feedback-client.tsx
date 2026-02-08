@@ -92,7 +92,7 @@ export function FeedbackClient({ grindId, grindTitle, userName, userEmail }: Fee
           Thanks for your feedback!
         </h2>
         <p className="text-[#57534E]">
-          Your input helps make future grinds even better.
+          Your feedback helps make future grinds way better.
         </p>
       </div>
     )
