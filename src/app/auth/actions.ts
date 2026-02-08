@@ -105,34 +105,21 @@ export async function verifyOtp(email: string, token: string) {
   
   // Check if user has completed onboarding
   if (data?.user) {
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('onboarding_completed')
-        .eq('user_id', data.user.id)
-        .single()
-      
-      if (profileError) {
-        console.error('Failed to fetch user profile:', profileError)
-        // Continue to dashboard even if profile fetch fails
-      } else if (!profile || !profile.onboarding_completed) {
-        // If no profile or onboarding not completed, redirect to onboarding
-        redirect('/onboarding')
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message?.includes('NEXT_REDIRECT')) {
-        throw error
-      }
-      console.error('Error checking onboarding status:', error)
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('onboarding_completed')
+      .eq('user_id', data.user.id)
+      .single()
+
+    if (profileError) {
+      console.error('Failed to fetch user profile:', profileError)
+      // Continue to dashboard even if profile fetch fails
+    } else if (!profile || !profile.onboarding_completed) {
+      return { success: true, redirectTo: '/onboarding' }
     }
   }
-  
-  try {
-    redirect('/dashboard/study')
-  } catch (redirectError) {
-    // redirect() throws a NEXT_REDIRECT error which is expected
-    throw redirectError
-  }
+
+  return { success: true, redirectTo: '/dashboard/study' }
 }
 
 export async function resendOtp(email: string) {
@@ -161,11 +148,7 @@ export async function requestPasswordReset(formData: FormData) {
 
   const supabase = await createServerSupabaseClient()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
-  })
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim())
 
   // Only surface rate-limit errors — never reveal whether the email exists
   if (error) {
@@ -174,6 +157,38 @@ export async function requestPasswordReset(formData: FormData) {
     }
     // Silently succeed for all other errors (e.g. email not found)
     console.error('Password reset error:', error.message)
+  }
+
+  return { success: true }
+}
+
+export async function verifyPasswordResetOtp(email: string, token: string) {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'recovery',
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true, redirectTo: '/auth/reset-password' }
+}
+
+export async function resendPasswordResetCode(email: string) {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email)
+
+  // Only surface rate-limit errors — never reveal whether the email exists
+  if (error) {
+    if (error.status === 429) {
+      return { error: 'Too many requests. Please try again later.' }
+    }
+    console.error('Resend password reset error:', error.message)
   }
 
   return { success: true }

@@ -20,6 +20,21 @@ interface GrindReminder {
   meeting_url: string | null;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function sanitizeUrl(url: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith("https://")) return url;
+  return null;
+}
+
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleTimeString("en-IE", {
@@ -37,6 +52,7 @@ function generateReminderEmailHtml(data: {
   meetingUrl: string | null;
 }): string {
   const startTime = formatTime(data.scheduledAt);
+  const safeMeetingUrl = sanitizeUrl(data.meetingUrl);
 
   return `
 <!DOCTYPE html>
@@ -65,7 +81,7 @@ function generateReminderEmailHtml(data: {
           <!-- Content -->
           <tr>
             <td style="padding: 32px 0;">
-              <p style="margin: 0 0 8px 0; font-size: 18px; line-height: 28px; color: #1A1A1A;">Hi ${data.userName},</p>
+              <p style="margin: 0 0 8px 0; font-size: 18px; line-height: 28px; color: #1A1A1A;">Hi ${escapeHtml(data.userName)},</p>
 
               <p style="margin: 0 0 24px 0; font-size: 20px; line-height: 30px; color: #1A1A1A;">
                 Just a heads up — your session starts in <strong>2 hours</strong>.
@@ -75,20 +91,20 @@ function generateReminderEmailHtml(data: {
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF; border: 1px solid #E5E4DC; border-radius: 4px; margin-bottom: 24px;">
                 <tr>
                   <td align="center" style="padding: 24px;">
-                    <p style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: #1A1A1A;">${data.grindTitle}</p>
-                    ${data.grindDescription ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #6B6B6B;">${data.grindDescription}</p>` : ""}
+                    <p style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: #1A1A1A;">${escapeHtml(data.grindTitle)}</p>
+                    ${data.grindDescription ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #6B6B6B;">${escapeHtml(data.grindDescription)}</p>` : ""}
                     <p style="margin: 16px 0 4px 0; font-size: 28px; font-weight: 600; color: #D97757;">Starts at ${startTime}</p>
                     <p style="margin: 0; font-size: 14px; color: #6B6B6B;">${data.durationMinutes} minutes</p>
                   </td>
                 </tr>
               </table>
 
-              ${data.meetingUrl ? `
+              ${safeMeetingUrl ? `
               <!-- Join Button -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                 <tr>
                   <td align="center">
-                    <a href="${data.meetingUrl}" style="display: inline-block; background-color: #D97757; color: #FFFFFF; font-size: 16px; font-weight: 500; text-decoration: none; padding: 14px 40px; border-radius: 4px;">Join Meeting</a>
+                    <a href="${safeMeetingUrl}" style="display: inline-block; background-color: #D97757; color: #FFFFFF; font-size: 16px; font-weight: 500; text-decoration: none; padding: 14px 40px; border-radius: 4px;">Join Meeting</a>
                   </td>
                 </tr>
               </table>
@@ -141,17 +157,14 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Verify authorization (cron jobs include the service role key)
+  // Verify authorization — only accept the service role key (used by pg_cron via pg_net)
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.includes(SUPABASE_SERVICE_ROLE_KEY)) {
-    // Check if it's an anon key request (for testing)
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    if (!authHeader?.includes(anonKey || "")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+  const expectedToken = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+  if (authHeader !== expectedToken) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   if (!RESEND_API_KEY) {

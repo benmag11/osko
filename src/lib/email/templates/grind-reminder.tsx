@@ -1,3 +1,7 @@
+// Design reference only — the production reminder email is generated inline by
+// the Supabase Edge Function at supabase/functions/send-grind-reminders/index.ts.
+// This React Email template is kept for visual previewing during development.
+
 import {
   Html,
   Head,

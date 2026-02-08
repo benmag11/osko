@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
-import { sendGrindConfirmationEmail, sendGrindReminderEmail } from '@/lib/email/grind-emails'
+import { sendGrindConfirmationEmail } from '@/lib/email/grind-emails'
 
 /**
- * Test endpoint for grind emails (development only)
+ * Test endpoint for grind confirmation emails (development only)
  * POST /api/test-grind-email
- * Body: { type: 'confirmation' | 'reminder', email: string }
+ * Body: { email: string }
+ *
+ * Note: Reminder emails are handled by the Supabase Edge Function
+ * (send-grind-reminders) and cannot be tested from here.
  */
 export async function POST(request: Request) {
   // Only allow in development
@@ -14,7 +17,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { type, email } = body
+    const { email } = body
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
@@ -31,15 +34,10 @@ export async function POST(request: Request) {
       meetingUrl: 'https://zoom.us/j/1234567890',
     }
 
-    let result
-    if (type === 'reminder') {
-      result = await sendGrindReminderEmail(testData)
-    } else {
-      result = await sendGrindConfirmationEmail(testData)
-    }
+    const result = await sendGrindConfirmationEmail(testData)
 
     if (result.success) {
-      return NextResponse.json({ success: true, message: `${type || 'confirmation'} email sent to ${email}` })
+      return NextResponse.json({ success: true, message: `Confirmation email sent to ${email}` })
     } else {
       return NextResponse.json({ error: result.error }, { status: 500 })
     }

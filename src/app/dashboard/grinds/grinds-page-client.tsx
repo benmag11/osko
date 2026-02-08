@@ -157,7 +157,7 @@ function GrindCard({ grind, weekOffset, subscriptionState }: {
               Ended
             </span>
           ) : grind.is_registered ? (
-            <span className="inline-block text-xs font-medium px-2 py-1 rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="inline-block text-xs font-medium px-2 py-1 rounded-sm bg-white text-stone-900 border border-stone-500">
               Registered
             </span>
           ) : GRINDS_ARE_FREE ? (
