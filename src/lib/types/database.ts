@@ -596,6 +596,7 @@ export interface Grind {
   scheduled_at: string
   duration_minutes: number
   meeting_url: string | null
+  feedback_email_body: string | null
   created_by: string
   created_at: string
   updated_at: string
@@ -607,6 +608,7 @@ export interface GrindRegistration {
   user_id: string
   confirmation_email_sent_at: string | null
   reminder_email_sent_at: string | null
+  feedback_email_sent_at: string | null
   used_free_grind: boolean
   created_at: string
 }

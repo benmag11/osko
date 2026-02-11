@@ -50,7 +50,7 @@ export function SubjectGradeRow({
           <button
             onClick={onLevelToggle}
             className={cn(
-              'text-sm font-semibold px-1.5 py-0.5 rounded transition-all',
+              'text-sm font-semibold w-[1.25rem] text-center py-0.5 rounded transition-all',
               'hover:bg-stone-200 active:scale-95 cursor-pointer',
               'underline decoration-double decoration-stone-600 underline-offset-2 hover:decoration-stone-700',
               level === 'Higher' ? 'text-salmon-500' : 'text-sky-500'
@@ -62,7 +62,7 @@ export function SubjectGradeRow({
         ) : (
           <span
             className={cn(
-              'text-sm font-semibold',
+              'text-sm font-semibold w-[1.25rem] text-center',
               level === 'Higher'
                 ? 'text-salmon-500'
                 : 'text-sky-500'

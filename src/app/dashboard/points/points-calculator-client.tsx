@@ -6,7 +6,7 @@ import { PointsSummary } from '@/components/points-calculator/points-summary'
 import { useUpdateGrade } from '@/lib/hooks/use-update-grade'
 import { calculatePoints, getNextGrade, getEffectiveGrade, convertGradeLevel, isLcvpSubject } from '@/lib/utils/points-calculator'
 import type { UserSubjectWithSubject, Grade } from '@/lib/types/database'
-import { toast } from 'sonner'
+import { showError } from '@/lib/toast'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
 
@@ -56,7 +56,7 @@ export function PointsCalculatorClient({
               s.subject_id === subjectId ? { ...s, grade: subject.grade } : s
             )
           )
-          toast.error('Failed to save grade')
+          showError('Failed to save grade')
         },
       }
     )

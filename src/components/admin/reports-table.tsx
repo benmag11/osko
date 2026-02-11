@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'sonner'
+import { showSuccess, showError } from '@/lib/toast'
 import { ReportDetailsDialog } from '@/components/admin/report-details-dialog'
 import { updateReportStatus } from '@/lib/supabase/report-actions'
 import { formatDate } from '@/lib/utils/format-date'
@@ -50,11 +50,11 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
       return result
     },
     onSuccess: () => {
-      toast.success('Report status updated')
+      showSuccess('Report status updated')
       onStatusChange()
     },
     onError: (error) => {
-      toast.error(error.message)
+      showError(error.message)
     }
   })
   

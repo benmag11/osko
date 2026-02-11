@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Source_Serif_4, Source_Sans_3, Crimson_Pro } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers/providers'
-import { Toaster } from 'sonner'
+import { Toaster } from '@/components/ui/sonner'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -93,7 +93,7 @@ export default async function RootLayout({
         <Providers initialSession={session} initialQueryState={dehydratedState}>
           {children}
         </Providers>
-        <Toaster position="top-center" richColors />
+        <Toaster />
         <GoogleAnalytics />
         <Analytics />
         <SpeedInsights />

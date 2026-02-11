@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { toast } from 'sonner'
+import { showSuccess, showError } from '@/lib/toast'
 import { updateReportStatus } from '@/lib/supabase/report-actions'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
 import { AudioQuestionEditModal } from '@/components/admin/audio-question-edit-modal'
@@ -57,12 +57,12 @@ export function ReportDetailsDialog({
       return result
     },
     onSuccess: () => {
-      toast.success('Report resolved successfully')
+      showSuccess('Report resolved successfully')
       onStatusChange()
       onOpenChange(false)
     },
     onError: (error) => {
-      toast.error(error.message)
+      showError(error.message)
     }
   })
   

@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { toast } from 'sonner'
+import { showSuccess, showError } from '@/lib/toast'
 import { updateQuestionMetadata, createTopic } from '@/lib/supabase/admin-actions'
 import type { Question, Topic } from '@/lib/types/database'
 
@@ -90,7 +90,7 @@ export function QuestionEditModal({
       return result
     },
     onSuccess: (data) => {
-      toast.success('Question updated successfully')
+      showSuccess('Question updated successfully')
       queryClient.invalidateQueries({ queryKey: ['questions'] })
       queryClient.invalidateQueries({ queryKey: ['reports'] })
       queryClient.invalidateQueries({ queryKey: ['audit-history', question.id] })
@@ -99,7 +99,7 @@ export function QuestionEditModal({
       onOpenChange(false)
     },
     onError: (error) => {
-      toast.error(error.message)
+      showError(error.message)
     }
   })
   
@@ -124,10 +124,10 @@ export function QuestionEditModal({
       setSelectedTopics(prev => [...prev, topic.id])
       setNewTopicName('')
       queryClient.invalidateQueries({ queryKey: ['topics', question.subject_id] })
-      toast.success(`Topic "${topic.name}" created`)
+      showSuccess(`Topic "${topic.name}" created`)
     },
     onError: (error) => {
-      toast.error(error.message)
+      showError(error.message)
     }
   })
 

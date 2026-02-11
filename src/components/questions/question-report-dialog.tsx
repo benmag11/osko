@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { toast } from 'sonner'
+import { showReportSuccess, showError } from '@/lib/toast'
 import { createReport } from '@/lib/supabase/report-actions'
 import type { BaseReportableQuestion } from '@/lib/types/database'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
@@ -83,14 +83,14 @@ export function QuestionReportDialog({
       return result
     },
     onSuccess: () => {
-      toast.success('Report submitted successfully. Thank you for helping improve OSKO!')
+      showReportSuccess(questionTitle)
       queryClient.invalidateQueries({ queryKey: ['reports'] })
       setSelectedType(null)
       setDescription('')
       onOpenChange(false)
     },
     onError: (error) => {
-      toast.error(error.message)
+      showError(error.message)
     }
   })
 

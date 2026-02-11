@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { toast } from 'sonner'
+import { showSuccess, showError } from '@/lib/toast'
 import { updateAudioQuestionMetadata, createAudioTopic } from '@/lib/supabase/admin-actions'
 import type { AudioQuestion, AudioTopic } from '@/lib/types/database'
 
@@ -90,7 +90,7 @@ export function AudioQuestionEditModal({
       return result
     },
     onSuccess: (data) => {
-      toast.success('Audio question updated successfully')
+      showSuccess('Audio question updated successfully')
       queryClient.invalidateQueries({ queryKey: ['audio-questions'] })
       queryClient.invalidateQueries({ queryKey: ['audio-audit-history', question.id] })
       router.refresh()
@@ -98,7 +98,7 @@ export function AudioQuestionEditModal({
       onOpenChange(false)
     },
     onError: (error) => {
-      toast.error(error.message)
+      showError(error.message)
     }
   })
 
@@ -123,10 +123,10 @@ export function AudioQuestionEditModal({
       setSelectedTopics(prev => [...prev, topic.id])
       setNewTopicName('')
       queryClient.invalidateQueries({ queryKey: ['audio-topics', question.subject_id] })
-      toast.success(`Topic "${topic.name}" created`)
+      showSuccess(`Topic "${topic.name}" created`)
     },
     onError: (error) => {
-      toast.error(error.message)
+      showError(error.message)
     }
   })
 
