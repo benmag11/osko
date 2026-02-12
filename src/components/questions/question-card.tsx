@@ -2,11 +2,14 @@
 
 import { useState, useCallback, memo, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
+import { useReducedMotion } from 'motion/react'
 import { TrackedImage } from './tracked-image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
 import { QuestionEditModal } from '@/components/admin/question-edit-modal'
 import { QuestionReportDialog } from '@/components/questions/question-report-dialog'
+import { CompletionTally } from '@/components/questions/completion-tally'
+import { useQuestionCompletions } from '@/lib/hooks/use-question-completions'
 import type { Question, Topic } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
@@ -42,6 +45,44 @@ export const QuestionCard = memo(function QuestionCard({
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
   const topics = availableTopics ?? []
+
+  // Glow animation: detect completion count changes from the shared query cache
+  const prefersReducedMotion = useReducedMotion()
+  const { completionCounts, isLoading: isCompletionsLoading } = useQuestionCompletions()
+  const completionCount = completionCounts.get(question.id) ?? 0
+  const [isGlowing, setIsGlowing] = useState(false)
+  const prevCompletionCountRef = useRef(completionCount)
+  const hasCompletionsHydrated = useRef(false)
+  const glowTokenRef = useRef(0)
+
+  useEffect(() => {
+    if (!isCompletionsLoading) hasCompletionsHydrated.current = true
+  }, [isCompletionsLoading])
+
+  useEffect(() => {
+    if (!hasCompletionsHydrated.current) {
+      prevCompletionCountRef.current = completionCount
+      return
+    }
+
+    const prev = prevCompletionCountRef.current
+    prevCompletionCountRef.current = completionCount
+
+    if (completionCount > prev && !prefersReducedMotion) {
+      glowTokenRef.current += 1
+      // Force CSS animation restart: remove class, then re-add next frame
+      setIsGlowing(false)
+      requestAnimationFrame(() => setIsGlowing(true))
+    } else if (completionCount < prev) {
+      // Undo — cancel glow immediately
+      glowTokenRef.current += 1
+      setIsGlowing(false)
+    }
+  }, [completionCount, prefersReducedMotion])
+
+  const handleGlowAnimationEnd = useCallback(() => {
+    setIsGlowing(false)
+  }, [])
 
   // Check if URLs are valid
   const hasValidQuestionImage = question.question_image_url &&
@@ -174,6 +215,7 @@ export const QuestionCard = memo(function QuestionCard({
               Edit Metadata
             </Button>
           )}
+          {canReport && <CompletionTally questionId={question.id} />}
           {canReport && (
             <Button
               onClick={() => setShowReportDialog(true)}
@@ -188,7 +230,10 @@ export const QuestionCard = memo(function QuestionCard({
         </div>
       </div>
       
-      <div className="overflow-hidden rounded-xl shadow-[0_0_7px_rgba(0,0,0,0.17)]">
+      <div
+        className={cn(styles.imageContainer, isGlowing && styles.imageContainerGlowing)}
+        onAnimationEnd={handleGlowAnimationEnd}
+      >
         <div className="group relative w-full bg-cream-50">
           {hasValidQuestionImage ? (
             <>

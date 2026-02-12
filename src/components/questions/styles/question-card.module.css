@@ -69,6 +69,41 @@
   transition: padding 140ms ease, font-size 140ms ease, height 140ms ease;
 }
 
+.tallyIcon {
+  height: clamp(0.65rem, calc(var(--exam-zoom) * 1.35rem), 1.35rem);
+  width: clamp(0.65rem, calc(var(--exam-zoom) * 1.35rem), 1.35rem);
+  transition: height 140ms ease, width 140ms ease;
+}
+
+.tallyMark {
+  height: clamp(0.5rem, calc(var(--exam-zoom) * 1rem), 1rem);
+  width: auto;
+  transition: height 140ms ease;
+}
+
+.tallyWrapper {
+  height: clamp(1rem, calc(var(--exam-zoom) * 2rem), 2.2rem);
+  transition: height 140ms ease;
+}
+
+/* Image container base — owns the shadow so the glow animation can override it */
+.imageContainer {
+  overflow: hidden;
+  border-radius: var(--radius-xl, 0.75rem);
+  box-shadow: 0 0 7px rgba(0, 0, 0, 0.17);
+}
+
+/* Completion glow — 3 breathing pulses synced to the tally draw + flash */
+.imageContainerGlowing {
+  animation: completion-glow 3.32s ease-in-out forwards;
+}
+
+@keyframes completion-glow {
+  0%   { box-shadow: 0 0 7px rgba(0, 0, 0, 0.17); }
+  40%  { box-shadow: 0 0 18px 4px rgba(237, 128, 94, 0.4), 0 0 7px rgba(0, 0, 0, 0.12); }
+  100% { box-shadow: 0 0 7px rgba(0, 0, 0, 0.17); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card,
   .title,
@@ -76,8 +111,15 @@
   .adminButton,
   .iconButton,
   .icon,
+  .tallyIcon,
+  .tallyMark,
   .markingToggleContainer,
-  .markingToggleButton {
+  .markingToggleButton,
+  .tallyWrapper {
     transition: none;
+  }
+
+  .imageContainerGlowing {
+    animation: none;
   }
 }

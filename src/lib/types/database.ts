@@ -63,6 +63,12 @@ export interface Database {
         Insert: AudioQuestionTopic
         Update: Partial<AudioQuestionTopic>
       }
+      // Completion tracking
+      user_question_completions: {
+        Row: QuestionCompletion
+        Insert: Omit<QuestionCompletion, 'id' | 'completed_at'>
+        Update: never
+      }
     }
     Functions: {
       normal_search_questions_paginated: {
@@ -168,6 +174,20 @@ export interface Database {
       get_subjects_with_audio_questions: {
         Args: Record<string, never>
         Returns: Subject[]
+      }
+      // Completion functions
+      insert_question_completion: {
+        Args: {
+          p_user_id: string
+          p_question_id: string
+        }
+        Returns: string
+      }
+      delete_latest_question_completion: {
+        Args: {
+          p_question_id: string
+        }
+        Returns: boolean
       }
       // Grinds functions
       register_for_grind_with_credit: {
@@ -353,6 +373,13 @@ export type HigherGrade = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'H7' | 'H8'
 export type OrdinaryGrade = 'O1' | 'O2' | 'O3' | 'O4' | 'O5' | 'O6' | 'O7' | 'O8'
 export type LcvpGrade = 'Distinction' | 'Merit' | 'Pass'
 export type Grade = HigherGrade | OrdinaryGrade | LcvpGrade
+
+export interface QuestionCompletion {
+  id: string
+  user_id: string
+  question_id: string
+  completed_at: string
+}
 
 export interface UserSubject {
   id: string

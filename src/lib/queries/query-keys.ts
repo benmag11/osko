@@ -24,6 +24,7 @@ export const queryKeys = {
     preferences: (userId: string) => ['user', userId, 'preferences'] as const,
     progress: (userId: string) => ['user', userId, 'progress'] as const,
     admin: (userId: string) => ['user', userId, 'admin'] as const,
+    completions: (userId: string) => ['user', userId, 'completions'] as const,
   },
 }
 

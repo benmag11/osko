@@ -13,6 +13,7 @@ import type {
   UserSubjectWithSubject,
   QuestionCursor
 } from '@/lib/types/database'
+import type { CompletionStats } from '@/lib/types/stats'
 
 // Error handling wrapper with retry logic
 async function withRetry<T>(
@@ -352,9 +353,35 @@ export async function saveUserSubjects(
   }, 1).catch(error => {
     // For save operations, only retry once
     console.error('Failed to save user subjects after retry:', error)
-    return { 
-      success: false, 
-      error: error.message || 'Failed to save subjects. Please try again.' 
+    return {
+      success: false,
+      error: error.message || 'Failed to save subjects. Please try again.'
     }
+  })
+}
+
+export async function getCompletionStats(
+  userId: string,
+  daysAgo: number | null = null
+): Promise<CompletionStats> {
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+
+    const { data, error } = await supabase
+      .rpc('get_user_completion_stats', {
+        p_user_id: userId,
+        p_days_ago: daysAgo,
+      })
+
+    if (error) {
+      console.error('Error fetching completion stats:', error)
+      throw new QueryError(
+        'Failed to fetch completion stats',
+        'COMPLETION_STATS_FETCH_ERROR',
+        error
+      )
+    }
+
+    return data as CompletionStats
   })
 }

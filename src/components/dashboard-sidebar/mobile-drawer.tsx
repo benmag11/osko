@@ -12,6 +12,7 @@ import {
   Users,
   Settings,
   Flag,
+  BarChart3,
   LogOut,
   type LucideIcon,
 } from 'lucide-react'
@@ -52,6 +53,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: 'Points', url: '/dashboard/points', icon: Calculator },
       { title: 'Timetable', url: '/dashboard/timetable', icon: Calendar },
+      { title: 'Stats', url: '/dashboard/stats', icon: BarChart3 },
     ]
   },
   {
