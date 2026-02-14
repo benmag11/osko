@@ -114,6 +114,10 @@ export const QuestionCard = memo(function QuestionCard({
   const maxDisplayWidth = Math.max(1, Math.round(rawDisplayWidth))
   const questionImageSizes = `(max-width: 640px) 100vw, ${maxDisplayWidth}px`
 
+  // Perceptually consistent animation: sqrt scaling so tall schemes don't rush open
+  const markingSchemeRenderedHeight = (markingSchemeHeight / markingSchemeWidth) * maxDisplayWidth + 32
+  const markingSchemeDuration = Math.min(Math.max(Math.sqrt(markingSchemeRenderedHeight) * 0.012, 0.15), 0.4)
+
   // Two-tier visibility system: visible (force-fetch) and far (background prefetch)
   const { ref: visibleRef, inView: isVisible } = useInView({
     threshold: 0,
@@ -324,7 +328,7 @@ export const QuestionCard = memo(function QuestionCard({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  transition={{ duration: markingSchemeDuration, ease: 'easeOut' }}
                   style={{ overflow: 'hidden' }}
                 >
                   <div className="px-4 pb-4">
