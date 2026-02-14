@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Check, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useQuestionCompletions } from '@/lib/hooks/use-question-completions'
+import { useCompletionAnimations } from '@/lib/hooks/use-completion-animations'
 import styles from './styles/question-card.module.css'
 
 interface CompletionTallyProps {
@@ -48,13 +49,14 @@ function TallyPath({ d, animate }: { d: string; animate: boolean }) {
  */
 function TallyMarks({ count, drawIndex }: { count: number; drawIndex: number | null }) {
   const prefersReducedMotion = useReducedMotion()
+  const { animationsEnabled } = useCompletionAnimations()
   if (count === 0) return null
 
   const fullGroups = Math.floor(count / 5)
   const remainder = count % 5
 
   const shouldAnimate = (flatIndex: number) =>
-    drawIndex === flatIndex && !prefersReducedMotion
+    drawIndex === flatIndex && !prefersReducedMotion && animationsEnabled
 
   return (
     <div className="flex items-center gap-[0.3em]">
@@ -107,6 +109,7 @@ export const CompletionTally = memo(function CompletionTally({
 }: CompletionTallyProps) {
   const { completionCounts, addCompletion, undoCompletion, isLoading } = useQuestionCompletions()
   const prefersReducedMotion = useReducedMotion()
+  const { animationsEnabled } = useCompletionAnimations()
   const tallyMarksControls = useAnimationControls()
   const count = completionCounts.get(questionId) ?? 0
 
@@ -115,7 +118,7 @@ export const CompletionTally = memo(function CompletionTally({
   const animationTokenRef = useRef(0)
   const finishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [drawIndex, setDrawIndex] = useState<number | null>(null)
-  const justIncremented = hasHydrated.current && count > prevCountRef.current && !prefersReducedMotion
+  const justIncremented = hasHydrated.current && count > prevCountRef.current && !prefersReducedMotion && animationsEnabled
   const activeDrawIndex = justIncremented ? count - 1 : drawIndex
 
   const clearFinishTimer = useCallback(() => {
@@ -143,7 +146,7 @@ export const CompletionTally = memo(function CompletionTally({
     }
 
     const previousCount = prevCountRef.current
-    if (count > previousCount && !prefersReducedMotion) {
+    if (count > previousCount && !prefersReducedMotion && animationsEnabled) {
       const token = animationTokenRef.current + 1
       animationTokenRef.current = token
 
@@ -166,7 +169,7 @@ export const CompletionTally = memo(function CompletionTally({
           },
         })
       }, DRAW_DURATION_MS)
-    } else if (count < previousCount || prefersReducedMotion) {
+    } else if (count < previousCount || prefersReducedMotion || !animationsEnabled) {
       animationTokenRef.current += 1
       resetMarkAnimation()
     }
@@ -174,6 +177,7 @@ export const CompletionTally = memo(function CompletionTally({
     prevCountRef.current = count
   }, [
     count,
+    animationsEnabled,
     clearFinishTimer,
     prefersReducedMotion,
     resetMarkAnimation,

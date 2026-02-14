@@ -2,7 +2,9 @@
 
 import { Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { useQuestionNavigation } from '@/components/providers/question-navigation-provider'
+import { useCompletionAnimations } from '@/lib/hooks/use-completion-animations'
 
 /**
  * Settings panel for normal sidebar
@@ -10,6 +12,7 @@ import { useQuestionNavigation } from '@/components/providers/question-navigatio
  */
 export function SettingsPanel() {
   const { canZoomIn, canZoomOut, handleZoomIn, handleZoomOut } = useQuestionNavigation()
+  const { animationsEnabled, setAnimationsEnabled } = useCompletionAnimations()
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,6 +43,16 @@ export function SettingsPanel() {
             <Plus className="h-4 w-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Animations toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-stone-600">Animations</span>
+        <Switch
+          checked={animationsEnabled}
+          onCheckedChange={setAnimationsEnabled}
+          aria-label="Toggle completion animations"
+        />
       </div>
     </div>
   )

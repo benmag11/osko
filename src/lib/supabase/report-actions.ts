@@ -2,12 +2,14 @@
 
 import { createServerSupabaseClient } from './server'
 import { ensureAdmin } from './admin-context'
-import type { 
-  CreateReportPayload, 
+import type {
+  CreateReportPayload,
   UpdateReportPayload,
   QuestionReport,
-  ReportStatistics 
+  ReportStatistics
 } from '@/lib/types/database'
+import { formatQuestionTitle } from '@/lib/utils/question-format'
+import { sendReportAcknowledgementEmail } from '@/lib/email/report-emails'
 
 export async function createReport(
   payload: CreateReportPayload
@@ -65,6 +67,37 @@ export async function createReport(
     if (insertError) {
       console.error('Failed to create report:', insertError)
       return { success: false, error: 'Failed to submit report' }
+    }
+
+    // Fire-and-forget: send acknowledgement email
+    try {
+      const questionTable = isAudio ? 'audio_questions' : 'normal_questions'
+      const { data: question } = await supabase
+        .from(questionTable)
+        .select('year, paper_number, question_number, question_parts, exam_type, additional_info')
+        .eq('id', payload.question_id)
+        .single()
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single()
+
+      if (question && user.email) {
+        const questionTitle = formatQuestionTitle(question)
+        const userName = profile?.display_name || user.email.split('@')[0]
+
+        sendReportAcknowledgementEmail({
+          userName,
+          userEmail: user.email,
+          questionTitle,
+        }).catch((err) => {
+          console.error('Failed to send report acknowledgement email:', err)
+        })
+      }
+    } catch (emailErr) {
+      console.error('Error preparing report acknowledgement email:', emailErr)
     }
 
     return { success: true }

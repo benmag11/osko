@@ -8,18 +8,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
 const FROM_NAME = "Uncooked";
 
-interface GrindReminder {
-  registration_id: string;
-  user_email: string;
-  user_name: string;
-  grind_id: string;
-  grind_title: string;
-  grind_description: string | null;
-  scheduled_at: string;
-  duration_minutes: number;
-  meeting_url: string | null;
-}
-
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -29,31 +17,10 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
-function sanitizeUrl(url: string | null): string | null {
-  if (!url) return null;
-  if (url.startsWith("https://")) return url;
-  return null;
-}
-
-function formatTime(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString("en-IE", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function generateReminderEmailHtml(data: {
+function generateRescheduleEmailHtml(data: {
   userName: string;
   grindTitle: string;
-  grindDescription: string | null;
-  scheduledAt: string;
-  durationMinutes: number;
-  meetingUrl: string | null;
 }): string {
-  const startTime = formatTime(data.scheduledAt);
-  const safeMeetingUrl = sanitizeUrl(data.meetingUrl);
-
   return `
 <!DOCTYPE html>
 <html>
@@ -83,8 +50,8 @@ function generateReminderEmailHtml(data: {
             <td style="padding: 32px 0;">
               <p style="margin: 0 0 8px 0; font-size: 18px; line-height: 28px; color: #1A1A1A;">Hi ${escapeHtml(data.userName)},</p>
 
-              <p style="margin: 0 0 24px 0; font-size: 20px; line-height: 30px; color: #1A1A1A;">
-                Just a heads up — your session starts in <strong>2 hours</strong>.
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 26px; color: #4A4A4A;">
+                You received a reminder earlier today about your upcoming session. Apologies for any confusion — that session has been <strong>cancelled</strong> for today.
               </p>
 
               <!-- Details Box -->
@@ -92,35 +59,19 @@ function generateReminderEmailHtml(data: {
                 <tr>
                   <td align="center" style="padding: 24px;">
                     <p style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: #1A1A1A;">${escapeHtml(data.grindTitle)}</p>
-                    ${data.grindDescription ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #6B6B6B;">${escapeHtml(data.grindDescription)}</p>` : ""}
-                    <p style="margin: 16px 0 4px 0; font-size: 28px; font-weight: 600; color: #D97757;">Starts at ${startTime}</p>
-                    <p style="margin: 0; font-size: 14px; color: #6B6B6B;">${data.durationMinutes} minutes</p>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #6B6B6B;">Today's session has been cancelled</p>
+                    <p style="margin: 0 0 4px 0; font-size: 22px; font-weight: 600; color: #D97757;">Rescheduled to Saturday 21 February</p>
+                    <p style="margin: 0; font-size: 16px; color: #4A4A4A;">at <strong>8:00 PM</strong></p>
                   </td>
                 </tr>
               </table>
 
-              ${safeMeetingUrl ? `
-              <!-- Join Button -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-                <tr>
-                  <td align="center">
-                    <a href="${safeMeetingUrl}" style="display: inline-block; background-color: #D97757; color: #FFFFFF; font-size: 16px; font-weight: 500; text-decoration: none; padding: 14px 40px; border-radius: 4px;">Join Meeting</a>
-                  </td>
-                </tr>
-              </table>
-              ` : `
-              <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 26px; color: #4A4A4A;">
-                The meeting link will be available on your dashboard when the session is about to start.
-              </p>
-              `}
-
-              <!-- Tip -->
-              <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 22px; color: #6B6B6B; font-style: italic; padding: 16px; background-color: #F5F4ED; border-radius: 4px;">
-                Tip: Find a quiet spot, have a pen and paper ready, and make sure your device is charged.
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 26px; color: #4A4A4A;">
+                You don't need to do anything — your registration carries over and you'll receive a new reminder before the rescheduled session.
               </p>
 
               <p style="margin: 16px 0 0 0; font-size: 16px; line-height: 26px; color: #4A4A4A;">
-                See you soon,<br>Ben
+                Sorry for the mixup,<br>Ben
               </p>
             </td>
           </tr>
@@ -149,7 +100,6 @@ function generateReminderEmailHtml(data: {
 }
 
 Deno.serve(async (req: Request) => {
-  // Only allow POST requests (from cron or manual trigger)
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -157,7 +107,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Verify authorization — only accept the service role key (used by pg_cron via pg_net)
+  // Verify authorization — only accept the service role key
   const authHeader = req.headers.get("Authorization");
   const expectedToken = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
   if (authHeader !== expectedToken) {
@@ -170,30 +120,20 @@ Deno.serve(async (req: Request) => {
   if (!RESEND_API_KEY) {
     return new Response(
       JSON.stringify({ error: "RESEND_API_KEY not configured" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 
-  // Parse optional request body for force mode
-  // force: true + grind_id required — sends reminders for a specific grind regardless of time window
-  let force = false;
-  let forceGrindId: string | null = null;
+  let grindId: string;
   try {
     const body = await req.json();
-    force = body?.force === true;
-    if (force && typeof body?.grind_id === "string") {
-      forceGrindId = body.grind_id;
+    if (typeof body?.grind_id !== "string") {
+      throw new Error("missing grind_id");
     }
+    grindId = body.grind_id;
   } catch {
-    // No body or invalid JSON — default to normal mode
-  }
-
-  if (force && !forceGrindId) {
     return new Response(
-      JSON.stringify({ error: "force mode requires a grind_id to prevent accidental mass sends" }),
+      JSON.stringify({ error: "Request body must include { grind_id: string }" }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -201,8 +141,8 @@ Deno.serve(async (req: Request) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    // Build the query for registrations where the reminder hasn't been sent yet
-    let query = supabase
+    // Find registrations that already received a reminder email today for this grind
+    const { data: registrations, error: queryError } = await supabase
       .from("grind_registrations")
       .select(
         `
@@ -211,31 +151,17 @@ Deno.serve(async (req: Request) => {
         grind_id,
         grinds!inner (
           id,
-          title,
-          description,
-          scheduled_at,
-          duration_minutes,
-          meeting_url
+          title
         )
       `
       )
-      .is("reminder_email_sent_at", null);
-
-    if (force && forceGrindId) {
-      // Force mode: send reminders for a specific grind, bypassing the time window
-      query = query.eq("grind_id", forceGrindId);
-    } else {
-      // Normal mode: find grinds starting in ~2 hours (1.5 to 2.5 hour window)
-      // This allows the cron job to run every 30 minutes without missing any
-      const now = new Date();
-      const windowStart = new Date(now.getTime() + 90 * 60 * 1000); // 1.5 hours from now
-      const windowEnd = new Date(now.getTime() + 150 * 60 * 1000); // 2.5 hours from now
-      query = query
-        .gte("grinds.scheduled_at", windowStart.toISOString())
-        .lte("grinds.scheduled_at", windowEnd.toISOString());
-    }
-
-    const { data: reminders, error: queryError } = await query;
+      .eq("grind_id", grindId)
+      .not("reminder_email_sent_at", "is", null)
+      .gte("reminder_email_sent_at", new Date().toISOString().split("T")[0])
+      .lt(
+        "reminder_email_sent_at",
+        new Date(Date.now() + 86400000).toISOString().split("T")[0]
+      );
 
     if (queryError) {
       console.error("Error querying registrations:", queryError);
@@ -245,24 +171,20 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (!reminders || reminders.length === 0) {
+    if (!registrations || registrations.length === 0) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: "No reminders to send",
+          message: "No registrations found with reminders sent today for this grind",
           count: 0,
         }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 200, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Get user details for each registration
-    const userIds = [...new Set(reminders.map((r) => r.user_id))];
+    // Get user details
+    const userIds = [...new Set(registrations.map((r) => r.user_id))];
 
-    // Get user emails from auth.users (parallel lookups)
     const userResults = await Promise.allSettled(
       userIds.map((id) => supabase.auth.admin.getUserById(id))
     );
@@ -302,45 +224,33 @@ Deno.serve(async (req: Request) => {
     const registrationIds: string[] = [];
     let skipped = 0;
 
-    for (const reminder of reminders) {
-      const grind = reminder.grinds as {
-        id: string;
-        title: string;
-        description: string | null;
-        scheduled_at: string;
-        duration_minutes: number;
-        meeting_url: string | null;
-      };
+    for (const reg of registrations) {
+      const grind = reg.grinds as { id: string; title: string };
 
-      const userEmail = emailMap.get(reminder.user_id);
+      const userEmail = emailMap.get(reg.user_id);
       if (!userEmail) {
-        console.error(`No email found for user ${reminder.user_id}`);
+        console.error(`No email found for user ${reg.user_id}`);
         skipped++;
         continue;
       }
 
-      const userName =
-        nameMap.get(reminder.user_id) || userEmail.split("@")[0];
+      const userName = nameMap.get(reg.user_id) || userEmail.split("@")[0];
 
-      const html = generateReminderEmailHtml({
+      const html = generateRescheduleEmailHtml({
         userName,
         grindTitle: grind.title,
-        grindDescription: grind.description,
-        scheduledAt: grind.scheduled_at,
-        durationMinutes: grind.duration_minutes,
-        meetingUrl: grind.meeting_url,
       });
 
       emailObjects.push({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: userEmail,
-        subject: `Reminder: ${grind.title} starts in 2 hours`,
+        subject: `Schedule Change: ${grind.title} — Rescheduled to 21 Feb`,
         html,
         headers: {
-          "X-Entity-Ref-ID": `grind-reminder/${grind.id}/${userEmail}`,
+          "X-Entity-Ref-ID": `grind-reschedule/${grind.id}/${userEmail}`,
         },
       });
-      registrationIds.push(reminder.id);
+      registrationIds.push(reg.id);
     }
 
     if (emailObjects.length === 0) {
@@ -348,7 +258,7 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           success: true,
           message: "No valid emails to send",
-          total: reminders.length,
+          total: registrations.length,
           successful: 0,
           failed: skipped,
         }),
@@ -356,7 +266,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Send via Resend Batch API (supports up to 100 emails per call)
+    // Send via Resend Batch API
     const batchResponse = await fetch(
       "https://api.resend.com/emails/batch",
       {
@@ -374,18 +284,22 @@ Deno.serve(async (req: Request) => {
 
     if (batchResponse.ok) {
       successful = emailObjects.length;
-      console.log(`Batch sent ${successful} reminder emails`);
+      console.log(`Batch sent ${successful} reschedule notice emails`);
 
-      // Stamp all registrations as sent
+      // Reset reminder_email_sent_at to NULL so the cron reminder fires again for the rescheduled date
       const { error: updateError } = await supabase
         .from("grind_registrations")
-        .update({ reminder_email_sent_at: new Date().toISOString() })
+        .update({ reminder_email_sent_at: null })
         .in("id", registrationIds);
 
       if (updateError) {
         console.error(
-          "Failed to stamp reminder_email_sent_at:",
+          "Failed to reset reminder_email_sent_at:",
           updateError
+        );
+      } else {
+        console.log(
+          `Reset reminder_email_sent_at for ${registrationIds.length} registrations`
         );
       }
     } else {
@@ -397,15 +311,12 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Sent ${successful} reminders, ${failed} failed`,
-        total: reminders.length,
+        message: `Sent ${successful} reschedule notices, ${failed} failed`,
+        total: registrations.length,
         successful,
         failed,
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Unexpected error:", error);
@@ -414,10 +325,7 @@ Deno.serve(async (req: Request) => {
         error: "Internal server error",
         details: error instanceof Error ? error.message : String(error),
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 });

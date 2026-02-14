@@ -3,34 +3,13 @@
 import { headers } from 'next/headers'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { sendFeedbackEmail } from '@/lib/email/feedback-emails'
+import { checkRateLimit } from '@/lib/utils/rate-limit'
 
 interface FeedbackFormData {
   grindId: string
   name?: string
   email?: string
   message: string
-}
-
-// In-memory rate limiting: IP → list of submission timestamps
-const rateLimitMap = new Map<string, number[]>()
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
-const RATE_LIMIT_MAX = 5
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now()
-  const timestamps = rateLimitMap.get(ip) ?? []
-
-  // Remove entries outside the window
-  const recent = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
-  rateLimitMap.set(ip, recent)
-
-  if (recent.length >= RATE_LIMIT_MAX) {
-    return true
-  }
-
-  recent.push(now)
-  rateLimitMap.set(ip, recent)
-  return false
 }
 
 export async function submitFeedback(
@@ -43,7 +22,8 @@ export async function submitFeedback(
     headersList.get('x-real-ip') ||
     'unknown'
 
-  if (isRateLimited(ip)) {
+  const allowed = await checkRateLimit(ip, 'feedback_form')
+  if (!allowed) {
     return {
       error: 'Too many submissions. Please try again later.',
     }

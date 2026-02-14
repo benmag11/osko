@@ -2,7 +2,9 @@
 
 import { Minus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { useAudioNavigation } from '@/components/providers/audio-navigation-provider'
+import { useCompletionAnimations } from '@/lib/hooks/use-completion-animations'
 
 /**
  * Settings panel for audio sidebar
@@ -10,6 +12,7 @@ import { useAudioNavigation } from '@/components/providers/audio-navigation-prov
  */
 export function AudioSettingsPanel() {
   const { canZoomIn, canZoomOut, handleZoomIn, handleZoomOut } = useAudioNavigation()
+  const { animationsEnabled, setAnimationsEnabled } = useCompletionAnimations()
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,6 +43,16 @@ export function AudioSettingsPanel() {
             <Plus className="h-4 w-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Animations toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-stone-600">Animations</span>
+        <Switch
+          checked={animationsEnabled}
+          onCheckedChange={setAnimationsEnabled}
+          aria-label="Toggle completion animations"
+        />
       </div>
     </div>
   )

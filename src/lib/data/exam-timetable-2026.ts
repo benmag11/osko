@@ -236,6 +236,24 @@ export function computeTimeSlotRows(exams: ExamSlot[]): string[] {
 }
 
 // ─────────────────────────────────────────────
+// Duration helpers
+// ─────────────────────────────────────────────
+
+export function getExamDurationMinutes(startTime: string, endTime: string): number {
+  const [sh, sm] = startTime.split(':').map(Number)
+  const [eh, em] = endTime.split(':').map(Number)
+  return (eh * 60 + em) - (sh * 60 + sm)
+}
+
+/** Returns a pixel min-height for desktop ExamCards proportional to duration.
+ *  Linear scale: 40min → 60px, 200min → 160px. Clamped at both ends. */
+export function getExamCardMinHeight(startTime: string, endTime: string): number {
+  const minutes = getExamDurationMinutes(startTime, endTime)
+  const clamped = Math.max(40, Math.min(200, minutes))
+  return Math.round(60 + ((clamped - 40) / (200 - 40)) * (160 - 60))
+}
+
+// ─────────────────────────────────────────────
 // Duration formatting
 // ─────────────────────────────────────────────
 

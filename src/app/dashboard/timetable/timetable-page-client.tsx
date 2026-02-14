@@ -11,6 +11,7 @@ import {
   formatTime,
   parseExamLabel,
   computeTimeSlotRows,
+  getExamCardMinHeight,
   type ExamSlot,
   type ExamDay,
   type ExamInsights,
@@ -678,8 +679,13 @@ function ExamCard({
   }
 
   // Desktop variant
+  const minHeight = getExamCardMinHeight(slot.startTime, slot.endTime)
+
   return (
-    <div className="group rounded-md border border-stone-200 bg-white px-2.5 py-2 hover:border-salmon-300 hover:shadow-sm transition-all mb-1 last:mb-0">
+    <div
+      className="group flex flex-col rounded-md border border-stone-200 bg-white px-2.5 py-2 hover:border-salmon-300 hover:shadow-sm transition-all mb-1 last:mb-0"
+      style={{ minHeight }}
+    >
       {/* Subject */}
       <p className="font-serif text-[13px] text-warm-text-primary leading-snug">
         {subject}
@@ -689,13 +695,9 @@ function ExamCard({
           {descriptor}
         </p>
       )}
-      {/* Time range */}
-      <p className="mt-1 text-[11px] text-stone-400 tabular-nums leading-tight">
-        {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
-      </p>
       {/* Duration + calendar */}
       <div className="mt-1 flex items-center gap-1.5">
-        <span className="rounded-full bg-cream-200 px-1.5 py-0.5 text-[10px] font-medium text-stone-500 tabular-nums">
+        <span className="rounded bg-cream-200 px-1.5 py-0.5 text-[10px] font-medium text-stone-500 tabular-nums">
           {duration}
         </span>
         <a
@@ -708,6 +710,10 @@ function ExamCard({
           <Calendar className="size-3 text-stone-300 hover:text-salmon-500 transition-colors" />
         </a>
       </div>
+      {/* Time range */}
+      <p className="mt-auto text-[11px] text-stone-400 tabular-nums leading-tight">
+        {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
+      </p>
       {isLastExam && (
         <span className="mt-1 inline-block text-[10px] font-medium text-salmon-500 uppercase tracking-wider">
           Last exam

@@ -2,7 +2,8 @@
 
 import { useState, useCallback, memo, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
-import { useReducedMotion } from 'motion/react'
+import { useReducedMotion, AnimatePresence, motion } from 'motion/react'
+import { useCompletionAnimations } from '@/lib/hooks/use-completion-animations'
 import { TrackedImage } from './tracked-image'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, Edit2, Flag } from 'lucide-react'
@@ -48,6 +49,7 @@ export const QuestionCard = memo(function QuestionCard({
 
   // Glow animation: detect completion count changes from the shared query cache
   const prefersReducedMotion = useReducedMotion()
+  const { animationsEnabled } = useCompletionAnimations()
   const { completionCounts, isLoading: isCompletionsLoading } = useQuestionCompletions()
   const completionCount = completionCounts.get(question.id) ?? 0
   const [isGlowing, setIsGlowing] = useState(false)
@@ -68,7 +70,7 @@ export const QuestionCard = memo(function QuestionCard({
     const prev = prevCompletionCountRef.current
     prevCompletionCountRef.current = completionCount
 
-    if (completionCount > prev && !prefersReducedMotion) {
+    if (completionCount > prev && !prefersReducedMotion && animationsEnabled) {
       glowTokenRef.current += 1
       // Force CSS animation restart: remove class, then re-add next frame
       setIsGlowing(false)
@@ -78,7 +80,7 @@ export const QuestionCard = memo(function QuestionCard({
       glowTokenRef.current += 1
       setIsGlowing(false)
     }
-  }, [completionCount, prefersReducedMotion])
+  }, [completionCount, prefersReducedMotion, animationsEnabled])
 
   const handleGlowAnimationEnd = useCallback(() => {
     setIsGlowing(false)
@@ -301,24 +303,54 @@ export const QuestionCard = memo(function QuestionCard({
             )}
           </div>
 
-          {showMarkingScheme && markingSchemeUrl && (
-            <div className="px-4 pb-4">
-              <div className="group relative">
-                {/* Native <img> with exact same URL as prefetch = guaranteed cache hit = instant */}
-                <img
-                  src={markingSchemeUrl}
-                  alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                  className="w-full h-auto rounded-lg"
-                  loading="eager"
-                  draggable={false}
-                />
-                <ImageLightbox
-                  src={question.marking_scheme_image_url!}
-                  alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                  naturalWidth={markingSchemeWidth}
-                />
+          {animationsEnabled && !prefersReducedMotion ? (
+            <AnimatePresence initial={false}>
+              {showMarkingScheme && markingSchemeUrl && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div className="px-4 pb-4">
+                    <div className="group relative">
+                      <img
+                        src={markingSchemeUrl}
+                        alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                        className="w-full h-auto rounded-lg"
+                        loading="eager"
+                        draggable={false}
+                      />
+                      <ImageLightbox
+                        src={question.marking_scheme_image_url!}
+                        alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                        naturalWidth={markingSchemeWidth}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          ) : (
+            showMarkingScheme && markingSchemeUrl && (
+              <div className="px-4 pb-4">
+                <div className="group relative">
+                  <img
+                    src={markingSchemeUrl}
+                    alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                    className="w-full h-auto rounded-lg"
+                    loading="eager"
+                    draggable={false}
+                  />
+                  <ImageLightbox
+                    src={question.marking_scheme_image_url!}
+                    alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                    naturalWidth={markingSchemeWidth}
+                  />
+                </div>
               </div>
-            </div>
+            )
           )}
         </div>
       </div>

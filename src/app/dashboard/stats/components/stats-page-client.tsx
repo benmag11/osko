@@ -6,7 +6,6 @@ import { StatsHeader } from './stats-header'
 import { TimePeriodSelector } from './time-period-selector'
 import { SubjectSelector } from './subject-selector'
 import { TopicBreakdown } from './topic-breakdown'
-import { AudioTopicBreakdown } from './audio-topic-breakdown'
 import { StatsEmptyState } from './stats-empty-state'
 import type { TimePeriod } from '@/lib/types/stats'
 import type { UserSubjectWithSubject } from '@/lib/types/database'
@@ -54,20 +53,11 @@ export function StatsPageClient({ userId, userSubjects }: StatsPageClientProps) 
       </div>
 
       <div className="mt-3">
-        <h3 className="text-xs text-stone-400 uppercase tracking-wide mb-2">Topics</h3>
         <TopicBreakdown
           subjectId={selectedSubjectId}
           topicStats={stats.by_topic.filter(t => t.subject_id === selectedSubjectId)}
+          audioTopicStats={stats.by_audio_topic.filter(t => t.subject_id === selectedSubjectId)}
         />
-
-        {stats.by_audio_topic.filter(t => t.subject_id === selectedSubjectId).length > 0 && (
-          <>
-            <h3 className="text-xs text-stone-400 uppercase tracking-wide mb-2 mt-6">Audio Topics</h3>
-            <AudioTopicBreakdown
-              topicStats={stats.by_audio_topic.filter(t => t.subject_id === selectedSubjectId)}
-            />
-          </>
-        )}
       </div>
     </div>
   )
