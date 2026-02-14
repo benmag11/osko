@@ -39,7 +39,7 @@ export function ReportsClient({ initialReports, initialStatistics }: ReportsClie
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-serif font-bold text-warm-text-primary">
-          Question Reports
+          Report Management
         </h1>
         <Badge variant="outline" className="gap-1">
           <Flag className="h-3 w-3" />
@@ -98,6 +98,10 @@ export function ReportsClient({ initialReports, initialStatistics }: ReportsClie
                   <span className="font-medium">{statistics.reports_by_type.incorrect_topic}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span>Images:</span>
+                  <span className="font-medium">{statistics.reports_by_type.missing_images}</span>
+                </div>
+                <div className="flex justify-between">
                   <span>Other:</span>
                   <span className="font-medium">{statistics.reports_by_type.other}</span>
                 </div>
@@ -133,6 +137,7 @@ export function ReportsClient({ initialReports, initialStatistics }: ReportsClie
             onStatusChange={() => {
               queryClient.invalidateQueries({ queryKey: ['reports'] })
               queryClient.invalidateQueries({ queryKey: ['report-statistics'] })
+              queryClient.invalidateQueries({ queryKey: ['admin', 'reported-question-ids'] })
             }}
           />
         </CardContent>

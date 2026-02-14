@@ -18,7 +18,7 @@ export function QuestionsPanel({ questionNumbers, subjectName }: QuestionsPanelP
   if (questionNumbers.length === 0) {
     return (
       <p className="text-sm text-stone-400 py-4 px-3 text-center">
-        Unfortunately the exam structure for {subjectName} does not contain question numbers.
+        {subjectName} does not really support question numbers.
       </p>
     )
   }

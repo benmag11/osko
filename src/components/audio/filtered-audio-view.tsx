@@ -12,6 +12,7 @@ import { useAudioNavigation } from '@/components/providers/audio-navigation-prov
 import type { AudioQuestionNavigationItem } from '@/lib/hooks/use-audio-navigation-list'
 import type { AudioTopic, AudioPaginatedResponse } from '@/lib/types/database'
 import { useAuth } from '@/components/providers/auth-provider'
+import { useReportedQuestionIds } from '@/lib/hooks/use-reported-question-ids'
 import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from '@/components/questions/constants'
 import '@/components/questions/styles/zoom.css'
 
@@ -433,6 +434,7 @@ export function FilteredAudioView({ topics, initialData }: FilteredAudioViewProp
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
   const canReport = Boolean(user)
   const isAdmin = Boolean(profile?.is_admin)
+  const { reportedAudioIds } = useReportedQuestionIds()
 
   // Convert AudioTopic[] to Topic[] format for AppliedFiltersDisplay
   const topicsForDisplay = topics.map(t => ({
@@ -487,6 +489,7 @@ export function FilteredAudioView({ topics, initialData }: FilteredAudioViewProp
                     availableTopics={topics}
                     canReport={canReport}
                     isAdmin={isAdmin}
+                    hasReport={isAdmin && reportedAudioIds.has(question.id)}
                     displayWidth={BASE_MAX_WIDTH_PX * zoom}
                     isPriority={index === 0}
                   />

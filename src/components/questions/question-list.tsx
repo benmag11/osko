@@ -6,6 +6,7 @@ import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import { useQuestionsQuery } from '@/lib/hooks/use-questions-query'
 import type { Filters, PaginatedResponse } from '@/lib/types/database'
 import { useAuth } from '@/components/providers/auth-provider'
+import { useReportedQuestionIds } from '@/lib/hooks/use-reported-question-ids'
 import { useTopics } from '@/lib/hooks/use-topics'
 
 interface QuestionListProps {
@@ -18,7 +19,8 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
   const { topics } = useTopics(filters.subjectId)
   const canReport = Boolean(user)
   const isAdmin = Boolean(profile?.is_admin)
-  const { 
+  const { reportedNormalIds } = useReportedQuestionIds()
+  const {
     questions, 
     isFetchingNextPage, 
     loadMoreRef,
@@ -61,6 +63,7 @@ export function QuestionList({ initialData, filters }: QuestionListProps) {
             availableTopics={topics}
             canReport={canReport}
             isAdmin={isAdmin}
+            hasReport={isAdmin && reportedNormalIds.has(question.id)}
             displayWidth={EXAM_VIEW_BASE_MAX_WIDTH_PX}
             isPriority={index === 0}
             searchTerms={filters.searchTerms}

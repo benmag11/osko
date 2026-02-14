@@ -12,6 +12,7 @@ import { useQuestionNavigation } from '@/components/providers/question-navigatio
 import type { QuestionNavigationItem } from '@/lib/hooks/use-question-navigation-list'
 import type { Topic, PaginatedResponse } from '@/lib/types/database'
 import { useAuth } from '@/components/providers/auth-provider'
+import { useReportedQuestionIds } from '@/lib/hooks/use-reported-question-ids'
 import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
 import '../questions/styles/zoom.css'
 
@@ -425,6 +426,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
   const filterWidth = `${BASE_MAX_WIDTH_PX}px`
   const canReport = Boolean(user)
   const isAdmin = Boolean(profile?.is_admin)
+  const { reportedNormalIds } = useReportedQuestionIds()
 
   return (
     <div
@@ -470,6 +472,7 @@ export function FilteredQuestionsView({ topics, initialData }: FilteredQuestions
                     availableTopics={topics}
                     canReport={canReport}
                     isAdmin={isAdmin}
+                    hasReport={isAdmin && reportedNormalIds.has(question.id)}
                     displayWidth={BASE_MAX_WIDTH_PX * zoom}
                     isPriority={index === 0}
                     searchTerms={filters.searchTerms}

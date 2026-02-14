@@ -426,7 +426,7 @@ export interface QuestionReport {
   normal_question_id: string | null
   audio_question_id: string | null
   user_id: string
-  report_type: 'metadata' | 'incorrect_topic' | 'other'
+  report_type: 'metadata' | 'incorrect_topic' | 'missing_images' | 'other'
   description: string | null
   status: 'pending' | 'resolved' | 'dismissed'
   resolved_by: string | null
@@ -435,6 +435,8 @@ export interface QuestionReport {
   created_at: string
   // Joined data (unified from either normal_question or audio_question join)
   question?: Question
+  // Reporter info (populated by get_report_user_info RPC for admin views)
+  reporter?: { name: string | null; email: string }
 }
 
 export interface ReportStatistics {
@@ -444,6 +446,7 @@ export interface ReportStatistics {
   reports_by_type: {
     metadata: number
     incorrect_topic: number
+    missing_images: number
     other: number
   }
 }
@@ -451,7 +454,7 @@ export interface ReportStatistics {
 export interface CreateReportPayload {
   question_id: string
   question_type: 'normal' | 'audio'
-  report_type: 'metadata' | 'incorrect_topic' | 'other'
+  report_type: 'metadata' | 'incorrect_topic' | 'missing_images' | 'other'
   description?: string
 }
 

@@ -27,6 +27,7 @@ interface AudioQuestionCardProps {
   availableTopics?: AudioTopic[]
   canReport?: boolean
   isAdmin?: boolean
+  hasReport?: boolean
   displayWidth?: number
   isPriority?: boolean
 }
@@ -45,6 +46,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
   availableTopics,
   canReport = false,
   isAdmin = false,
+  hasReport = false,
   displayWidth,
   isPriority = false,
 }: AudioQuestionCardProps) {
@@ -220,6 +222,12 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
           <h3 className={cn('font-serif font-semibold text-warm-text-primary', styles.title)}>
             {title}
           </h3>
+          {hasReport && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 border border-amber-300 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+              <Flag className="h-3 w-3" />
+              Reported
+            </span>
+          )}
         </div>
         <div className={cn('flex items-center', styles.actions)}>
           <CompletionTally questionId={question.id} questionType="audio" />

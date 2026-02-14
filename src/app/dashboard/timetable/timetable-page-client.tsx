@@ -697,7 +697,7 @@ function ExamCard({
       )}
       {/* Duration + calendar */}
       <div className="mt-1 flex items-center gap-1.5">
-        <span className="rounded bg-cream-200 px-1.5 py-0.5 text-[10px] font-medium text-stone-500 tabular-nums">
+        <span className="rounded border border-stone-400 bg-white px-1.5 py-0.5 text-[10px] font-medium text-stone-500 tabular-nums">
           {duration}
         </span>
         <a

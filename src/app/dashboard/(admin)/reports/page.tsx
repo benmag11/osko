@@ -31,7 +31,7 @@ export default async function ReportsPage() {
   const statistics = queryClient.getQueryData<ReportStatistics | null>(['report-statistics']) || null
 
   return (
-    <DashboardPage>
+    <DashboardPage maxWidth="max-w-6xl">
       <HydrationBoundary state={dehydratedState}>
         <ReportsClient 
           initialReports={reports}

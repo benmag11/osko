@@ -103,6 +103,7 @@ export function ReportDetailsDialog({
                   <Badge variant="outline">
                     {report.report_type === 'metadata' && 'Metadata Issue'}
                     {report.report_type === 'incorrect_topic' && 'Incorrect Topic'}
+                    {report.report_type === 'missing_images' && 'Missing Images'}
                     {report.report_type === 'other' && 'Other Issue'}
                   </Badge>
                 </div>
@@ -119,11 +120,22 @@ export function ReportDetailsDialog({
             </div>
             
             {/* Reporter Info */}
-            <div>
-              <Label className="text-sm font-medium">Reported</Label>
-              <p className="mt-1 text-sm">
-                {formatDateTime(report.created_at)}
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Reporter</Label>
+                <div className="mt-1 text-sm">
+                  <p className="font-medium">{report.reporter?.name || 'Unknown'}</p>
+                  {report.reporter?.email && (
+                    <p className="text-warm-text-muted">{report.reporter.email}</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Reported</Label>
+                <p className="mt-1 text-sm">
+                  {formatDateTime(report.created_at)}
+                </p>
+              </div>
             </div>
             
             {/* Description */}

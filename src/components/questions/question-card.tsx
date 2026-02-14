@@ -27,6 +27,7 @@ interface QuestionCardProps {
   availableTopics?: Topic[]
   canReport?: boolean
   isAdmin?: boolean
+  hasReport?: boolean
   displayWidth?: number
   isPriority?: boolean
   searchTerms?: string[]
@@ -38,11 +39,13 @@ export const QuestionCard = memo(function QuestionCard({
   availableTopics,
   canReport = false,
   isAdmin = false,
+  hasReport = false,
   displayWidth,
   isPriority = false,
   searchTerms,
 }: QuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
+  const [isMarkingSchemeReady, setIsMarkingSchemeReady] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
   const topics = availableTopics ?? []
@@ -101,6 +104,7 @@ export const QuestionCard = memo(function QuestionCard({
   const questionImageWidth = question.question_image_width ?? 2480
   const questionImageHeight = question.question_image_height ?? 1500
   const markingSchemeWidth = question.marking_scheme_image_width ?? 2480
+  const markingSchemeHeight = question.marking_scheme_image_height ?? 3508
 
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
@@ -158,6 +162,7 @@ export const QuestionCard = memo(function QuestionCard({
 
     // new Image() forces the browser to fetch immediately (not a hint, a command)
     const img = new window.Image()
+    img.onload = () => setIsMarkingSchemeReady(true)
     img.src = markingSchemeUrl
     hasForceFetchedRef.current = true
   }, [isVisible, markingSchemeUrl, showMarkingScheme])
@@ -190,6 +195,7 @@ export const QuestionCard = memo(function QuestionCard({
     if (!markingSchemeUrl || showMarkingScheme || hasForceFetchedRef.current) return
 
     const img = new window.Image()
+    img.onload = () => setIsMarkingSchemeReady(true)
     img.src = markingSchemeUrl
     hasForceFetchedRef.current = true
   }, [markingSchemeUrl, showMarkingScheme])
@@ -202,9 +208,17 @@ export const QuestionCard = memo(function QuestionCard({
       style={{ '--exam-zoom': zoom ?? 1 } as CSSProperties}
     >
       <div className={cn('flex items-center justify-between', styles.header)}>
-        <h3 className={cn('font-serif font-semibold text-warm-text-primary', styles.title)}>
-          {title}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className={cn('font-serif font-semibold text-warm-text-primary', styles.title)}>
+            {title}
+          </h3>
+          {hasReport && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 border border-amber-300 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+              <Flag className="h-3 w-3" />
+              Reported
+            </span>
+          )}
+        </div>
         <div className={cn('flex items-center', styles.actions)}>
           {isAdmin && (
             <Button
@@ -315,13 +329,21 @@ export const QuestionCard = memo(function QuestionCard({
                 >
                   <div className="px-4 pb-4">
                     <div className="group relative">
-                      <img
-                        src={markingSchemeUrl}
-                        alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                        className="w-full h-auto rounded-lg"
-                        loading="eager"
-                        draggable={false}
-                      />
+                      <div className={cn(
+                        'rounded-lg transition-colors duration-300',
+                        !isMarkingSchemeReady && 'bg-stone-100'
+                      )}>
+                        <img
+                          src={markingSchemeUrl}
+                          alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                          width={markingSchemeWidth}
+                          height={markingSchemeHeight}
+                          className="w-full h-auto rounded-lg"
+                          loading="eager"
+                          draggable={false}
+                          onLoad={() => setIsMarkingSchemeReady(true)}
+                        />
+                      </div>
                       <ImageLightbox
                         src={question.marking_scheme_image_url!}
                         alt={`Marking scheme for question ${question.question_number ?? ''}`}
@@ -336,13 +358,21 @@ export const QuestionCard = memo(function QuestionCard({
             showMarkingScheme && markingSchemeUrl && (
               <div className="px-4 pb-4">
                 <div className="group relative">
-                  <img
-                    src={markingSchemeUrl}
-                    alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                    className="w-full h-auto rounded-lg"
-                    loading="eager"
-                    draggable={false}
-                  />
+                  <div className={cn(
+                    'rounded-lg transition-colors duration-300',
+                    !isMarkingSchemeReady && 'bg-stone-100'
+                  )}>
+                    <img
+                      src={markingSchemeUrl}
+                      alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                      width={markingSchemeWidth}
+                      height={markingSchemeHeight}
+                      className="w-full h-auto rounded-lg"
+                      loading="eager"
+                      draggable={false}
+                      onLoad={() => setIsMarkingSchemeReady(true)}
+                    />
+                  </div>
                   <ImageLightbox
                     src={question.marking_scheme_image_url!}
                     alt={`Marking scheme for question ${question.question_number ?? ''}`}

@@ -79,6 +79,7 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
     const labels: Record<string, string> = {
       metadata: 'Metadata',
       incorrect_topic: 'Topic',
+      missing_images: 'Images',
       other: 'Other'
     }
     
@@ -115,6 +116,7 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
           <TableRow>
             <TableHead>Question</TableHead>
             <TableHead>Subject</TableHead>
+            <TableHead>Reporter</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Date</TableHead>
@@ -147,6 +149,18 @@ export function ReportsTable({ reports, isLoading, onStatusChange }: ReportsTabl
                 </TableCell>
                 <TableCell>
                   {subjectName}
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    <p className="font-medium truncate max-w-[140px]">
+                      {report.reporter?.name || 'Unknown'}
+                    </p>
+                    {report.reporter?.email && (
+                      <p className="text-xs text-warm-text-muted truncate max-w-[140px]">
+                        {report.reporter.email}
+                      </p>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {getReportTypeBadge(report.report_type)}

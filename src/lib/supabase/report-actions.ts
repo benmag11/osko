@@ -18,12 +18,15 @@ export async function createReport(
 
   try {
     // Server-side validation
-    const validReportTypes = ['metadata', 'incorrect_topic', 'other'] as const
+    const validReportTypes = ['metadata', 'incorrect_topic', 'missing_images', 'other'] as const
     if (!validReportTypes.includes(payload.report_type)) {
       return { success: false, error: 'Invalid report type' }
     }
     if (payload.description && payload.description.trim().length > 500) {
       return { success: false, error: 'Description must be 500 characters or less' }
+    }
+    if (payload.report_type === 'other' && (!payload.description || !payload.description.trim())) {
+      return { success: false, error: 'Description is required for "Other" report type' }
     }
 
     // Get current user
@@ -80,13 +83,13 @@ export async function createReport(
 
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('display_name')
-        .eq('id', user.id)
+        .select('name')
+        .eq('user_id', user.id)
         .single()
 
       if (question && user.email) {
         const questionTitle = formatQuestionTitle(question)
-        const userName = profile?.display_name || user.email.split('@')[0]
+        const userName = profile?.name || user.email.split('@')[0]
 
         sendReportAcknowledgementEmail({
           userName,
@@ -237,9 +240,26 @@ export async function getReports(
       normal_question: undefined,
       audio_question: undefined,
     } as QuestionReport
-  })
+  }) || []
 
-  return transformedData || []
+  // Fetch reporter info for all reports
+  if (transformedData.length > 0) {
+    const reportIds = transformedData.map(r => r.id)
+    const { data: reporterData } = await supabase
+      .rpc('get_report_user_info', { p_report_ids: reportIds })
+
+    if (reporterData) {
+      const reporterMap = new Map(
+        (reporterData as Array<{ report_id: string; name: string | null; email: string }>)
+          .map(r => [r.report_id, { name: r.name, email: r.email }])
+      )
+      for (const report of transformedData) {
+        report.reporter = reporterMap.get(report.id)
+      }
+    }
+  }
+
+  return transformedData
 }
 
 export async function getReportStatistics(): Promise<ReportStatistics | null> {
@@ -262,5 +282,39 @@ export async function getReportStatistics(): Promise<ReportStatistics | null> {
   }
   
   return data as ReportStatistics
+}
+
+export async function getPendingReportedQuestionIds(): Promise<{
+  normalIds: string[]
+  audioIds: string[]
+}> {
+  try {
+    await ensureAdmin()
+  } catch {
+    return { normalIds: [], audioIds: [] }
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .rpc('get_pending_reported_question_ids')
+
+  if (error) {
+    console.error('Failed to fetch pending reported question IDs:', error)
+    return { normalIds: [], audioIds: [] }
+  }
+
+  const normalIds: string[] = []
+  const audioIds: string[] = []
+
+  for (const row of (data as Array<{ question_id: string; question_type: string }>) || []) {
+    if (row.question_type === 'normal') {
+      normalIds.push(row.question_id)
+    } else {
+      audioIds.push(row.question_id)
+    }
+  }
+
+  return { normalIds, audioIds }
 }
 

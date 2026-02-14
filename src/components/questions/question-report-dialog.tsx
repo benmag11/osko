@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Flag } from 'lucide-react'
+import { Flag, SquareCheckBig } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -31,17 +31,30 @@ const reportTypeOptions = [
   {
     value: 'metadata' as const,
     label: 'Question information (Year, question number, subparts)',
-    placeholder: 'Any other details about why it is wrong, or what it should be, would be hugely appreciated!'
+    placeholder: 'Any other details about why it is wrong, or what it should be, would be hugely appreciated!',
+    showTextarea: true,
+    textareaRequired: false,
   },
   {
     value: 'incorrect_topic' as const,
     label: 'Incorrect topic',
-    placeholder: 'If you could share what you think the topic should be, or if you think the breakdown of topics for the subject could be improved, or any other details, then that would be amazing!'
+    placeholder: 'If you could share what you think the topic should be, or if you think the breakdown of topics for the subject could be improved, or any other details, then that would be amazing!',
+    showTextarea: true,
+    textareaRequired: false,
+  },
+  {
+    value: 'missing_images' as const,
+    label: 'Missing images',
+    placeholder: '',
+    showTextarea: false,
+    textareaRequired: false,
   },
   {
     value: 'other' as const,
     label: 'Other',
-    placeholder: 'The more detail the better — it goes a long way to making the website more useful for everyone.'
+    placeholder: 'The more detail the better — it goes a long way to making the website more useful for everyone.',
+    showTextarea: true,
+    textareaRequired: true,
   }
 ]
 
@@ -51,7 +64,7 @@ export function QuestionReportDialog({
   open,
   onOpenChange
 }: QuestionReportDialogProps) {
-  const [selectedType, setSelectedType] = useState<'metadata' | 'incorrect_topic' | 'other' | null>(null)
+  const [selectedType, setSelectedType] = useState<'metadata' | 'incorrect_topic' | 'missing_images' | 'other' | null>(null)
   const [description, setDescription] = useState('')
   const queryClient = useQueryClient()
 
@@ -60,10 +73,17 @@ export function QuestionReportDialog({
   // Get assigned topics for this question
   const assignedTopics = question.topics || []
 
+  const selectedOption = selectedType
+    ? reportTypeOptions.find(o => o.value === selectedType)
+    : null
+
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (!selectedType) {
         throw new Error('Please select a report type')
+      }
+      if (selectedOption?.textareaRequired && !description.trim()) {
+        throw new Error('Description is required for this report type')
       }
       if (description.trim().length > 500) {
         throw new Error('Description is too long (maximum 500 characters)')
@@ -99,6 +119,11 @@ export function QuestionReportDialog({
     setDescription('')
   }
 
+  const canSubmit =
+    selectedType !== null &&
+    !submitMutation.isPending &&
+    !(selectedOption?.textareaRequired && !description.trim())
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       if (!isOpen) handleReset()
@@ -119,19 +144,23 @@ export function QuestionReportDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Show assigned topics if they exist */}
+          {/* Show assigned topics as filter-tag-style chips */}
           {assignedTopics.length > 0 && (
             <div className="rounded-lg border border-stone-200 bg-cream-50 p-3">
               <p className="text-sm font-medium text-warm-text-primary mb-2">
                 Currently assigned topics:
               </p>
-              <ul className="list-disc list-inside space-y-1">
+              <div className="flex flex-wrap gap-1.5">
                 {assignedTopics.map(topic => (
-                  <li key={topic.id} className="text-sm text-warm-text-muted">
+                  <span
+                    key={topic.id}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-stone-300 bg-cream-50 px-2 py-1 text-xs text-warm-text-secondary"
+                  >
+                    <SquareCheckBig className="h-3.5 w-3.5 text-green-600" />
                     {topic.name}
-                  </li>
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 
@@ -165,14 +194,17 @@ export function QuestionReportDialog({
             ))}
           </div>
 
-          {/* Description input */}
-          {selectedType && (
+          {/* Conditional textarea */}
+          {selectedOption?.showTextarea && (
             <div className="space-y-2 animate-in slide-in-from-top-1">
               <Label className="text-sm text-warm-text-muted">
-                Additional details <span className="text-warm-text-muted/60">(Optional)</span>
+                Additional details{' '}
+                <span className="text-warm-text-muted/60">
+                  ({selectedOption.textareaRequired ? 'Required' : 'Optional'})
+                </span>
               </Label>
               <Textarea
-                placeholder={reportTypeOptions.find(o => o.value === selectedType)?.placeholder}
+                placeholder={selectedOption.placeholder}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={500}
@@ -194,7 +226,7 @@ export function QuestionReportDialog({
           </Button>
           <Button
             onClick={() => submitMutation.mutate()}
-            disabled={!selectedType || submitMutation.isPending}
+            disabled={!canSubmit}
           >
             {submitMutation.isPending ? 'Submitting...' : 'Submit Report'}
           </Button>
