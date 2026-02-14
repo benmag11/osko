@@ -1,0 +1,7 @@
+{
+  "entry": ["src/app/**/{page,layout,loading,error,not-found,route,default}.{ts,tsx}"],
+  "ignore": ["supabase/functions/**"],
+  "ignoreDependencies": ["eslint", "eslint-config-next"],
+  "ignoreExportsUsedInFile": { "interface": true, "type": true },
+  "paths": { "@/*": ["./src/*"] }
+}

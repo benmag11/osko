@@ -44,16 +44,3 @@ export async function ensureAdmin(): Promise<string> {
   
   return user.id
 }
-
-/**
- * Optional: Get admin status without throwing
- * Useful for conditional logic
- */
-export async function getAdminStatus(): Promise<{ isAdmin: boolean; userId: string | null }> {
-  try {
-    const userId = await ensureAdmin()
-    return { isAdmin: true, userId }
-  } catch {
-    return { isAdmin: false, userId: null }
-  }
-}

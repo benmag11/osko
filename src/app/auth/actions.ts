@@ -73,23 +73,6 @@ export async function signIn(formData: FormData) {
   }
 }
 
-export async function signOut() {
-  const supabase = await createServerSupabaseClient()
-  await supabase.auth.signOut()
-  try {
-    redirect('/')
-  } catch (redirectError) {
-    // redirect() throws a NEXT_REDIRECT error which is expected
-    throw redirectError
-  }
-}
-
-export async function getUser() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
-}
-
 export async function verifyOtp(email: string, token: string) {
   const supabase = await createServerSupabaseClient()
   

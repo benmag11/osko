@@ -182,34 +182,3 @@ export async function registerForGrind(
 
   return { success: true }
 }
-
-export async function unregisterFromGrind(
-  grindId: string
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    return { success: false, error: 'You must be logged in to unregister' }
-  }
-
-  const { data: success, error } = await supabase.rpc('unregister_from_grind_with_credit_restore', {
-    p_user_id: user.id,
-    p_grind_id: grindId,
-  })
-
-  if (error) {
-    console.error('Failed to unregister from grind:', error)
-    return { success: false, error: 'Failed to unregister' }
-  }
-
-  if (!success) {
-    return { success: false, error: 'Registration not found' }
-  }
-
-  return { success: true }
-}

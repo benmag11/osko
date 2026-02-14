@@ -27,12 +27,3 @@ export const queryKeys = {
     completions: (userId: string) => ['user', userId, 'completions'] as const,
   },
 }
-
-/**
- * Helper to scope any query key with user context
- * Use this for any user-specific data
- */
-export function scopeWithUser(userId: string | null, baseKey: readonly unknown[]) {
-  if (!userId) return baseKey
-  return ['user', userId, ...baseKey] as const
-}

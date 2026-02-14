@@ -90,31 +90,6 @@ export function parseSearchParams(
     questionNumbers: deserializeFilterValue('questionNumbers', getValue(FILTER_PARAM_MAP.questionNumbers)),
   }
 }
-
-export function buildFilterUrl(
-  pathname: string,
-  filters: Partial<Filters>
-): string {
-  const params = new URLSearchParams()
-
-  // Use the shared serialization logic
-  Object.entries(FILTER_PARAM_MAP).forEach(([filterKey, paramName]) => {
-    const key = filterKey as keyof Omit<Filters, 'subjectId'>
-    if (key in filters) {
-      const value = filters[key]
-      if (value !== undefined) {
-        const serialized = serializeFilterValue(key, value as Filters[typeof key])
-        if (serialized) {
-          params.set(paramName, serialized)
-        }
-      }
-    }
-  })
-
-  const query = params.toString()
-  return query ? `${pathname}?${query}` : pathname
-}
-
 export function updateSearchParams(
   currentParams: URLSearchParams,
   updates: Partial<Filters>
