@@ -1,1 +1,2 @@
 export const EXAM_VIEW_BASE_MAX_WIDTH_PX = 896
+export const MARKING_SCHEME_QUALITY = 60

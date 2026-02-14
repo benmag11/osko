@@ -14,7 +14,7 @@ import type { AudioQuestion, AudioTopic } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
 import { useInView } from 'react-intersection-observer'
-import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from '@/components/questions/constants'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX, MARKING_SCHEME_QUALITY } from '@/components/questions/constants'
 import { getTransformedImageUrl } from '@/lib/supabase/image-loader'
 import { ImageLightbox } from '@/components/questions/image-lightbox'
 import styles from '@/components/questions/styles/question-card.module.css'
@@ -51,6 +51,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
   isPriority = false,
 }: AudioQuestionCardProps) {
   const [showMarkingScheme, setShowMarkingScheme] = useState(false)
+  const [isMarkingSchemeReady, setIsMarkingSchemeReady] = useState(false)
   const [showTranscriptModal, setShowTranscriptModal] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -111,6 +112,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
   const questionImageWidth = question.question_image_width ?? 2480
   const questionImageHeight = question.question_image_height ?? 1500
   const markingSchemeWidth = question.marking_scheme_image_width ?? 2480
+  const markingSchemeHeight = question.marking_scheme_image_height ?? 3508
 
   const toggleMarkingScheme = useCallback(() => {
     setShowMarkingScheme(prev => !prev)
@@ -124,11 +126,11 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
   // Two-tier visibility system: visible (force-fetch) and far (background prefetch)
   const { ref: visibleRef, inView: isVisible } = useInView({
     threshold: 0,
-    rootMargin: '200px',
+    rootMargin: '500px',
   })
   const { ref: farRef, inView: isFar } = useInView({
     threshold: 0,
-    rootMargin: '1200px',
+    rootMargin: '2000px',
   })
 
   // Combine refs for the card element
@@ -157,7 +159,7 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
   useEffect(() => {
     if (hasValidMarkingScheme && !markingSchemeUrl) {
       const url = question.marking_scheme_image_url!
-      setMarkingSchemeUrl(getTransformedImageUrl(url, getOptimalWidth(), 75))
+      setMarkingSchemeUrl(getTransformedImageUrl(url, getOptimalWidth(), MARKING_SCHEME_QUALITY))
     }
   }, [hasValidMarkingScheme, markingSchemeUrl, question.marking_scheme_image_url, getOptimalWidth])
 
@@ -167,10 +169,20 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
       return
     }
 
-    // new Image() forces the browser to fetch immediately (not a hint, a command)
+    // new Image() forces the browser to fetch + decode immediately (not a hint, a command)
     const img = new window.Image()
     img.src = markingSchemeUrl
     hasForceFetchedRef.current = true
+
+    img.decode()
+      .then(() => setIsMarkingSchemeReady(true))
+      .catch(() => {
+        if (img.complete && img.naturalWidth > 0) {
+          setIsMarkingSchemeReady(true)
+        } else {
+          img.onload = () => setIsMarkingSchemeReady(true)
+        }
+      })
   }, [isVisible, markingSchemeUrl, showMarkingScheme])
 
   // Background prefetch for far cards (low priority hint for cards not yet visible)
@@ -203,6 +215,16 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
     const img = new window.Image()
     img.src = markingSchemeUrl
     hasForceFetchedRef.current = true
+
+    img.decode()
+      .then(() => setIsMarkingSchemeReady(true))
+      .catch(() => {
+        if (img.complete && img.naturalWidth > 0) {
+          setIsMarkingSchemeReady(true)
+        } else {
+          img.onload = () => setIsMarkingSchemeReady(true)
+        }
+      })
   }, [markingSchemeUrl, showMarkingScheme])
 
   // AudioQuestion satisfies BaseReportableQuestion directly — no cast needed
@@ -350,20 +372,35 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
           {showMarkingScheme && markingSchemeUrl && (
             <div className="px-4 pb-4">
               <div className="group relative">
-                {/* Native <img> with exact same URL as prefetch = guaranteed cache hit = instant */}
-                <img
-                  src={markingSchemeUrl}
-                  alt={`Marking scheme for question ${question.question_number ?? ''}`}
-                  className="w-full h-auto rounded-lg"
-                  loading="eager"
-                  draggable={false}
-                />
+                <div className={cn(
+                  'rounded-lg transition-colors duration-300',
+                  !isMarkingSchemeReady && 'bg-stone-100'
+                )}>
+                  <img
+                    src={markingSchemeUrl}
+                    alt={`Marking scheme for question ${question.question_number ?? ''}`}
+                    width={markingSchemeWidth}
+                    height={markingSchemeHeight}
+                    className="w-full h-auto rounded-lg"
+                    loading="eager"
+                    decoding="sync"
+                    draggable={false}
+                    onLoad={() => setIsMarkingSchemeReady(true)}
+                  />
+                </div>
                 <ImageLightbox
                   src={question.marking_scheme_image_url!}
                   alt={`Marking scheme for question ${question.question_number ?? ''}`}
                   naturalWidth={markingSchemeWidth}
                 />
               </div>
+            </div>
+          )}
+
+          {/* Pre-render hidden image for visible cards so bitmap is in compositor cache */}
+          {isVisible && markingSchemeUrl && isMarkingSchemeReady && !showMarkingScheme && (
+            <div aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+              <img src={markingSchemeUrl} alt="" width={markingSchemeWidth} height={markingSchemeHeight} decoding="sync" />
             </div>
           )}
         </div>

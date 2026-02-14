@@ -15,7 +15,7 @@ import type { Question, Topic } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { formatQuestionTitle } from '@/lib/utils/question-format'
 import { useInView } from 'react-intersection-observer'
-import { EXAM_VIEW_BASE_MAX_WIDTH_PX } from './constants'
+import { EXAM_VIEW_BASE_MAX_WIDTH_PX, MARKING_SCHEME_QUALITY } from './constants'
 import { getTransformedImageUrl } from '@/lib/supabase/image-loader'
 import { SearchHighlightOverlay } from './search-highlight-overlay'
 import { ImageLightbox } from './image-lightbox'
@@ -121,11 +121,11 @@ export const QuestionCard = memo(function QuestionCard({
   // Two-tier visibility system: visible (force-fetch) and far (background prefetch)
   const { ref: visibleRef, inView: isVisible } = useInView({
     threshold: 0,
-    rootMargin: '200px',
+    rootMargin: '500px',
   })
   const { ref: farRef, inView: isFar } = useInView({
     threshold: 0,
-    rootMargin: '1200px',
+    rootMargin: '2000px',
   })
 
   // Combine refs for the card element
@@ -154,7 +154,7 @@ export const QuestionCard = memo(function QuestionCard({
   useEffect(() => {
     if (hasValidMarkingScheme && !markingSchemeUrl) {
       const url = question.marking_scheme_image_url!
-      setMarkingSchemeUrl(getTransformedImageUrl(url, getOptimalWidth(), 75))
+      setMarkingSchemeUrl(getTransformedImageUrl(url, getOptimalWidth(), MARKING_SCHEME_QUALITY))
     }
   }, [hasValidMarkingScheme, markingSchemeUrl, question.marking_scheme_image_url, getOptimalWidth])
 
@@ -164,11 +164,20 @@ export const QuestionCard = memo(function QuestionCard({
       return
     }
 
-    // new Image() forces the browser to fetch immediately (not a hint, a command)
+    // new Image() forces the browser to fetch + decode immediately (not a hint, a command)
     const img = new window.Image()
-    img.onload = () => setIsMarkingSchemeReady(true)
     img.src = markingSchemeUrl
     hasForceFetchedRef.current = true
+
+    img.decode()
+      .then(() => setIsMarkingSchemeReady(true))
+      .catch(() => {
+        if (img.complete && img.naturalWidth > 0) {
+          setIsMarkingSchemeReady(true)
+        } else {
+          img.onload = () => setIsMarkingSchemeReady(true)
+        }
+      })
   }, [isVisible, markingSchemeUrl, showMarkingScheme])
 
   // Background prefetch for far cards (low priority hint for cards not yet visible)
@@ -199,9 +208,18 @@ export const QuestionCard = memo(function QuestionCard({
     if (!markingSchemeUrl || showMarkingScheme || hasForceFetchedRef.current) return
 
     const img = new window.Image()
-    img.onload = () => setIsMarkingSchemeReady(true)
     img.src = markingSchemeUrl
     hasForceFetchedRef.current = true
+
+    img.decode()
+      .then(() => setIsMarkingSchemeReady(true))
+      .catch(() => {
+        if (img.complete && img.naturalWidth > 0) {
+          setIsMarkingSchemeReady(true)
+        } else {
+          img.onload = () => setIsMarkingSchemeReady(true)
+        }
+      })
   }, [markingSchemeUrl, showMarkingScheme])
 
   return (
@@ -344,6 +362,7 @@ export const QuestionCard = memo(function QuestionCard({
                           height={markingSchemeHeight}
                           className="w-full h-auto rounded-lg"
                           loading="eager"
+                          decoding="sync"
                           draggable={false}
                           onLoad={() => setIsMarkingSchemeReady(true)}
                         />
@@ -373,6 +392,7 @@ export const QuestionCard = memo(function QuestionCard({
                       height={markingSchemeHeight}
                       className="w-full h-auto rounded-lg"
                       loading="eager"
+                      decoding="sync"
                       draggable={false}
                       onLoad={() => setIsMarkingSchemeReady(true)}
                     />
@@ -385,6 +405,13 @@ export const QuestionCard = memo(function QuestionCard({
                 </div>
               </div>
             )
+          )}
+
+          {/* Pre-render hidden image for visible cards so bitmap is in compositor cache */}
+          {isVisible && markingSchemeUrl && isMarkingSchemeReady && !showMarkingScheme && (
+            <div aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+              <img src={markingSchemeUrl} alt="" width={markingSchemeWidth} height={markingSchemeHeight} decoding="sync" />
+            </div>
           )}
         </div>
       </div>
