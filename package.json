@@ -39,6 +39,7 @@
     "motion": "^12.23.12",
     "next": "^15.5.9",
     "postcss": "^8.5.6",
+    "posthog-js": "^1.347.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-intersection-observer": "^9.16.0",
