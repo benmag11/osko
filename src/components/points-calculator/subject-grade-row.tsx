@@ -35,7 +35,7 @@ export function SubjectGradeRow({
   return (
     <div
       className={cn(
-        'flex items-center justify-between pl-5 pr-3 py-2 transition-colors border-l-[3px]',
+        'flex items-center justify-between pl-5 pr-3 py-3 transition-colors border-l-[3px]',
         isInBest6
           ? 'bg-white border-l-stone-800'
           : 'bg-stone-200/60 border-l-transparent'
