@@ -399,6 +399,7 @@ input:-webkit-autofill:active {
 .btn-salmon {
   background-color: var(--color-salmon-accent);
   color: white;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -414,6 +415,7 @@ input:-webkit-autofill:active {
 /* Text link styling */
 .text-link {
   color: var(--color-charcoal-secondary);
+  cursor: pointer;
   transition: color 0.2s ease;
 }
 
