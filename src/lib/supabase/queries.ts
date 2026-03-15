@@ -3,7 +3,7 @@
 import { createServerSupabaseClient } from './server'
 import { QueryError } from '@/lib/errors'
 import { buildSearchQueryParams } from './query-builders'
-import { parseSlug } from '@/lib/utils/slug'
+import { generateSlug } from '@/lib/utils/slug'
 import type {
   Subject,
   Topic,
@@ -72,33 +72,9 @@ export async function getSubjects(): Promise<Subject[]> {
 
 
 export async function getSubjectBySlug(slug: string): Promise<Subject | null> {
-  return withRetry(async () => {
-    const supabase = await createServerSupabaseClient()
-
-    const { name, level } = parseSlug(slug)
-
-    const { data, error } = await supabase
-      .from('subjects')
-      .select('*')
-      .ilike('name', name)
-      .eq('level', level)
-      .single()
-
-    if (error) {
-      // Return null for not found errors
-      if (error.code === 'PGRST116') {
-        return null
-      }
-      console.error('Error fetching subject:', error)
-      throw new QueryError(
-        'Failed to fetch subject',
-        'SUBJECT_FETCH_ERROR',
-        error
-      )
-    }
-
-    return data as Subject
-  })
+  const subjects = await getSubjects()
+  const decoded = decodeURIComponent(slug)
+  return subjects.find(s => generateSlug(s) === decoded) ?? null
 }
 
 export async function getTopics(subjectId: string): Promise<Topic[]> {

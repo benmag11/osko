@@ -11,7 +11,7 @@ export default function NotFound() {
         <p className="text-xl text-exam-text-secondary">
           The subject you&apos;re looking for doesn&apos;t exist.
         </p>
-        <Link href="/">
+        <Link href="/dashboard/study">
           <Button className="bg-primary hover:bg-primary/90">
             Back to Subjects
           </Button>

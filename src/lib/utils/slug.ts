@@ -1,7 +1,10 @@
 import type { Subject } from '@/lib/types/database'
 
 export function generateSlug(subject: Subject): string {
-  const name = subject.name.toLowerCase().replace(/\s+/g, '-')
+  const name = subject.name
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/\s+/g, '-')
   if (name === 'lcvp') return 'lcvp'
   const level = subject.level.toLowerCase()
   return `${name}-${level}`

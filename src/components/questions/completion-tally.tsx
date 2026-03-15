@@ -136,8 +136,11 @@ export const CompletionTally = memo(function CompletionTally({
   }, [clearFinishTimer, tallyMarksControls])
 
   useEffect(() => {
-    if (!isLoading) hasHydrated.current = true
-  }, [isLoading])
+    if (!isLoading) {
+      prevCountRef.current = count
+      hasHydrated.current = true
+    }
+  }, [isLoading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!hasHydrated.current) {

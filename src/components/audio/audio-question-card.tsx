@@ -66,8 +66,11 @@ export const AudioQuestionCard = memo(function AudioQuestionCard({
   const glowTokenRef = useRef(0)
 
   useEffect(() => {
-    if (!isCompletionsLoading) hasCompletionsHydrated.current = true
-  }, [isCompletionsLoading])
+    if (!isCompletionsLoading) {
+      prevCompletionCountRef.current = completionCount
+      hasCompletionsHydrated.current = true
+    }
+  }, [isCompletionsLoading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!hasCompletionsHydrated.current) {
