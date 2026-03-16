@@ -262,6 +262,12 @@ export interface WordCoordinatesData {
   words: WordCoordinate[]
 }
 
+export interface SupplementaryImage {
+  url: string
+  width: number
+  height: number
+}
+
 export interface Question {
   id: string
   subject_id: string
@@ -276,6 +282,8 @@ export interface Question {
   question_image_height: number | null
   marking_scheme_image_width: number | null
   marking_scheme_image_height: number | null
+  supplementary_question_images: SupplementaryImage[]
+  supplementary_marking_scheme_images: SupplementaryImage[]
   full_text: string | null
   additional_info: string | null
   word_coordinates: WordCoordinatesData | null

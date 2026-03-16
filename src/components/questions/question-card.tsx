@@ -310,6 +310,26 @@ export const QuestionCard = memo(function QuestionCard({
             </div>
           )}
         </div>
+        {question.supplementary_question_images?.length > 0 &&
+          question.supplementary_question_images.map((img, i) => (
+            <div key={i} className="group relative w-full bg-cream-50 mt-px">
+              <img
+                src={getTransformedImageUrl(img.url, Math.round(maxDisplayWidth * 2), 80)}
+                alt={`Question ${question.question_number ?? 'image'} — additional image ${i + 1}`}
+                width={img.width}
+                height={img.height}
+                className="w-full h-auto"
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+              />
+              <ImageLightbox
+                src={img.url}
+                alt={`Question ${question.question_number ?? ''} additional image ${i + 1}`}
+                naturalWidth={img.width}
+              />
+            </div>
+          ))}
         
         <div className="bg-[#F5F4ED] rounded-b-xl border-t border-stone-300">
           <div
@@ -376,6 +396,28 @@ export const QuestionCard = memo(function QuestionCard({
                         naturalWidth={markingSchemeWidth}
                       />
                     </div>
+                    {question.supplementary_marking_scheme_images?.length > 0 &&
+                      question.supplementary_marking_scheme_images.map((img, i) => (
+                        <div key={i} className="group relative mt-4">
+                          <div className="rounded-lg">
+                            <img
+                              src={getTransformedImageUrl(img.url, getOptimalWidth(), MARKING_SCHEME_QUALITY)}
+                              alt={`Marking scheme additional image ${i + 1}`}
+                              width={img.width}
+                              height={img.height}
+                              className="w-full h-auto rounded-lg"
+                              loading="lazy"
+                              decoding="async"
+                              draggable={false}
+                            />
+                          </div>
+                          <ImageLightbox
+                            src={img.url}
+                            alt={`Marking scheme additional image ${i + 1}`}
+                            naturalWidth={img.width}
+                          />
+                        </div>
+                      ))}
                   </div>
                 </motion.div>
               )}
@@ -406,6 +448,28 @@ export const QuestionCard = memo(function QuestionCard({
                     naturalWidth={markingSchemeWidth}
                   />
                 </div>
+                {question.supplementary_marking_scheme_images?.length > 0 &&
+                  question.supplementary_marking_scheme_images.map((img, i) => (
+                    <div key={i} className="group relative mt-4">
+                      <div className="rounded-lg">
+                        <img
+                          src={getTransformedImageUrl(img.url, getOptimalWidth(), MARKING_SCHEME_QUALITY)}
+                          alt={`Marking scheme additional image ${i + 1}`}
+                          width={img.width}
+                          height={img.height}
+                          className="w-full h-auto rounded-lg"
+                          loading="lazy"
+                          decoding="async"
+                          draggable={false}
+                        />
+                      </div>
+                      <ImageLightbox
+                        src={img.url}
+                        alt={`Marking scheme additional image ${i + 1}`}
+                        naturalWidth={img.width}
+                      />
+                    </div>
+                  ))}
               </div>
             )
           )}
