@@ -118,7 +118,11 @@ export const QuestionCard = memo(function QuestionCard({
   const questionImageSizes = `(max-width: 640px) 100vw, ${maxDisplayWidth}px`
 
   // Perceptually consistent animation: sqrt scaling so tall schemes don't rush open
-  const markingSchemeRenderedHeight = (markingSchemeHeight / markingSchemeWidth) * maxDisplayWidth + 32
+  const supplementaryMsHeight = (question.supplementary_marking_scheme_images ?? []).reduce(
+    (sum, img) => sum + (img.height / img.width) * maxDisplayWidth + 16, // +16 for mt-4 gap
+    0
+  )
+  const markingSchemeRenderedHeight = (markingSchemeHeight / markingSchemeWidth) * maxDisplayWidth + 32 + supplementaryMsHeight
   const markingSchemeDuration = Math.min(Math.max(Math.sqrt(markingSchemeRenderedHeight) * 0.012, 0.15), 0.4)
 
   // Two-tier visibility system: visible (force-fetch) and far (background prefetch)
@@ -146,6 +150,8 @@ export const QuestionCard = memo(function QuestionCard({
 
   // Store the pre-computed marking scheme URL (same URL for prefetch AND display = cache hit)
   const [markingSchemeUrl, setMarkingSchemeUrl] = useState<string | null>(null)
+  const [supplementaryMsUrls, setSupplementaryMsUrls] = useState<string[]>([])
+  const supplementaryMsPrefetchLinksRef = useRef<HTMLLinkElement[]>([])
 
   // Calculate optimal image width based on display size and device pixel ratio
   const getOptimalWidth = useCallback(() => {
@@ -159,7 +165,14 @@ export const QuestionCard = memo(function QuestionCard({
       const url = question.marking_scheme_image_url!
       setMarkingSchemeUrl(getTransformedImageUrl(url, getOptimalWidth(), MARKING_SCHEME_QUALITY))
     }
-  }, [hasValidMarkingScheme, markingSchemeUrl, question.marking_scheme_image_url, getOptimalWidth])
+    if (question.supplementary_marking_scheme_images?.length > 0 && supplementaryMsUrls.length === 0) {
+      setSupplementaryMsUrls(
+        question.supplementary_marking_scheme_images.map(img =>
+          getTransformedImageUrl(img.url, getOptimalWidth(), MARKING_SCHEME_QUALITY)
+        )
+      )
+    }
+  }, [hasValidMarkingScheme, markingSchemeUrl, question.marking_scheme_image_url, question.supplementary_marking_scheme_images, getOptimalWidth, supplementaryMsUrls.length])
 
   // Force-fetch marking scheme when card becomes visible (guarantees immediate load)
   useEffect(() => {
@@ -181,7 +194,13 @@ export const QuestionCard = memo(function QuestionCard({
           img.onload = () => setIsMarkingSchemeReady(true)
         }
       })
-  }, [isVisible, markingSchemeUrl, showMarkingScheme])
+
+    // Also force-fetch supplementary MS images into browser cache
+    supplementaryMsUrls.forEach(url => {
+      const supplementaryImg = new window.Image()
+      supplementaryImg.src = url
+    })
+  }, [isVisible, markingSchemeUrl, showMarkingScheme, supplementaryMsUrls])
 
   // Background prefetch for far cards (low priority hint for cards not yet visible)
   useEffect(() => {
@@ -198,13 +217,27 @@ export const QuestionCard = memo(function QuestionCard({
     document.head.appendChild(link)
     prefetchLinkRef.current = link
 
+    // Also prefetch supplementary MS images
+    const supplementaryLinks = supplementaryMsUrls.map(url => {
+      const supLink = document.createElement('link')
+      supLink.rel = 'prefetch'
+      supLink.as = 'image'
+      supLink.href = url
+      supLink.setAttribute('fetchpriority', 'low')
+      document.head.appendChild(supLink)
+      return supLink
+    })
+    supplementaryMsPrefetchLinksRef.current = supplementaryLinks
+
     return () => {
       if (prefetchLinkRef.current === link) {
         link.remove()
         prefetchLinkRef.current = null
       }
+      supplementaryLinks.forEach(l => l.remove())
+      supplementaryMsPrefetchLinksRef.current = []
     }
-  }, [isFar, isVisible, markingSchemeUrl])
+  }, [isFar, isVisible, markingSchemeUrl, supplementaryMsUrls])
 
   // Hover handler: force-fetch if not already done (backup for edge cases)
   const handleToggleMouseEnter = useCallback(() => {
@@ -223,7 +256,13 @@ export const QuestionCard = memo(function QuestionCard({
           img.onload = () => setIsMarkingSchemeReady(true)
         }
       })
-  }, [markingSchemeUrl, showMarkingScheme])
+
+    // Also force-fetch supplementary MS images
+    supplementaryMsUrls.forEach(url => {
+      const supplementaryImg = new window.Image()
+      supplementaryImg.src = url
+    })
+  }, [markingSchemeUrl, showMarkingScheme, supplementaryMsUrls])
 
   return (
     <div
@@ -396,18 +435,18 @@ export const QuestionCard = memo(function QuestionCard({
                         naturalWidth={markingSchemeWidth}
                       />
                     </div>
-                    {question.supplementary_marking_scheme_images?.length > 0 &&
-                      question.supplementary_marking_scheme_images.map((img, i) => (
+                    {supplementaryMsUrls.length > 0 &&
+                      question.supplementary_marking_scheme_images?.map((img, i) => (
                         <div key={i} className="group relative mt-4">
                           <div className="rounded-lg">
                             <img
-                              src={getTransformedImageUrl(img.url, getOptimalWidth(), MARKING_SCHEME_QUALITY)}
+                              src={supplementaryMsUrls[i]}
                               alt={`Marking scheme additional image ${i + 1}`}
                               width={img.width}
                               height={img.height}
                               className="w-full h-auto rounded-lg"
-                              loading="lazy"
-                              decoding="async"
+                              loading="eager"
+                              decoding="sync"
                               draggable={false}
                             />
                           </div>
@@ -448,18 +487,18 @@ export const QuestionCard = memo(function QuestionCard({
                     naturalWidth={markingSchemeWidth}
                   />
                 </div>
-                {question.supplementary_marking_scheme_images?.length > 0 &&
-                  question.supplementary_marking_scheme_images.map((img, i) => (
+                {supplementaryMsUrls.length > 0 &&
+                  question.supplementary_marking_scheme_images?.map((img, i) => (
                     <div key={i} className="group relative mt-4">
                       <div className="rounded-lg">
                         <img
-                          src={getTransformedImageUrl(img.url, getOptimalWidth(), MARKING_SCHEME_QUALITY)}
+                          src={supplementaryMsUrls[i]}
                           alt={`Marking scheme additional image ${i + 1}`}
                           width={img.width}
                           height={img.height}
                           className="w-full h-auto rounded-lg"
-                          loading="lazy"
-                          decoding="async"
+                          loading="eager"
+                          decoding="sync"
                           draggable={false}
                         />
                       </div>
@@ -478,6 +517,9 @@ export const QuestionCard = memo(function QuestionCard({
           {isVisible && markingSchemeUrl && isMarkingSchemeReady && !showMarkingScheme && (
             <div aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
               <img src={markingSchemeUrl} alt="" width={markingSchemeWidth} height={markingSchemeHeight} decoding="sync" />
+              {supplementaryMsUrls.map((url, i) => (
+                <img key={i} src={url} alt="" width={question.supplementary_marking_scheme_images?.[i]?.width ?? 0} height={question.supplementary_marking_scheme_images?.[i]?.height ?? 0} decoding="sync" />
+              ))}
             </div>
           )}
         </div>
