@@ -11,7 +11,8 @@ import type {
   Filters,
   PaginatedResponse,
   UserSubjectWithSubject,
-  QuestionCursor
+  QuestionCursor,
+  TopicFrequencyAnalysis
 } from '@/lib/types/database'
 import type { CompletionStats } from '@/lib/types/stats'
 
@@ -333,6 +334,30 @@ export async function saveUserSubjects(
       success: false,
       error: error.message || 'Failed to save subjects. Please try again.'
     }
+  })
+}
+
+export async function getTopicFrequencyAnalysis(
+  subjectId: string
+): Promise<TopicFrequencyAnalysis> {
+  return withRetry(async () => {
+    const supabase = await createServerSupabaseClient()
+
+    const { data, error } = await supabase
+      .rpc('get_topic_frequency_analysis', {
+        p_subject_id: subjectId,
+      })
+
+    if (error) {
+      console.error('Error fetching topic frequency analysis:', error)
+      throw new QueryError(
+        'Failed to fetch topic frequency analysis',
+        'TOPIC_ANALYSIS_FETCH_ERROR',
+        error
+      )
+    }
+
+    return data as TopicFrequencyAnalysis
   })
 }
 

@@ -12,6 +12,7 @@ import {
   Settings,
   Flag,
   BarChart3,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -43,6 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: 'Study', url: '/dashboard/study', icon: BookOpen },
       { title: 'Listening', url: '/dashboard/listening', icon: Headphones },
       { title: 'Stats', url: '/dashboard/stats', icon: BarChart3 },
+      { title: 'Analysis', url: '/dashboard/analysis', icon: TrendingUp },
       { title: 'Grinds', url: '/dashboard/grinds', icon: Users },
     ]
   },

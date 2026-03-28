@@ -16,6 +16,7 @@ export const queryKeys = {
   topics: (subjectId: string) => ['topics', subjectId] as const,
   years: (subjectId: string) => ['years', subjectId] as const,
   auditHistory: (questionId: string) => ['audit-history', questionId] as const,
+  topicAnalysis: (subjectId: string) => ['topic-analysis', subjectId] as const,
   
   // User-specific queries (require user context)
   user: {

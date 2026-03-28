@@ -244,6 +244,40 @@ export interface GroupedTopics {
   }>
 }
 
+// =============================================================================
+// Topic Frequency Analysis Types
+// =============================================================================
+
+export interface TopicFrequencyData {
+  topic_id: string
+  topic_name: string
+  group_id: string | null
+  years_appeared: number
+  year_list: number[]
+  last_year: number | null
+  recent_appearances: number  // count in last 5 years
+}
+
+export interface TopicFrequencyAnalysis {
+  all_years: number[]
+  total_years: number
+  min_year: number | null
+  max_year: number | null
+  topics: TopicFrequencyData[]
+}
+
+export type LikelihoodCategory = 'Very Likely' | 'Likely' | 'Possible' | 'Unlikely'
+
+export interface TopicPrediction extends TopicFrequencyData {
+  frequency_rate: number
+  recent_rate: number
+  overdue: boolean
+  years_since_last: number | null
+  expected_interval: number | null
+  likelihood_score: number
+  likelihood_category: LikelihoodCategory
+}
+
 // Type for word coordinate information (matches OCR pipeline output)
 export interface WordBbox {
   x: number
