@@ -22,19 +22,31 @@ export function StudyPageClient({ userName, subjects }: StudyPageClientProps) {
 
   return (
     <DashboardPage maxWidth="max-w-6xl">
-      <a
-        href="https://pointsgame.ie"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-center justify-between gap-3 border border-salmon-300/50 border-l-[3px] border-l-salmon-400 bg-cream-200/60 rounded-sm px-4 py-2.5 mb-8 transition-colors hover:bg-cream-200"
-      >
-        <p className="text-sm text-warm-text-secondary leading-snug">
-          <span className="font-serif font-semibold text-warm-text-primary">pointsgame.ie</span>
-          <span className="mx-1.5 text-stone-300">|</span>
-          A study course me and my friend made — methods, motivation, maths &amp; more.
-        </p>
-        <ExternalLink className="size-3.5 shrink-0 text-warm-text-muted group-hover:text-salmon-500 transition-colors" />
-      </a>
+      <div className="bg-white border border-stone-200 rounded-md px-5 py-4 mb-8">
+        <h3 className="text-base font-serif font-semibold text-warm-text-primary mb-1.5">
+          Hi guys, go visit pointsgame.ie
+        </h3>
+        <div className="text-sm text-warm-text-secondary leading-relaxed space-y-1.5 mb-3">
+          <p>
+            Me and my friend have made a course teaching you how to actually
+            study, like what methods to use, how to avoid procrastination, how
+            to study maths and I have loads more tools over there.
+          </p>
+          <p>
+            Go check it out. Thanks, best of luck in the exams, they
+            ain&apos;t too far away anymore.
+          </p>
+        </div>
+        <a
+          href="https://pointsgame.ie"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-salmon-500 hover:text-salmon-600 transition-colors"
+        >
+          Visit pointsgame.ie
+          <ExternalLink className="size-3.5" />
+        </a>
+      </div>
 
       <div className="mb-12">
         <h1 className="text-6xl font-serif font-normal text-warm-text-secondary mb-2">
